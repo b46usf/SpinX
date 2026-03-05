@@ -27,11 +27,13 @@ class GoogleAuth {
 
       if (window.google?.accounts?.identity) {
         this.setupGIS();
+        this.setupLoginButton();
         this.initialized = true;
         resolve();
       } else {
         window.addEventListener('load', () => {
           this.setupGIS();
+          this.setupLoginButton();
           this.initialized = true;
           resolve();
         });
@@ -43,14 +45,26 @@ class GoogleAuth {
    * Setup Google Identity Services
    */
   setupGIS() {
-    if (!window.google?.accounts?.identity) return;
+    if (!window.google?.accounts?.id) return;
 
-    window.google.accounts.identity.initialize({
+    google.accounts.id.initialize({
       client_id: AUTH_CONFIG.CLIENT_ID,
-      callback: 'handleGoogleCredentialResponse',
-      auto_select: false,
-      cancel_on_tap_outside: false
+      callback: window.handleGoogleCredentialResponse
     });
+  }
+
+  /**
+   * Setup login button event listener
+   */
+  setupLoginButton() {
+    const loginBtn = document.getElementById("googleLoginBtn");
+    if (loginBtn) {
+      loginBtn.addEventListener("click", () => {
+        if (window.google?.accounts?.id) {
+          google.accounts.id.prompt();
+        }
+      });
+    }
   }
 
   /**
@@ -77,7 +91,19 @@ class GoogleAuth {
       }
 
       if (authResult.registered) {
-        // User exists - login and route to dashboard
+        // Check if user needs OTP verification
+        if (authResult.needVerification) {
+          // User exists but needs OTP verification
+          this.triggerCallbacks(null, {
+            needOTPVerification: true,
+            userId: authResult.userId,
+            noWa: authResult.noWa,
+            googleUser: this.googleUser
+          });
+          return;
+        }
+
+        // User exists and verified - login and route to dashboard
         this.currentUser = {
           ...authResult.user,
           picture: userInfo.picture
@@ -110,7 +136,9 @@ class GoogleAuth {
         action: 'login',
         email: userInfo.email,
         name: userInfo.name,
-        sub: userInfo.sub
+        sub: userInfo.sub,
+        device: 'web',
+        ip: ''
       };
 
       const res = await fetch(AUTH_CONFIG.API_URL, {
@@ -122,6 +150,95 @@ class GoogleAuth {
       return data;
     } catch (error) {
       console.error('Backend validation failed:', error);
+      return { success: false, message: 'Koneksi gagal' };
+    }
+  }
+
+  /**
+   * Generate and send OTP
+   */
+  async generateOTP(userId, noWa) {
+    try {
+      const payload = {
+        action: 'generateOTP',
+        userId: userId,
+        noWa: noWa
+      };
+
+      const res = await fetch(AUTH_CONFIG.API_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      return data;
+    } catch (error) {
+      console.error('Generate OTP failed:', error);
+      return { success: false, message: 'Koneksi gagal' };
+    }
+  }
+
+  /**
+   * Verify OTP
+   */
+  async verifyOTP(otpId, otpCode, userId) {
+    try {
+      const payload = {
+        action: 'verifyOTP',
+        otpId: otpId,
+        otpCode: otpCode,
+        userId: userId
+      };
+
+      const res = await fetch(AUTH_CONFIG.API_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      return data;
+    } catch (error) {
+      console.error('Verify OTP failed:', error);
+      return { success: false, message: 'Koneksi gagal' };
+    }
+  }
+
+  /**
+   * Complete login after OTP verification
+   */
+  async completeLoginAfterVerification(userId) {
+    try {
+      // Get user profile
+      const payload = {
+        action: 'getProfile',
+        userId: userId
+      };
+
+      const res = await fetch(AUTH_CONFIG.API_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      
+      if (data.success && data.user) {
+        this.currentUser = {
+          ...data.user,
+          picture: this.googleUser?.picture || ''
+        };
+        this.role = data.user.role;
+        
+        localStorage.setItem('user', JSON.stringify(this.currentUser));
+        this.triggerCallbacks(this.currentUser);
+        this.routeToDashboard(this.role);
+        
+        return { success: true };
+      }
+      
+      return { success: false, message: 'Gagal mengambil data user' };
+      
+    } catch (error) {
+      console.error('Complete login failed:', error);
       return { success: false, message: 'Koneksi gagal' };
     }
   }
@@ -140,11 +257,7 @@ class GoogleAuth {
         noWa: userData.noWa,
         kelas: userData.kelas || '',
         sekolah: userData.sekolah || '',
-        foto: this.googleUser.picture || '',
-        // Extra fields for MITRA
-        namaMitra: userData.namaMitra || '',
-        kategori: userData.kategori || '',
-        alamat: userData.alamat || ''
+        foto: this.googleUser.picture || ''
       };
 
       const res = await fetch(AUTH_CONFIG.API_URL, {
@@ -155,22 +268,24 @@ class GoogleAuth {
       const data = await res.json();
       
       if (data.success) {
+        // After registration, user needs to verify OTP
         this.currentUser = {
           userId: data.user.userId,
           email: data.user.email,
           name: data.user.name,
           role: data.user.role,
           noWa: data.user.noWa,
-          kelas: data.user.kelas,
-          sekolah: data.user.sekolah,
+          status: data.user.status,
           picture: this.googleUser.picture
         };
         
-        this.role = data.user.role;
-        
-        localStorage.setItem('user', JSON.stringify(this.currentUser));
-        this.triggerCallbacks(this.currentUser);
-        this.routeToDashboard(this.role);
+        // Trigger callback to show OTP verification
+        this.triggerCallbacks(null, {
+          needOTPVerification: true,
+          userId: data.user.userId,
+          noWa: data.user.noWa,
+          googleUser: this.googleUser
+        });
         
         return { success: true };
       }
@@ -212,6 +327,10 @@ class GoogleAuth {
     const dashboard = dashboards[role];
     if (dashboard) {
       window.location.href = dashboard;
+    } else {
+      // Invalid role - redirect to index with error
+      this.showError('Role tidak valid');
+      window.location.href = 'index.html';
     }
   }
 
@@ -258,8 +377,8 @@ class GoogleAuth {
     this.role = null;
     this.googleUser = null;
     
-    if (window.google?.accounts?.identity) {
-      window.google.accounts.identity.disableAutoSelect();
+    if (window.google?.accounts?.id) {
+      window.google.accounts.id.disableAutoSelect();
     }
     
     window.location.href = 'index.html';
@@ -291,6 +410,20 @@ class GoogleAuth {
     if (errorEl) {
       errorEl.textContent = message;
       errorEl.classList.remove('hidden');
+    } else {
+      // If no error element, show alert
+      alert(message);
+    }
+  }
+
+  /**
+   * Hide error message
+   */
+  hideError() {
+    const errorEl = document.getElementById('auth-error');
+    if (errorEl) {
+      errorEl.textContent = '';
+      errorEl.classList.add('hidden');
     }
   }
 }
