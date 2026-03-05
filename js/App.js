@@ -5,7 +5,7 @@
 
 class App {
   constructor(options = {}) {
-    this.googleAuth = options.googleAuth || window.googleAuth;
+    this.googleAuth = options.googleAuth;
     this.themeToggle = null;
     this.loginComponent = null;
     this.registerComponent = null;
@@ -22,6 +22,10 @@ class App {
       console.error('App container not found');
       return;
     }
+
+    // Wait for googleAuth to be available
+    await this.waitForGoogleAuth();
+    this.googleAuth = window.googleAuth;
 
     // Initialize theme toggle first
     this.initThemeToggle();
@@ -50,6 +54,32 @@ class App {
 
     // Show login section by default
     this.showLoginSection();
+  }
+
+  /**
+   * Wait for googleAuth to be available
+   */
+  waitForGoogleAuth() {
+    return new Promise((resolve) => {
+      if (window.googleAuth) {
+        resolve();
+        return;
+      }
+      
+      const checkInterval = setInterval(() => {
+        if (window.googleAuth) {
+          clearInterval(checkInterval);
+          resolve();
+        }
+      }, 50);
+
+      // Timeout after 5 seconds
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        console.error('googleAuth not loaded');
+        resolve();
+      }, 5000);
+    });
   }
 
   /**

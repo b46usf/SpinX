@@ -30,10 +30,7 @@
        AUTH MODULES (load first - dependencies)
        ============================================ -->
   <script src="js/auth/config.js"></script>
-  <script src="js/auth/AuthState.js"></script>
-  <script src="js/auth/AuthApi.js"></script>
-  <script src="js/auth/utils/JwtParser.js"></script>
-  <script src="js/auth/utils/AuthRouter.js"></script>
+  <script src="js/auth/googleAuth.js"></script>
 
   <!-- ============================================
        COMPONENT UTILITIES & CONFIG
@@ -67,13 +64,7 @@
   <!-- ============================================
        INITIALIZATION
        ============================================ -->
-  <script type="module">
-    // Import application modules
-    import googleAuth from './js/auth/googleAuth.js';
-    
-    // Make googleAuth available globally for components
-    window.googleAuth = googleAuth;
-
+  <script>
     // Initialize app when DOM is ready
     document.addEventListener('DOMContentLoaded', async () => {
       // Wait for all components to be available
