@@ -12,6 +12,11 @@
 
 <body class="min-h-screen flex items-center justify-center p-4">
 
+  <!-- Theme Toggle Button (Fixed Position) -->
+  <button class="theme-btn" onclick="toggleTheme()" title="Toggle Theme" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
+    <i class="fas fa-moon" id="theme-icon"></i>
+  </button>
+
   <!-- Login Section -->
   <div id="login-section" class="glass-card p-8 w-full max-w-md text-center animate-scale-in">
     
@@ -84,8 +89,8 @@
         <select id="role" name="role" required class="select">
           <option value="">Pilih role...</option>
           <option value="siswa">🎓 Siswa</option>
-          <option value="guru">👨‍🏫 Guru/Karyawan</option>
-          <option value="mitra">🏪 Mitra (UMKM)</option>
+          <option value="guru">👨‍🏫 Guru</option>
+          <option value="mitra">🏪 Mitra Kantin</option>
         </select>
       </div>
 

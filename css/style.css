@@ -223,6 +223,33 @@ h1, h2, h3, h4, h5, h6 {
   background-repeat: no-repeat;
   background-position: right 16px center;
   background-size: 20px;
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%234a4a5e'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+}
+
+.select option {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  padding: 10px;
+}
+
+[data-theme="light"] .select option {
+  background: #ffffff;
+  color: #1a1a2e;
+}
+
+/* Form labels - theme aware */
+label, .block, label.block {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] label, 
+[data-theme="light"] .block, 
+[data-theme="light"] label.block {
+  color: #1a1a2e;
 }
 
 .textarea { resize: vertical; min-height: 100px; }
