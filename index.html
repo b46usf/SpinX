@@ -7,387 +7,105 @@
   <link rel="icon" href="data:,">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="css/style.css">
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 
 <body class="min-h-screen flex items-center justify-center p-4">
 
   <!-- Theme Toggle Button (Fixed Position) -->
-  <button class="theme-btn" onclick="toggleTheme()" title="Toggle Theme" style="position: fixed; top: 20px; right: 20px; z-index: 1000;">
-    <i class="fas fa-moon" id="theme-icon"></i>
-  </button>
+  <div id="theme-toggle-container"></div>
 
-  <!-- Login Section -->
-  <div id="login-section" class="glass-card p-8 w-full max-w-md text-center animate-scale-in">
-    
-    <!-- Logo/Icon -->
-    <div class="mb-6">
-      <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center animate-float">
-        <i class="fas fa-ticket text-4xl text-white"></i>
-      </div>
-      <h1 class="text-3xl font-bold text-gradient">SpinX 🎰</h1>
-      <p class="text-secondary mt-2">Lucky Wheel Festival</p>
+  <!-- Main App Container - Components will be rendered here by App.js -->
+  <main id="app">
+    <!-- Loading state while components initialize -->
+    <div class="glass-card p-8 w-full max-w-md text-center">
+      <i class="fas fa-spinner fa-spin text-4xl text-indigo-400"></i>
+      <p class="text-secondary mt-4">Memuat aplikasi...</p>
     </div>
+  </main>
 
-    <p class="text-secondary mb-6">Masuk dengan Google & coba keberuntunganmu! 🚀</p>
-    
-    <!-- Google Sign-In -->
-    <div class="login-card">
-      <div id="g_id_onload"
-          data-client_id="88663261491-uugvuvfgrq20ftg481k1l6evouh98uon.apps.googleusercontent.com"
-          data-context="signin"
-          data-ux_mode="popup"
-          data-callback="handleGoogleCredentialResponse"
-          data-auto_prompt="false">
-      </div>
+  <!-- ============================================
+       AUTH MODULES (load first - dependencies)
+       ============================================ -->
+  <script src="js/auth/config.js"></script>
+  <script src="js/auth/AuthState.js"></script>
+  <script src="js/auth/AuthApi.js"></script>
+  <script src="js/auth/utils/JwtParser.js"></script>
+  <script src="js/auth/utils/AuthRouter.js"></script>
 
-      <!-- Custom Google Button -->
-      <button id="googleLoginBtn" class="google-login">
-          <img src="https://developers.google.com/identity/images/g-logo.png">
-          <span>Sign in with Google</span>
-      </button>
-    </div>
+  <!-- ============================================
+       COMPONENT UTILITIES & CONFIG
+       ============================================ -->
+  <script src="js/components/config/RoleFields.js"></script>
+  <script src="js/components/utils/ErrorHandler.js"></script>
 
-    <div id="auth-error" class="hidden mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm"></div>
-    
-    <!-- Decorative elements -->
-    <div class="mt-6 pt-6 border-t border-white/10">
-      <p class="text-xs text-muted">
-        <i class="fas fa-shield-alt mr-1"></i>
-        Login aman & terjamin privasinya
-      </p>
-    </div>
-  </div>
+  <!-- ============================================
+       COMPONENT TEMPLATES
+       ============================================ -->
+  <script src="js/components/templates/LoginTemplates.js"></script>
+  <script src="js/components/templates/RegisterTemplates.js"></script>
 
-  <!-- Registration Section -->
-  <div id="register-section" class="hidden glass-card p-8 w-full max-w-md animate-scale-in">
-    <div class="text-center mb-6">
-      <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-green-500 via-cyan-500 to-blue-500 flex items-center justify-center animate-float">
-        <i class="fas fa-user-plus text-3xl text-white"></i>
-      </div>
-      <h2 class="text-2xl font-bold">Daftar Sekarang</h2>
-      <p class="text-secondary mt-2 text-sm">Lengkapi data diri Anda</p>
-    </div>
-    
-    <!-- Google Info -->
-    <div class="glass-card p-4 mb-6 flex items-center gap-4">
-      <img id="register-avatar" src="" alt="Avatar" class="avatar avatar-sm">
-      <div class="text-left">
-        <div id="register-name" class="font-semibold"></div>
-        <div id="register-email" class="text-sm text-secondary"></div>
-      </div>
-    </div>
+  <!-- ============================================
+       COMPONENT HANDLERS
+       ============================================ -->
+  <script src="js/components/utils/RegisterHandler.js"></script>
 
-    <form id="register-form" class="space-y-4">
-      <!-- Role Selection -->
-      <div class="input-group">
-        <label class="block text-sm font-medium mb-2 text-left">
-          <i class="fas fa-user-tag mr-2 text-indigo-400"></i>Saya adalah *
-        </label>
-        <select id="role" name="role" required class="select">
-          <option value="">Pilih role...</option>
-          <option value="siswa">🎓 Siswa</option>
-          <option value="guru">👨‍🏫 Guru</option>
-          <option value="mitra">🏪 Mitra Kantin</option>
-        </select>
-      </div>
+  <!-- ============================================
+       MAIN COMPONENTS
+       ============================================ -->
+  <script src="js/components/ThemeToggle.js"></script>
+  <script src="js/components/LoginComponent.js"></script>
+  <script src="js/components/RegisterComponent.js"></script>
 
-      <!-- WhatsApp -->
-      <div class="input-group">
-        <input type="text" id="noWa" name="noWa" required placeholder="Nomor WhatsApp" class="input">
-        <i class="input-icon fas fa-phone"></i>
-      </div>
+  <!-- ============================================
+       APP ORCHESTRATOR
+       ============================================ -->
+  <script src="js/App.js"></script>
 
-      <!-- NIS (for siswa) -->
-      <div id="nis-field" class="hidden input-group">
-        <label class="block text-sm font-medium mb-2 text-left">
-          <i class="fas fa-id-card mr-2 text-blue-400"></i>NIS *
-        </label>
-        <input type="text" id="nis" name="nis" placeholder="Masukkan NIS Anda" class="input">
-        <i class="input-icon fas fa-id-card"></i>
-        <button type="button" id="verify-nis-btn" class="btn btn-secondary mt-2 w-full" style="padding: 8px 16px; font-size: 13px;">
-          <i class="fas fa-search"></i> Cek NIS
-        </button>
-        <div id="nis-status" class="hidden mt-2 p-2 rounded text-sm"></div>
-      </div>
-
-      <!-- Nama (from NIS - readonly) -->
-      <div id="nama-field" class="hidden input-group">
-        <label class="block text-sm font-medium mb-2 text-left">
-          <i class="fas fa-user mr-2 text-green-400"></i>Nama
-        </label>
-        <input type="text" id="nama" name="nama" readonly placeholder="Nama dari NIS" class="input" style="background: var(--bg-glass-hover);">
-        <i class="input-icon fas fa-user"></i>
-      </div>
-
-      <!-- Kelas (for siswa - from NIS, readonly) -->
-      <div id="kelas-field" class="hidden input-group">
-        <label class="block text-sm font-medium mb-2 text-left">
-          <i class="fas fa-school mr-2 text-green-400"></i>Kelas
-        </label>
-        <input type="text" id="kelas" name="kelas" readonly placeholder="Kelas dari NIS" class="input" style="background: var(--bg-glass-hover);">
-        <i class="input-icon fas fa-door-open"></i>
-      </div>
-
-      <!-- Sekolah (for siswa - from NIS, readonly) -->
-      <div id="sekolah-field-siswa" class="hidden input-group">
-        <label class="block text-sm font-medium mb-2 text-left">
-          <i class="fas fa-building mr-2 text-purple-400"></i>Sekolah
-        </label>
-        <input type="text" id="sekolah-siswa" name="sekolah-siswa" readonly placeholder="Sekolah dari NIS" class="input" style="background: var(--bg-glass-hover);">
-        <i class="input-icon fas fa-university"></i>
-      </div>
-
-      <!-- Sekolah (optional - for guru) -->
-      <div id="sekolah-field" class="hidden input-group">
-        <label class="block text-sm font-medium mb-2 text-left">
-          <i class="fas fa-building mr-2 text-purple-400"></i>Sekolah (Opsional)
-        </label>
-        <input type="text" id="sekolah" name="sekolah" placeholder="Nama sekolah" class="input">
-        <i class="input-icon fas fa-university"></i>
-      </div>
-
-      <!-- MITRA Fields -->
-      <div id="mitra-fields" class="hidden space-y-4">
-        <div class="input-group">
-          <label class="block text-sm font-medium mb-2 text-left">
-            <i class="fas fa-store mr-2 text-orange-400"></i>Nama Toko/UMKM *
-          </label>
-          <input type="text" id="namaMitra" name="namaMitra" placeholder="Nama toko Anda" class="input">
-          <i class="input-icon fas fa-shopping-bag"></i>
-        </div>
-        <div class="input-group">
-          <label class="block text-sm font-medium mb-2 text-left">
-            <i class="fas fa-tags mr-2 text-pink-400"></i>Kategori *
-          </label>
-          <select id="kategori" name="kategori" class="select">
-            <option value="">Pilih kategori...</option>
-            <option value="makanan">🍔 Makanan</option>
-            <option value="minuman">🥤 Minuman</option>
-            <option value="jasa">🔧 Jasa</option>
-            <option value="lainnya">📦 Lainnya</option>
-          </select>
-        </div>
-        <div class="input-group">
-          <label class="block text-sm font-medium mb-2 text-left">
-            <i class="fas fa-map-marker-alt mr-2 text-red-400"></i>Alamat *
-          </label>
-          <textarea id="alamat" name="alamat" placeholder="Alamat toko" class="textarea"></textarea>
-        </div>
-      </div>
-
-      <div id="register-error" class="hidden p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm"></div>
-
-      <button type="submit" class="btn btn-primary w-full">
-        <i class="fas fa-rocket"></i>
-        Daftar Sekarang
-      </button>
-      
-      <button type="button" id="cancel-register" class="btn btn-secondary w-full">
-        <i class="fas fa-arrow-left"></i>
-        Batal
-      </button>
-    </form>
-  </div>
-
-  <script>
-    // Theme Toggle
-    function toggleTheme() {
-      const html = document.documentElement;
-      const icon = document.getElementById('theme-icon');
-      
-      if (html.getAttribute('data-theme') === 'dark') {
-        html.setAttribute('data-theme', 'light');
-        icon.className = 'fas fa-sun';
-      } else {
-        html.setAttribute('data-theme', 'dark');
-        icon.className = 'fas fa-moon';
-      }
-    }
-  </script>
-
+  <!-- ============================================
+       INITIALIZATION
+       ============================================ -->
   <script type="module">
+    // Import application modules
     import googleAuth from './js/auth/googleAuth.js';
+    
+    // Make googleAuth available globally for components
+    window.googleAuth = googleAuth;
 
-    // Initialize auth
-    googleAuth.init();
-
-    // Global callback for Google Sign-In
-    window.handleGoogleCredentialResponse = async (response) => {
-      await googleAuth.handleCredentialResponse(response);
-    };
-
-    // Handle auth state changes
-    googleAuth.onAuthChange((user, extra) => {
-      if (user) {
-        // User registered - redirect handled by module
-      } else if (extra && extra.needRegister) {
-        // Show registration form
-        showRegisterForm(extra.googleUser);
-      } else {
-        showLoginSection();
-      }
+    // Initialize app when DOM is ready
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Wait for all components to be available
+      await waitForComponents();
+      
+      // Initialize and start the application
+      const app = new App();
+      await app.init();
     });
 
-    // Check if already logged in
-    if (googleAuth.isLoggedIn()) {
-      googleAuth.routeToDashboard(googleAuth.getRole());
-    }
-
-    // Show login section
-    function showLoginSection() {
-      document.getElementById('login-section').classList.remove('hidden');
-      document.getElementById('register-section').classList.add('hidden');
-    }
-
-    // Show register form
-    function showRegisterForm(googleUser) {
-      document.getElementById('login-section').classList.add('hidden');
-      document.getElementById('register-section').classList.remove('hidden');
-      
-      // Fill Google info
-      document.getElementById('register-avatar').src = googleUser.picture;
-      document.getElementById('register-name').textContent = googleUser.name;
-      document.getElementById('register-email').textContent = googleUser.email;
-      
-      // Clear form
-      document.getElementById('register-form').reset();
-      toggleFields();
-    }
-
-    // Toggle fields based on role
-    document.getElementById('role').addEventListener('change', toggleFields);
-
-    function toggleFields() {
-      const role = document.getElementById('role').value;
-      
-      // Reset all
-      document.getElementById('nis-field').classList.add('hidden');
-      document.getElementById('nama-field').classList.add('hidden');
-      document.getElementById('kelas-field').classList.add('hidden');
-      document.getElementById('sekolah-field-siswa').classList.add('hidden');
-      document.getElementById('sekolah-field').classList.add('hidden');
-      document.getElementById('mitra-fields').classList.add('hidden');
-      
-      if (role === 'siswa') {
-        document.getElementById('nis-field').classList.remove('hidden');
-        document.getElementById('nama-field').classList.remove('hidden');
-        document.getElementById('kelas-field').classList.remove('hidden');
-        document.getElementById('sekolah-field-siswa').classList.remove('hidden');
-      } else if (role === 'guru') {
-        document.getElementById('sekolah-field').classList.remove('hidden');
-      } else if (role === 'mitra') {
-        document.getElementById('mitra-fields').classList.remove('hidden');
-      }
-    }
-
-    // Handle NIS verification
-    document.getElementById('verify-nis-btn').addEventListener('click', async () => {
-      const nis = document.getElementById('nis').value.trim();
-      const statusEl = document.getElementById('nis-status');
-      
-      if (!nis) {
-        statusEl.textContent = 'Masukkan NIS terlebih dahulu';
-        statusEl.className = 'mt-2 p-2 rounded text-sm bg-red-500/20 text-red-400';
-        statusEl.classList.remove('hidden');
-        return;
-      }
-
-      statusEl.textContent = 'Memeriksa NIS...';
-      statusEl.className = 'mt-2 p-2 rounded text-sm bg-blue-500/20 text-blue-400';
-      statusEl.classList.remove('hidden');
-
-      try {
-        const response = await fetch(googleAuth.getScriptUrl(), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'verifyNIS', nis: nis })
-        });
+    /**
+     * Wait for required components to be loaded
+     */
+    function waitForComponents() {
+      return new Promise((resolve) => {
+        const checkInterval = setInterval(() => {
+          if (window.App && window.googleAuth && window.ThemeToggle && 
+              window.LoginComponent && window.RegisterComponent) {
+            clearInterval(checkInterval);
+            resolve();
+          }
+        }, 50);
         
-        const result = await response.json();
-        
-        if (result.success && result.found) {
-          // NIS found - auto-fill the fields
-          document.getElementById('nama').value = result.nama || '';
-          document.getElementById('kelas').value = result.kelas || '';
-          document.getElementById('sekolah-siswa').value = result.sekolah || '';
-          
-          statusEl.textContent = 'NIS valid! Data ditemukan.';
-          statusEl.className = 'mt-2 p-2 rounded text-sm bg-green-500/20 text-green-400';
-        } else {
-          statusEl.textContent = result.message || 'NIS tidak ditemukan';
-          statusEl.className = 'mt-2 p-2 rounded text-sm bg-red-500/20 text-red-400';
-        }
-      } catch (error) {
-        statusEl.textContent = 'Gagal memverifikasi NIS';
-        statusEl.className = 'mt-2 p-2 rounded text-sm bg-red-500/20 text-red-400';
-      }
-    });
-
-    // Handle form submission
-    document.getElementById('register-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      const role = document.getElementById('role').value;
-      const noWa = document.getElementById('noWa').value.trim();
-      const nis = document.getElementById('nis') ? document.getElementById('nis').value.trim() : '';
-      const nama = document.getElementById('nama') ? document.getElementById('nama').value.trim() : '';
-      const kelas = document.getElementById('kelas') ? document.getElementById('kelas').value.trim() : '';
-      const sekolahSiswa = document.getElementById('sekolah-siswa') ? document.getElementById('sekolah-siswa').value.trim() : '';
-      const sekolah = document.getElementById('sekolah') ? document.getElementById('sekolah').value.trim() : '';
-      const namaMitra = document.getElementById('namaMitra') ? document.getElementById('namaMitra').value.trim() : '';
-      const kategori = document.getElementById('kategori') ? document.getElementById('kategori').value : '';
-      const alamat = document.getElementById('alamat') ? document.getElementById('alamat').value.trim() : '';
-
-      if (!role || !noWa) {
-        showRegisterError('Mohon lengkapi semua data wajib');
-        return;
-      }
-
-      if (role === 'siswa' && !nis) {
-        showRegisterError('Masukkan NIS untuk verifikasi');
-        return;
-      }
-
-      if (role === 'mitra' && (!namaMitra || !kategori || !alamat)) {
-        showRegisterError('Mohon lengkapi data toko');
-        return;
-      }
-
-      const userData = {
-        role: role,
-        noWa: noWa,
-        nis: nis,
-        name: nama,
-        kelas: kelas,
-        sekolah: sekolahSiswa || sekolah,
-        namaMitra: namaMitra,
-        kategori: kategori,
-        alamat: alamat
-      };
-
-      const result = await googleAuth.register(userData);
-      
-      if (!result.success) {
-        showRegisterError(result.message);
-      }
-    });
-
-    // Cancel registration
-    document.getElementById('cancel-register').addEventListener('click', () => {
-      showLoginSection();
-      // Clear Google user
-      if (window.google?.accounts?.identity) {
-        window.google.accounts.identity.disableAutoSelect();
-      }
-    });
-
-    function showRegisterError(message) {
-      const errorEl = document.getElementById('register-error');
-      errorEl.textContent = message;
-      errorEl.classList.remove('hidden');
+        // Timeout after 5 seconds
+        setTimeout(() => {
+          clearInterval(checkInterval);
+          resolve();
+        }, 5000);
+      });
     }
   </script>
 
 </body>
 </html>
+
