@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Guru/Karyawan - Spin Diskon UMKM</title>
+  <link rel="icon" href="data:,">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="min-h-screen">
+
+  <!-- Header -->
+  <header class="glass-card border-b border-white/10">
+    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+      <div class="flex items-center gap-4">
+        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+          <i class="fas fa-chalkboard-teacher text-white"></i>
+        </div>
+        <h1 class="text-xl font-bold">Dashboard <span class="text-gradient">Guru</span></h1>
+      </div>
+      
+      <div class="flex items-center gap-4">
+        <button class="theme-btn" onclick="toggleTheme()" title="Toggle Theme">
+          <i class="fas fa-moon" id="theme-icon"></i>
+        </button>
+        
+        <div class="flex items-center gap-3 glass-card px-4 py-2">
+          <img id="user-avatar" src="" alt="Avatar" class="w-8 h-8 rounded-full">
+          <span id="user-name" class="font-medium text-sm"></span>
+          <button id="logout-btn" class="text-red-400 hover:text-red-300 ml-2">
+            <i class="fas fa-sign-out-alt"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container mx-auto px-6 py-8">
+    
+    <!-- Welcome -->
+    <div class="glass-card p-8 mb-8 animate-fade-in-up">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-3xl font-bold mb-2">Hai, <span id="welcome-name" class="text-gradient"></span>! 👨‍🏫</h2>
+          <p class="text-secondary">Kelola siswa dan pantau permainan spin diskon</p>
+        </div>
+        <div class="hidden md:block">
+          <div class="w-20 h-20 rounded-full bg-gradient-to-br from-purple-400 to-pink-600 flex items-center justify-center animate-float">
+            <i class="fas fa-graduation-cap text-3xl text-white"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <button class="glass-card p-6 text-center hover:scale-105 transition-transform animate-fade-in-up delay-1">
+        <div class="text-4xl mb-3">👨‍🎓</div>
+        <div class="font-bold">Data Siswa</div>
+        <div class="text-sm text-muted">Kelola data siswa</div>
+      </button>
+      <button class="glass-card p-6 text-center hover:scale-105 transition-transform animate-fade-in-up delay-2">
+        <div class="text-4xl mb-3">📊</div>
+        <div class="font-bold">Statistik</div>
+        <div class="text-sm text-muted">Lihat statistik</div>
+      </button>
+      <button class="glass-card p-6 text-center hover:scale-105 transition-transform animate-fade-in-up delay-3">
+        <div class="text-4xl mb-3">🎫</div>
+        <div class="font-bold">Voucher</div>
+        <div class="text-sm text-muted">Kelola voucher</div>
+      </button>
+      <button class="glass-card p-6 text-center hover:scale-105 transition-transform animate-fade-in-up delay-4">
+        <div class="text-4xl mb-3">📋</div>
+        <div class="font-bold">Laporan</div>
+        <div class="text-sm text-muted">Cetak laporan</div>
+      </button>
+    </div>
+
+    <!-- Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      
+      <!-- Students Activity -->
+      <div class="glass-card p-6 animate-fade-in-up delay-3">
+        <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+          <i class="fas fa-users text-blue-400"></i>
+          Aktivitas Siswa
+        </h3>
+        
+        <div class="space-y-4">
+          <div class="flex items-center justify-between p-4 bg-white/5 rounded-lg">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center">
+                <span class="text-white font-bold">A</span>
+              </div>
+              <div>
+                <div class="font-medium">Ahmad Fauzi</div>
+                <div class="text-xs text-muted">XII IPA 1 • Main 3x hari ini</div>
+              </div>
+            </div>
+            <span class="badge badge-success">Aktif</span>
+          </div>
+          
+          <div class="flex items-center justify-between p-4 bg-white/5 rounded-lg">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-emerald-400 flex items-center justify-center">
+                <span class="text-white font-bold">S</span>
+              </div>
+              <div>
+                <div class="font-medium">Siti Rahayu</div>
+                <div class="text-xs text-muted">XII IPS 2 • Main 2x hari ini</div>
+              </div>
+            </div>
+            <span class="badge badge-success">Aktif</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Vouchers -->
+      <div class="glass-card p-6 animate-fade-in-up delay-4">
+        <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+          <i class="fas fa-trophy text-yellow-400"></i>
+          Voucher Populer
+        </h3>
+        
+        <div class="space-y-3">
+          <div class="flex items-center justify-between p-4 bg-white/5 rounded-lg">
+            <div class="flex items-center gap-3">
+              <span class="text-2xl">🥇</span>
+              <div>
+                <div class="font-medium">DISC20</div>
+                <div class="text-xs text-muted">45x digunakan</div>
+              </div>
+            </div>
+            <span class="badge badge-primary">20%</span>
+          </div>
+          
+          <div class="flex items-center justify-between p-4 bg-white/5 rounded-lg">
+            <div class="flex items-center gap-3">
+              <span class="text-2xl">🥈</span>
+              <div>
+                <div class="font-medium">DISC15</div>
+                <div class="text-xs text-muted">38x digunakan</div>
+              </div>
+            </div>
+            <span class="badge badge-pink">15%</span>
+          </div>
+          
+          <div class="flex items-center justify-between p-4 bg-white/5 rounded-lg">
+            <div class="flex items-center gap-3">
+              <span class="text-2xl">🥉</span>
+              <div>
+                <div class="font-medium">DISC10</div>
+                <div class="text-xs text-muted">25x digunakan</div>
+              </div>
+            </div>
+            <span class="badge badge-warning">10%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- School Info -->
+    <div class="glass-card p-6 mt-8 animate-fade-in-up delay-5">
+      <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+        <i class="fas fa-school text-purple-400"></i>
+        Info Sekolah
+      </h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="p-4 bg-white/5 rounded-lg">
+          <div class="text-muted text-sm">Sekolah</div>
+          <div class="font-semibold" id="school-name">SMA Negeri 1</div>
+        </div>
+        <div class="p-4 bg-white/5 rounded-lg">
+          <div class="text-muted text-sm">Total Siswa Terdaftar</div>
+          <div class="font-semibold">150 siswa</div>
+        </div>
+        <div class="p-4 bg-white/5 rounded-lg">
+          <div class="text-muted text-sm">Total Main Hari Ini</div>
+          <div class="font-semibold">45x</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function toggleTheme() {
+      const html = document.documentElement;
+      const icon = document.getElementById('theme-icon');
+      if (html.getAttribute('data-theme') === 'dark') {
+        html.setAttribute('data-theme', 'light');
+        icon.className = 'fas fa-sun';
+      } else {
+        html.setAttribute('data-theme', 'dark');
+        icon.className = 'fas fa-moon';
+      }
+    }
+  </script>
+
+  <script type="module">
+    import googleAuth from './js/auth/googleAuth.js';
+
+    if (!googleAuth.isLoggedIn() || googleAuth.getRole() !== 'guru') {
+      alert('Akses ditolak. Silakan login sebagai guru/karyawan.');
+      window.location.href = 'index.html';
+    }
+
+    const user = googleAuth.getUser();
+    document.getElementById('user-avatar').src = user.picture;
+    document.getElementById('user-name').textContent = user.name;
+    document.getElementById('welcome-name').textContent = user.name.split(' ')[0];
+
+    if (user.profile && user.profile.sekolah) {
+      document.getElementById('school-name').textContent = user.profile.sekolah;
+    }
+
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      googleAuth.logout();
+    });
+  </script>
+
+</body>
+</html>
