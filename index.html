@@ -27,21 +27,28 @@
 <p class="text-secondary mb-6">Masuk dengan Google & coba keberuntunganmu! 🚀</p>
     
     <!-- Google Sign-In -->
-    <div id="g_id_onload"
-         data-client_id="88663261491-uugvuvfgrq20ftg481k1l6evouh98uon.apps.googleusercontent.com"
-         data-context="signin"
-         data-ux_mode="popup"
-         data-callback="handleGoogleCredentialResponse"
-         data-auto_prompt="false">
-    </div>
+    <div class="login-card">
 
-    <div class="g_id_signin"
-         data-type="standard"
-         data-shape="rectangular"
-         data-theme="outline"
-         data-text="signin_with"
-         data-size="large"
-         data-logo_alignment="left">
+      <div id="g_id_onload"
+          data-client_id="88663261491-uugvuvfgrq20ftg481k1l6evouh98uon.apps.googleusercontent.com"
+          data-context="signin"
+          data-ux_mode="popup"
+          data-callback="handleGoogleCredentialResponse"
+          data-auto_prompt="false">
+      </div>
+
+      <div class="google-btn">
+        <div class="g_id_signin"
+            data-type="standard"
+            data-shape="rectangular"
+            data-theme="outline"
+            data-text="signin_with"
+            data-size="large"
+            data-logo_alignment="left"
+            data-width="350">
+        </div>
+      </div>
+
     </div>
 
     <div id="auth-error" class="hidden mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm"></div>

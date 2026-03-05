@@ -539,3 +539,13 @@ header .container {
 @media (min-width: 641px) {
   .table-responsive { margin: 0; padding: 0; }
 }
+
+.login-card {
+  max-width: 380px;
+  width: 100%;
+  margin: auto;
+}
+
+.google-btn iframe {
+  width: 100% !important;
+}
