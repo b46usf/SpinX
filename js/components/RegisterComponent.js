@@ -1,61 +1,35 @@
+
 /**
  * Register Component
- * Handles user registration UI with role-based fields
- * Delegates rendering to templates and logic to handlers
+ * Handles registration UI rendering and events
  */
 
-class RegisterComponent {
+import { RegisterTemplates } from './templates/RegisterTemplates.js';
+import { RegisterHandler } from './utils/RegisterHandler.js';
+
+export class RegisterComponent {
   constructor(options = {}) {
+    this.googleAuth = options.googleAuth || window.googleAuth;
     this.onSubmit = options.onSubmit || (() => {});
     this.onCancel = options.onCancel || (() => {});
-    this.googleAuth = options.googleAuth || window.googleAuth;
-    this.currentGoogleUser = null;
-    
-    // Use handler for form logic
-    this.handler = new RegisterHandler({
-      googleAuth: this.googleAuth
-    });
+    this.registerHandler = new RegisterHandler({ googleAuth: this.googleAuth });
   }
 
-  /**
-   * Render registration section HTML
-   */
   render() {
     return RegisterTemplates.registerSection();
   }
 
-  /**
-   * Initialize event listeners
-   */
   initEvents() {
-    this.handler.initEvents({
-      onSubmit: (formData) => this.handleSubmit(formData),
-      onCancel: () => this.handleCancel()
+    this.registerHandler.initEvents({
+      onSubmit: this.onSubmit,
+      onCancel: this.onCancel
     });
   }
 
-  /**
-   * Handle form submission
-   */
-  handleSubmit(formData) {
-    this.onSubmit(formData);
-  }
-
-  /**
-   * Handle cancel button
-   */
-  handleCancel() {
-    this.reset();
-    this.onCancel();
-  }
-
-  /**
-   * Show register form with Google user data
-   */
   show(googleUser) {
-    this.currentGoogleUser = googleUser;
+    const section = document.getElementById('register-section');
+    if (section) section.classList.remove('hidden');
     
-    // Fill Google info
     const avatarEl = document.getElementById('register-avatar');
     const nameEl = document.getElementById('register-name');
     const emailEl = document.getElementById('register-email');
@@ -64,49 +38,22 @@ class RegisterComponent {
     if (nameEl) nameEl.textContent = googleUser.name;
     if (emailEl) emailEl.textContent = googleUser.email;
     
-    // Show section
-    const section = document.getElementById('register-section');
-    if (section) {
-      section.classList.remove('hidden');
-    }
-    
-    // Reset form
-    this.reset();
+    this.registerHandler.reset();
   }
 
-  /**
-   * Hide register form
-   */
   hide() {
     const section = document.getElementById('register-section');
-    if (section) {
-      section.classList.add('hidden');
-    }
-    this.reset();
+    if (section) section.classList.add('hidden');
+    this.registerHandler.reset();
   }
 
-  /**
-   * Reset form
-   */
-  reset() {
-    this.handler.reset();
-  }
-
-  /**
-   * Show error message
-   */
   showError(message) {
-    this.handler.showError(message);
+    this.registerHandler.showError(message);
   }
 
-  /**
-   * Hide error message
-   */
   hideError() {
-    this.handler.hideError();
+    this.registerHandler.hideError();
   }
 }
 
-// Export for global use
-window.RegisterComponent = RegisterComponent;
 

@@ -1,171 +1,111 @@
 /**
- * Main Application Component
- * Orchestrates all authentication flow components
+ * Main Application Entry Point
+ * Modular ES6 Module Architecture
  */
 
+// Import all modules
+import googleAuth from './auth/googleAuth.js';
+import { RoleFields } from './components/config/RoleFields.js';
+import { ErrorHandler } from './components/utils/ErrorHandler.js';
+import { RegisterHandler } from './components/utils/RegisterHandler.js';
+import { LoginTemplates } from './components/templates/LoginTemplates.js';
+import { RegisterTemplates } from './components/templates/RegisterTemplates.js';
+import { ThemeToggle } from './components/ThemeToggle.js';
+import { LoginComponent } from './components/LoginComponent.js';
+import { RegisterComponent } from './components/RegisterComponent.js';
+
+/**
+ * App - Main Application Orchestrator
+ */
 class App {
-  constructor(options = {}) {
-    this.googleAuth = options.googleAuth;
+  constructor() {
+    this.googleAuth = googleAuth;
     this.themeToggle = null;
     this.loginComponent = null;
     this.registerComponent = null;
     this.appContainer = null;
   }
 
-  /**
-   * Initialize the application
-   */
   async init() {
-    // Get app container
     this.appContainer = document.getElementById('app');
     if (!this.appContainer) {
       console.error('App container not found');
       return;
     }
 
-    // Wait for googleAuth to be available
-    await this.waitForGoogleAuth();
-    this.googleAuth = window.googleAuth;
+    // Initialize theme
+    this.initTheme();
 
-    // Initialize theme toggle first
-    this.initThemeToggle();
-
-    // Check if user is already logged in
+    // Check if already logged in
     if (this.googleAuth.isLoggedIn()) {
       this.googleAuth.routeToDashboard(this.googleAuth.getRole());
       return;
     }
 
-    // Initialize components (but don't render yet)
+    // Initialize components
     this.initComponents();
 
     // Initialize Google Auth
     await this.googleAuth.init();
 
-    // Setup global callback
+    // Setup callback
     window.handleGoogleCredentialResponse = async (response) => {
       await this.googleAuth.handleCredentialResponse(response);
     };
 
     // Setup auth change handler
-    this.googleAuth.onAuthChange((user, extra) => {
-      this.handleAuthChange(user, extra);
-    });
+    this.googleAuth.onAuthChange((user, extra) => this.handleAuthChange(user, extra));
 
-    // Show login section by default
+    // Show login
     this.showLoginSection();
   }
 
-  /**
-   * Wait for googleAuth to be available
-   */
-  waitForGoogleAuth() {
-    return new Promise((resolve) => {
-      if (window.googleAuth) {
-        resolve();
-        return;
-      }
-      
-      const checkInterval = setInterval(() => {
-        if (window.googleAuth) {
-          clearInterval(checkInterval);
-          resolve();
-        }
-      }, 50);
-
-      // Timeout after 5 seconds
-      setTimeout(() => {
-        clearInterval(checkInterval);
-        console.error('googleAuth not loaded');
-        resolve();
-      }, 5000);
-    });
-  }
-
-  /**
-   * Initialize theme toggle
-   */
-  initThemeToggle() {
+  initTheme() {
     this.themeToggle = new ThemeToggle();
     this.themeToggle.init();
-    
-    // Mount theme toggle to container
-    const themeContainer = document.getElementById('theme-toggle-container');
-    if (themeContainer) {
-      const btn = this.themeToggle.render();
-      themeContainer.appendChild(btn);
-    }
+    const container = document.getElementById('theme-toggle-container');
+    if (container) container.appendChild(this.themeToggle.render());
   }
 
-  /**
-   * Initialize all components
-   */
   initComponents() {
-    // Login Component
-    this.loginComponent = new LoginComponent({
-      googleAuth: this.googleAuth
-    });
-
-    // Register Component
+    this.loginComponent = new LoginComponent({ googleAuth: this.googleAuth });
     this.registerComponent = new RegisterComponent({
       googleAuth: this.googleAuth,
-      onSubmit: async (formData) => {
-        await this.handleRegister(formData);
+      onSubmit: async (data) => {
+        const result = await this.googleAuth.register(data);
+        if (!result.success) this.registerComponent.showError(result.message);
       },
-      onCancel: () => {
-        this.showLoginSection();
-      }
+      onCancel: () => this.showLoginSection()
     });
   }
 
-  /**
-   * Handle authentication state changes
-   */
   handleAuthChange(user, extra) {
     if (user) {
-      // User is logged in - redirect handled by module
-    } else if (extra && extra.needRegister) {
-      // Show registration form
+      // Logged in - redirect handled by module
+    } else if (extra?.needRegister) {
       this.showRegisterSection(extra.googleUser);
     } else {
       this.showLoginSection();
     }
   }
 
-  /**
-   * Handle registration
-   */
-  async handleRegister(formData) {
-    const result = await this.googleAuth.register(formData);
-    
-    if (!result.success) {
-      this.registerComponent.showError(result.message);
-    }
-    // Success will trigger onAuthChange callback which redirects
-  }
-
-  /**
-   * Show login section - renders login component HTML
-   */
   showLoginSection() {
     if (!this.appContainer) return;
-    
     this.appContainer.innerHTML = this.loginComponent.render();
     this.loginComponent.initEvents();
   }
 
-  /**
-   * Show register section - renders register component HTML
-   */
   showRegisterSection(googleUser) {
     if (!this.appContainer) return;
-    
     this.appContainer.innerHTML = this.registerComponent.render();
     this.registerComponent.initEvents();
     this.registerComponent.show(googleUser);
   }
 }
 
-// Export for global use
-window.App = App;
+// Initialize app when DOM is ready
+document.addEventListener('DOMContentLoaded', async () => {
+  const app = new App();
+  await app.init();
+});
 

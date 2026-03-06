@@ -1,6 +1,8 @@
+
 /**
  * Google Auth Module
  * Handles Google Sign-In with registration flow
+ * ES6 Module Export
  */
 
 class GoogleAuth {
@@ -12,9 +14,6 @@ class GoogleAuth {
     this.googleUser = null;
   }
 
-  /**
-   * Initialize Google Identity Services
-   */
   async init() {
     if (this.initialized) return;
 
@@ -39,40 +38,26 @@ class GoogleAuth {
     });
   }
 
-  /**
-   * Setup Google Identity Services
-   */
   setupGIS() {
     if (!window.google?.accounts?.id) return;
-
     google.accounts.id.initialize({
       client_id: window.AUTH_CONFIG.CLIENT_ID,
       callback: window.handleGoogleCredentialResponse
     });
   }
 
-  /**
-   * Setup login button event listener
-   */
   setupLoginButton() {
     const loginBtn = document.getElementById("googleLoginBtn");
     if (loginBtn) {
       loginBtn.addEventListener("click", () => {
-        if (window.google?.accounts?.id) {
-          google.accounts.id.prompt();
-        }
+        if (window.google?.accounts?.id) google.accounts.id.prompt();
       });
     }
   }
 
-  /**
-   * Handle credential response from Google
-   */
   async handleCredentialResponse(response) {
     try {
-      // Decode JWT to get user info
       const userInfo = this.parseJwt(response.credential);
-      
       this.googleUser = {
         email: userInfo.email,
         name: userInfo.name,
@@ -80,7 +65,6 @@ class GoogleAuth {
         sub: userInfo.sub
       };
 
-      // Send to backend to validate
       const authResult = await this.validateWithBackend(userInfo);
       
       if (!authResult.success) {
@@ -89,9 +73,7 @@ class GoogleAuth {
       }
 
       if (authResult.registered) {
-        // Check if user needs OTP verification
         if (authResult.needVerification) {
-          // User exists but needs OTP verification
           this.triggerCallbacks(null, {
             needOTPVerification: true,
             userId: authResult.userId,
@@ -101,33 +83,20 @@ class GoogleAuth {
           return;
         }
 
-        // User exists and verified - login and route to dashboard
-        this.currentUser = {
-          ...authResult.user,
-          picture: userInfo.picture
-        };
+        this.currentUser = { ...authResult.user, picture: userInfo.picture };
         this.role = authResult.role;
-        
         localStorage.setItem('user', JSON.stringify(this.currentUser));
         this.triggerCallbacks(this.currentUser);
         this.routeToDashboard(this.role);
       } else {
-        // New user - show registration form
-        this.triggerCallbacks(null, {
-          needRegister: true,
-          googleUser: this.googleUser
-        });
+        this.triggerCallbacks(null, { needRegister: true, googleUser: this.googleUser });
       }
-      
     } catch (error) {
       console.error('Auth error:', error);
       this.showError('Login gagal. Silakan coba lagi.');
     }
   }
 
-  /**
-   * Validate user with backend
-   */
   async validateWithBackend(userInfo) {
     try {
       const payload = {
@@ -138,23 +107,14 @@ class GoogleAuth {
         device: 'web',
         ip: ''
       };
-
-      const res = await fetch(window.AUTH_CONFIG.API_URL, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      });
-
-      const data = await res.json();
-      return data;
+      const res = await fetch(window.AUTH_CONFIG.API_URL, { method: 'POST', body: JSON.stringify(payload) });
+      return await res.json();
     } catch (error) {
       console.error('Backend validation failed:', error);
       return { success: false, message: 'Koneksi gagal' };
     }
   }
 
-  /**
-   * Register new user
-   */
   async register(userData) {
     try {
       const payload = {
@@ -168,16 +128,10 @@ class GoogleAuth {
         sekolah: userData.sekolah || '',
         foto: this.googleUser.picture || ''
       };
-
-      const res = await fetch(window.AUTH_CONFIG.API_URL, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      });
-
+      const res = await fetch(window.AUTH_CONFIG.API_URL, { method: 'POST', body: JSON.stringify(payload) });
       const data = await res.json();
       
       if (data.success) {
-        // After registration, user needs to verify OTP
         this.currentUser = {
           userId: data.user.userId,
           email: data.user.email,
@@ -187,79 +141,38 @@ class GoogleAuth {
           status: data.user.status,
           picture: this.googleUser.picture
         };
-        
-        // Trigger callback to show OTP verification
         this.triggerCallbacks(null, {
           needOTPVerification: true,
           userId: data.user.userId,
           noWa: data.user.noWa,
           googleUser: this.googleUser
         });
-        
         return { success: true };
       }
-      
       return { success: false, message: data.message };
-      
     } catch (error) {
       console.error('Registration failed:', error);
       return { success: false, message: 'Koneksi gagal' };
     }
   }
 
-  /**
-   * Parse JWT token
-   */
   parseJwt(token) {
     const base64Url = token.split('.')[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
-    );
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
     return JSON.parse(jsonPayload);
   }
 
-  /**
-   * Route to appropriate dashboard based on role
-   */
   routeToDashboard(role) {
-    const dashboards = {
-      'admin': 'dashboard-admin.html',
-      'siswa': 'dashboard-siswa.html',
-      'mitra': 'dashboard-mitra.html',
-      'guru': 'dashboard-guru.html'
-    };
-
+    const dashboards = { 'admin': 'dashboard-admin.html', 'siswa': 'dashboard-siswa.html', 'mitra': 'dashboard-mitra.html', 'guru': 'dashboard-guru.html' };
     const dashboard = dashboards[role];
-    if (dashboard) {
-      window.location.href = dashboard;
-    } else {
-      // Invalid role - redirect to index with error
-      this.showError('Role tidak valid');
-      window.location.href = 'index.html';
-    }
+    if (dashboard) window.location.href = dashboard;
+    else { this.showError('Role tidak valid'); window.location.href = 'index.html'; }
   }
 
-  /**
-   * Get the API URL for backend calls
-   */
-  getScriptUrl() {
-    return window.AUTH_CONFIG.API_URL;
-  }
+  getScriptUrl() { return window.AUTH_CONFIG.API_URL; }
+  getClientId() { return window.AUTH_CONFIG.CLIENT_ID; }
 
-  /**
-   * Get the Google OAuth Client ID
-   */
-  getClientId() {
-    return window.AUTH_CONFIG.CLIENT_ID;
-  }
-
-  /**
-   * Check if user is logged in
-   */
   isLoggedIn() {
     const user = localStorage.getItem('user');
     if (user) {
@@ -270,88 +183,45 @@ class GoogleAuth {
     return false;
   }
 
-  /**
-   * Get current user
-   */
-  getUser() {
-    return this.currentUser;
-  }
+  getUser() { return this.currentUser; }
+  getRole() { return this.role; }
+  hasRole(role) { return this.role === role; }
 
-  /**
-   * Get current role
-   */
-  getRole() {
-    return this.role;
-  }
-
-  /**
-   * Check if user has specific role
-   */
-  hasRole(role) {
-    return this.role === role;
-  }
-
-  /**
-   * Logout user
-   */
   logout() {
     localStorage.removeItem('user');
     this.currentUser = null;
     this.role = null;
     this.googleUser = null;
-    
-    if (window.google?.accounts?.id) {
-      window.google.accounts.id.disableAutoSelect();
-    }
-    
+    if (window.google?.accounts?.id) window.google.accounts.id.disableAutoSelect();
     window.location.href = 'index.html';
   }
 
-  /**
-   * Register callback for auth state changes
-   */
   onAuthChange(callback) {
     this.callbacks.push(callback);
-    
-    if (this.isLoggedIn()) {
-      callback(this.currentUser);
-    }
+    if (this.isLoggedIn()) callback(this.currentUser);
   }
 
-  /**
-   * Trigger all registered callbacks
-   */
   triggerCallbacks(user, extra = null) {
     this.callbacks.forEach(cb => cb(user, extra));
   }
 
-  /**
-   * Show error message
-   */
   showError(message) {
     const errorEl = document.getElementById('auth-error');
-    if (errorEl) {
-      errorEl.textContent = message;
-      errorEl.classList.remove('hidden');
-    } else {
-      // If no error element, show alert
-      alert(message);
-    }
+    if (errorEl) { errorEl.textContent = message; errorEl.classList.remove('hidden'); }
+    else { alert(message); }
   }
 
-  /**
-   * Hide error message
-   */
   hideError() {
     const errorEl = document.getElementById('auth-error');
-    if (errorEl) {
-      errorEl.textContent = '';
-      errorEl.classList.add('hidden');
-    }
+    if (errorEl) { errorEl.textContent = ''; errorEl.classList.add('hidden'); }
   }
 }
 
-// Export singleton instance - set on window for non-module scripts
-window.googleAuth = new GoogleAuth();
-export default window.googleAuth;
+// Export singleton instance
+const googleAuth = new GoogleAuth();
+export default googleAuth;
+
+// Also expose globally for non-module scripts
+window.googleAuth = googleAuth;
+
 
