@@ -3,8 +3,14 @@
  * Spin Diskon UMKM - Main game logic
  */
 
-// API Configuration
-const API_URL = 'https://script.google.com/macros/s/AKfycbzoapuRNn9OeliSHt3s_DtbzDQ1YNntPFYZ-p5wbYeVbJXrmTlXJuuk-gJZ8kX8CQG2/exec';
+// API Configuration - Use single source from AUTH_CONFIG
+const getApiUrl = () => {
+  if (typeof AUTH_CONFIG !== 'undefined' && AUTH_CONFIG.API_URL) {
+    return AUTH_CONFIG.API_URL;
+  }
+  console.warn('AUTH_CONFIG not found, using fallback API URL');
+  return 'https://script.google.com/macros/s/AKfycbzoapuRNn9OeliSHt3s_DtbzDQ1YNntPFYZ-p5wbYeVbJXrmTlXJuuk-gJZ8kX8CQG2/exec';
+};
 
 // Wheel Configuration
 const CONFIG = {
@@ -157,7 +163,7 @@ async function spinWheel() {
       cid: getCustomerId()
     };
 
-    const res = await fetch(API_URL, {
+    const res = await fetch(getApiUrl(), {
       method: 'POST',
       body: JSON.stringify(payload)
     });
