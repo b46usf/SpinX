@@ -4,7 +4,7 @@
  */
 
 // Import all modules
-import GoogleAuth from './auth/GoogleAuth.js';
+import GoogleAuth from './auth/googleAuth.js';
 import { RoleFields } from './components/config/RoleFields.js';
 import { ErrorHandler } from './components/utils/ErrorHandler.js';
 import { RegisterHandler } from './components/utils/RegisterHandler.js';
