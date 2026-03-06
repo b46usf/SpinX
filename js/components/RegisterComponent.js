@@ -4,7 +4,10 @@
  * Handles registration UI rendering and events
  */
 
-class RegisterComponent {
+import { RegisterTemplates } from './templates/RegisterTemplates.js';
+import { RegisterHandler } from './utils/RegisterHandler.js';
+
+export class RegisterComponent {
   constructor(options = {}) {
     this.googleAuth = options.googleAuth || window.GoogleAuth;
     this.onSubmit = options.onSubmit || (() => {});
@@ -52,8 +55,5 @@ class RegisterComponent {
     this.registerHandler.hideError();
   }
 }
-
-// Export globally
-window.RegisterComponent = RegisterComponent;
 
 

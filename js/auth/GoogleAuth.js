@@ -3,13 +3,20 @@
  * Handles Google Sign-In with registration flow
  */
 
-class GoogleAuth {
+import { AUTH_CONFIG } from './Config.js';
+
+export class GoogleAuth {
   constructor() {
     this.initialized = false;
     this.currentUser = null;
     this.callbacks = [];
     this.role = null;
     this.googleUser = null;
+  }
+
+  // Expose AUTH_CONFIG to window for Google Sign-In
+  initConfig() {
+    window.AUTH_CONFIG = AUTH_CONFIG;
   }
 
   async init() {

@@ -4,7 +4,7 @@
  * HTML templates for login form
  */
 
-const LoginTemplates = {
+export const LoginTemplates = {
   getClientId() {
     return window.AUTH_CONFIG?.CLIENT_ID || '88663261491-uugvuvfgrq20ftg481k1l6evouh98uon.apps.googleusercontent.com';
   },
@@ -42,8 +42,5 @@ const LoginTemplates = {
     `;
   }
 };
-
-// Export globally
-window.LoginTemplates = LoginTemplates;
 
 

@@ -1,12 +1,38 @@
-
 /**
  * Main Application Entry Point
- * Modular Architecture - Using global objects
+ * Modular Architecture using ES6 Modules
  */
 
+// Import all modules
+import { AUTH_CONFIG } from './auth/Config.js';
+import { GoogleAuth } from './auth/GoogleAuth.js';
+import { ThemeToggle } from './components/ThemeToggle.js';
+import { LoginTemplates } from './components/templates/LoginTemplates.js';
+import { RegisterTemplates } from './components/templates/RegisterTemplates.js';
+import { ErrorHandler } from './components/utils/ErrorHandler.js';
+import { RoleFields } from './components/config/RoleFields.js';
+import { RegisterHandler } from './components/utils/RegisterHandler.js';
+import { LoginComponent } from './components/LoginComponent.js';
+import { RegisterComponent } from './components/RegisterComponent.js';
+
+// Make everything available globally for backward compatibility
+window.AUTH_CONFIG = AUTH_CONFIG;
+window.GoogleAuth = GoogleAuth;
+window.ThemeToggle = ThemeToggle;
+window.LoginTemplates = LoginTemplates;
+window.RegisterTemplates = RegisterTemplates;
+window.ErrorHandler = ErrorHandler;
+window.RoleFields = RoleFields;
+window.RegisterHandler = RegisterHandler;
+window.LoginComponent = LoginComponent;
+window.RegisterComponent = RegisterComponent;
+
+/**
+ * Main Application Class
+ */
 class App {
   constructor() {
-    this.googleAuth = window.GoogleAuth;
+    this.googleAuth = GoogleAuth;
     this.themeToggle = null;
     this.loginComponent = null;
     this.registerComponent = null;
@@ -90,4 +116,12 @@ class App {
   }
 }
 
+// Initialize app when DOM is ready
+document.addEventListener('DOMContentLoaded', async () => {
+  const app = new App();
+  await app.init();
+});
+
+// Export for potential external use
+export { App, AUTH_CONFIG, GoogleAuth, ThemeToggle };
 

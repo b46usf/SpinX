@@ -4,7 +4,7 @@
  * HTML templates for register form fields
  */
 
-const RegisterTemplates = {
+export const RegisterTemplates = {
   roleField() {
     return `
       <div class="input-group">
@@ -82,8 +82,5 @@ const RegisterTemplates = {
       </div>`;
   }
 };
-
-// Export globally
-window.RegisterTemplates = RegisterTemplates;
 
 

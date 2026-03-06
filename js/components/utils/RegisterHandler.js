@@ -4,7 +4,10 @@
  * Handles form logic, validation, and NIS verification
  */
 
-class RegisterHandler {
+import { RoleFields } from '../config/RoleFields.js';
+import { ErrorHandler } from '../utils/ErrorHandler.js';
+
+export class RegisterHandler {
   constructor(options = {}) {
     this.googleAuth = options.googleAuth || window.GoogleAuth;
   }
@@ -117,8 +120,5 @@ class RegisterHandler {
     document.getElementById('cancel-register')?.addEventListener('click', () => { this.reset(); onCancel(); });
   }
 }
-
-// Export globally
-window.RegisterHandler = RegisterHandler;
 
 

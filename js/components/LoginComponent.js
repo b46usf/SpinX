@@ -4,7 +4,9 @@
  * Handles login UI rendering and events
  */
 
-class LoginComponent {
+import { LoginTemplates } from './templates/LoginTemplates.js';
+
+export class LoginComponent {
   constructor(options = {}) {
     this.googleAuth = options.googleAuth || window.GoogleAuth;
   }
@@ -38,8 +40,5 @@ class LoginComponent {
     if (section) section.classList.add('hidden');
   }
 }
-
-// Export globally
-window.LoginComponent = LoginComponent;
 
 
