@@ -5,7 +5,7 @@
 
 import { AUTH_CONFIG } from './Config.js';
 
-export class GoogleAuth {
+class GoogleAuth {
   constructor() {
     this.initialized = false;
     this.currentUser = null;
@@ -231,6 +231,6 @@ window.GoogleAuth = googleAuth;
 // Expose AUTH_CONFIG to window for Google Sign-In library
 window.AUTH_CONFIG = AUTH_CONFIG;
 
-// Export both the class and the singleton instance
-export { GoogleAuth, googleAuth as googleAuthInstance };
+// Export only the singleton instance
+export { googleAuth as googleAuthInstance };
 
