@@ -1,8 +1,6 @@
-
 /**
  * Google Auth Module
  * Handles Google Sign-In with registration flow
- * ES6 Module Export
  */
 
 class GoogleAuth {
@@ -217,11 +215,9 @@ class GoogleAuth {
   }
 }
 
-// Export singleton instance
+// Create singleton instance
 const googleAuth = new GoogleAuth();
-export { googleAuth };
 
-// Also expose globally for non-module scripts
+// Expose globally for non-module scripts
 window.GoogleAuth = googleAuth;
-
 
