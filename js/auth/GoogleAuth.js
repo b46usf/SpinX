@@ -228,3 +228,9 @@ const googleAuth = new GoogleAuth();
 // Expose globally for non-module scripts
 window.GoogleAuth = googleAuth;
 
+// Expose AUTH_CONFIG to window for Google Sign-In library
+window.AUTH_CONFIG = AUTH_CONFIG;
+
+// Export both the class and the singleton instance
+export { GoogleAuth, googleAuth as googleAuthInstance };
+

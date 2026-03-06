@@ -3,9 +3,8 @@
  * Modular Architecture using ES6 Modules
  */
 
-// Import all modules
-import { AUTH_CONFIG } from './auth/Config.js';
-import { GoogleAuth } from './auth/GoogleAuth.js';
+// Import all modules (for type checking and IDE support)
+import { googleAuthInstance } from './auth/GoogleAuth.js';
 import { ThemeToggle } from './components/ThemeToggle.js';
 import { LoginTemplates } from './components/templates/LoginTemplates.js';
 import { RegisterTemplates } from './components/templates/RegisterTemplates.js';
@@ -16,8 +15,8 @@ import { LoginComponent } from './components/LoginComponent.js';
 import { RegisterComponent } from './components/RegisterComponent.js';
 
 // Make everything available globally for backward compatibility
-window.AUTH_CONFIG = AUTH_CONFIG;
-window.GoogleAuth = GoogleAuth;
+// Note: Don't reassign GoogleAuth here - it's already set by the GoogleAuth module
+// Note: AUTH_CONFIG is also set by GoogleAuth.js
 window.ThemeToggle = ThemeToggle;
 window.LoginTemplates = LoginTemplates;
 window.RegisterTemplates = RegisterTemplates;
@@ -32,7 +31,8 @@ window.RegisterComponent = RegisterComponent;
  */
 class App {
   constructor() {
-    this.googleAuth = GoogleAuth;
+    // Use the singleton instance from GoogleAuth module
+    this.googleAuth = googleAuthInstance;
     this.themeToggle = null;
     this.loginComponent = null;
     this.registerComponent = null;
@@ -123,5 +123,5 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // Export for potential external use
-export { App, AUTH_CONFIG, GoogleAuth, ThemeToggle };
+export { App, ThemeToggle };
 
