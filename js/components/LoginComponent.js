@@ -16,7 +16,25 @@ export class LoginComponent {
   }
 
   initEvents() {
-    // Google button is handled by googleAuth in setupLoginButton()
+    // Re-render Google button after component is rendered
+    // This is needed because innerHTML replaces the DOM elements
+    if (window.google?.accounts?.id) {
+      // Reinitialize Google Auth to render the button
+      window.google.accounts.id.renderButton(
+        document.getElementById("googleLoginBtn"),
+        { theme: 'outline', size: 'large', width: '100%' }
+      );
+    }
+    
+    // Also add click handler for the custom button as backup
+    const loginBtn = document.getElementById("googleLoginBtn");
+    if (loginBtn) {
+      loginBtn.addEventListener("click", () => {
+        if (window.google?.accounts?.id) {
+          window.google.accounts.id.prompt();
+        }
+      });
+    }
   }
 
   showError(message) {

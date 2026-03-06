@@ -23,6 +23,7 @@ class GoogleAuth {
     if (this.initialized) return;
 
     return new Promise((resolve) => {
+      // Set up the global callback FIRST before initializing GIS
       window.handleGoogleCredentialResponse = (response) => {
         this.handleCredentialResponse(response);
       };
@@ -45,9 +46,13 @@ class GoogleAuth {
 
   setupGIS() {
     if (!window.google?.accounts?.id) return;
+    
+    // Initialize with the global callback
     google.accounts.id.initialize({
       client_id: window.AUTH_CONFIG?.CLIENT_ID,
-      callback: window.handleGoogleCredentialResponse
+      callback: window.handleGoogleCredentialResponse,
+      auto_select: false,
+      cancel_on_tap_outside: false
     });
   }
 

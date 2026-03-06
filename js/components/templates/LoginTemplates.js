@@ -22,17 +22,13 @@ export const LoginTemplates = {
         <p class="text-secondary mb-6">Masuk dengan Google & coba keberuntunganmu! 🚀</p>
         
         <div class="login-card">
-          <div id="g_id_onload"
-              data-client_id="${this.getClientId()}"
-              data-context="signin"
-              data-ux_mode="popup"
-              data-callback="handleGoogleCredentialResponse"
-              data-auto_prompt="false">
-          </div>
-          <button id="googleLoginBtn" class="google-login">
+          <!-- Google Sign-In button will be rendered here by JavaScript -->
+          <div id="google-login-container">
+            <button id="googleLoginBtn" class="google-login">
               <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google">
               <span>Sign in with Google</span>
-          </button>
+            </button>
+          </div>
         </div>
         <div id="auth-error" class="hidden mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm"></div>
         <div class="mt-6 pt-6 border-t border-white/10">

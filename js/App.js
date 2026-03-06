@@ -55,19 +55,19 @@ class App {
       return;
     }
 
-    // Initialize components
-    this.initComponents();
-
-    // Initialize Google Auth
+    // Initialize Google Auth FIRST - this sets up the callback
     await this.googleAuth.init();
 
-    // Setup callback
+    // Setup callback BEFORE rendering components
     window.handleGoogleCredentialResponse = async (response) => {
       await this.googleAuth.handleCredentialResponse(response);
     };
 
     // Setup auth change handler
     this.googleAuth.onAuthChange((user, extra) => this.handleAuthChange(user, extra));
+
+    // Initialize components AFTER Google Auth is ready
+    this.initComponents();
 
     // Show login
     this.showLoginSection();
