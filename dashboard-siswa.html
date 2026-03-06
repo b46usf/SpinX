@@ -169,15 +169,15 @@
   </script>
 
   <script type="module">
-    import googleAuth from './js/auth/googleAuth.js';
+    import GoogleAuth from './js/auth/GoogleAuth.js';
 
     // Check auth
-    if (!googleAuth.isLoggedIn() || googleAuth.getRole() !== 'siswa') {
+    if (!GoogleAuth.isLoggedIn() || GoogleAuth.getRole() !== 'siswa') {
       alert('Akses ditolak. Silakan login sebagai siswa.');
       window.location.href = 'index.html';
     }
 
-    const user = googleAuth.getUser();
+    const user = GoogleAuth.getUser();
     
     // Display user info
     document.getElementById('user-avatar').src = user.picture;
@@ -192,7 +192,7 @@
 
     // Logout
     document.getElementById('logout-btn').addEventListener('click', () => {
-      googleAuth.logout();
+      GoogleAuth.logout();
     });
   </script>
 

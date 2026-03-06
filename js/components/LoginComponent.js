@@ -8,7 +8,7 @@ import { LoginTemplates } from './templates/LoginTemplates.js';
 
 export class LoginComponent {
   constructor(options = {}) {
-    this.googleAuth = options.googleAuth || window.googleAuth;
+    this.GoogleAuth = options.GoogleAuth || window.GoogleAuth;
   }
 
   render() {
@@ -16,7 +16,7 @@ export class LoginComponent {
   }
 
   initEvents() {
-    // Google button is handled by googleAuth in setupLoginButton()
+    // Google button is handled by GoogleAuth in setupLoginButton()
   }
 
   showError(message) {

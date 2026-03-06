@@ -9,10 +9,10 @@ import { RegisterHandler } from './utils/RegisterHandler.js';
 
 export class RegisterComponent {
   constructor(options = {}) {
-    this.googleAuth = options.googleAuth || window.googleAuth;
+    this.GoogleAuth = options.GoogleAuth || window.GoogleAuth;
     this.onSubmit = options.onSubmit || (() => {});
     this.onCancel = options.onCancel || (() => {});
-    this.registerHandler = new RegisterHandler({ googleAuth: this.googleAuth });
+    this.registerHandler = new RegisterHandler({ GoogleAuth: this.GoogleAuth });
   }
 
   render() {

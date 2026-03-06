@@ -200,14 +200,14 @@
   </script>
 
   <script type="module">
-    import googleAuth from './js/auth/googleAuth.js';
+    import GoogleAuth from './js/auth/GoogleAuth.js';
 
-    if (!googleAuth.isLoggedIn() || googleAuth.getRole() !== 'guru') {
+    if (!GoogleAuth.isLoggedIn() || GoogleAuth.getRole() !== 'guru') {
       alert('Akses ditolak. Silakan login sebagai guru/karyawan.');
       window.location.href = 'index.html';
     }
 
-    const user = googleAuth.getUser();
+    const user = GoogleAuth.getUser();
     document.getElementById('user-avatar').src = user.picture;
     document.getElementById('user-name').textContent = user.name;
     document.getElementById('welcome-name').textContent = user.name.split(' ')[0];
@@ -217,7 +217,7 @@
     }
 
     document.getElementById('logout-btn').addEventListener('click', () => {
-      googleAuth.logout();
+      GoogleAuth.logout();
     });
   </script>
 

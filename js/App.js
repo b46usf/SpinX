@@ -4,7 +4,7 @@
  */
 
 // Import all modules
-import googleAuth from './auth/googleAuth.js';
+import GoogleAuth from './auth/GoogleAuth.js';
 import { RoleFields } from './components/config/RoleFields.js';
 import { ErrorHandler } from './components/utils/ErrorHandler.js';
 import { RegisterHandler } from './components/utils/RegisterHandler.js';
@@ -19,7 +19,7 @@ import { RegisterComponent } from './components/RegisterComponent.js';
  */
 class App {
   constructor() {
-    this.googleAuth = googleAuth;
+    this.GoogleAuth = GoogleAuth;
     this.themeToggle = null;
     this.loginComponent = null;
     this.registerComponent = null;
@@ -37,8 +37,8 @@ class App {
     this.initTheme();
 
     // Check if already logged in
-    if (this.googleAuth.isLoggedIn()) {
-      this.googleAuth.routeToDashboard(this.googleAuth.getRole());
+    if (this.GoogleAuth.isLoggedIn()) {
+      this.GoogleAuth.routeToDashboard(this.GoogleAuth.getRole());
       return;
     }
 
@@ -46,15 +46,15 @@ class App {
     this.initComponents();
 
     // Initialize Google Auth
-    await this.googleAuth.init();
+    await this.GoogleAuth.init();
 
     // Setup callback
     window.handleGoogleCredentialResponse = async (response) => {
-      await this.googleAuth.handleCredentialResponse(response);
+      await this.GoogleAuth.handleCredentialResponse(response);
     };
 
     // Setup auth change handler
-    this.googleAuth.onAuthChange((user, extra) => this.handleAuthChange(user, extra));
+    this.GoogleAuth.onAuthChange((user, extra) => this.handleAuthChange(user, extra));
 
     // Show login
     this.showLoginSection();
@@ -68,11 +68,11 @@ class App {
   }
 
   initComponents() {
-    this.loginComponent = new LoginComponent({ googleAuth: this.googleAuth });
+    this.loginComponent = new LoginComponent({ GoogleAuth: this.GoogleAuth });
     this.registerComponent = new RegisterComponent({
-      googleAuth: this.googleAuth,
+      GoogleAuth: this.GoogleAuth,
       onSubmit: async (data) => {
-        const result = await this.googleAuth.register(data);
+        const result = await this.GoogleAuth.register(data);
         if (!result.success) this.registerComponent.showError(result.message);
       },
       onCancel: () => this.showLoginSection()

@@ -218,10 +218,10 @@ class GoogleAuth {
 }
 
 // Export singleton instance
-const googleAuth = new GoogleAuth();
-export default googleAuth;
+const GoogleAuth = new GoogleAuth();
+export default GoogleAuth;
 
 // Also expose globally for non-module scripts
-window.googleAuth = googleAuth;
+window.GoogleAuth = GoogleAuth;
 
 

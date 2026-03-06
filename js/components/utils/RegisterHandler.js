@@ -8,7 +8,7 @@ import { ErrorHandler } from './ErrorHandler.js';
 
 export class RegisterHandler {
   constructor(options = {}) {
-    this.googleAuth = options.googleAuth || window.googleAuth;
+    this.GoogleAuth = options.GoogleAuth || window.GoogleAuth;
   }
 
   toggleFields() {
@@ -34,7 +34,7 @@ export class RegisterHandler {
     this.showNISStatus('Memeriksa NIS...', 'loading');
 
     try {
-      const response = await fetch(this.googleAuth?.getScriptUrl(), {
+      const response = await fetch(this.GoogleAuth?.getScriptUrl(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'verifyNIS', nis })
