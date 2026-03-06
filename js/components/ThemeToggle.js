@@ -1,9 +1,10 @@
+
 /**
  * Theme Toggle Component
  * Handles dark/light theme switching
  */
 
-export class ThemeToggle {
+class ThemeToggle {
   constructor(options = {}) {
     this.iconId = options.iconId || 'theme-icon';
     this.themeKey = options.themeKey || 'theme';
@@ -44,3 +45,8 @@ export class ThemeToggle {
     if (icon) icon.className = savedTheme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
   }
 }
+
+// Export globally
+window.ThemeToggle = ThemeToggle;
+
+

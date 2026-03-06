@@ -41,7 +41,7 @@ class GoogleAuth {
   setupGIS() {
     if (!window.google?.accounts?.id) return;
     google.accounts.id.initialize({
-      client_id: window.AUTH_CONFIG.CLIENT_ID,
+      client_id: window.AUTH_CONFIG?.CLIENT_ID,
       callback: window.handleGoogleCredentialResponse
     });
   }
@@ -107,7 +107,7 @@ class GoogleAuth {
         device: 'web',
         ip: ''
       };
-      const res = await fetch(window.AUTH_CONFIG.API_URL, { method: 'POST', body: JSON.stringify(payload) });
+      const res = await fetch(window.AUTH_CONFIG?.API_URL, { method: 'POST', body: JSON.stringify(payload) });
       return await res.json();
     } catch (error) {
       console.error('Backend validation failed:', error);
@@ -128,7 +128,7 @@ class GoogleAuth {
         sekolah: userData.sekolah || '',
         foto: this.googleUser.picture || ''
       };
-      const res = await fetch(window.AUTH_CONFIG.API_URL, { method: 'POST', body: JSON.stringify(payload) });
+      const res = await fetch(window.AUTH_CONFIG?.API_URL, { method: 'POST', body: JSON.stringify(payload) });
       const data = await res.json();
       
       if (data.success) {
@@ -170,8 +170,8 @@ class GoogleAuth {
     else { this.showError('Role tidak valid'); window.location.href = 'index.html'; }
   }
 
-  getScriptUrl() { return window.AUTH_CONFIG.API_URL; }
-  getClientId() { return window.AUTH_CONFIG.CLIENT_ID; }
+  getScriptUrl() { return window.AUTH_CONFIG?.API_URL; }
+  getClientId() { return window.AUTH_CONFIG?.CLIENT_ID; }
 
   isLoggedIn() {
     const user = localStorage.getItem('user');
@@ -218,10 +218,10 @@ class GoogleAuth {
 }
 
 // Export singleton instance
-const GoogleAuth = new GoogleAuth();
-export default GoogleAuth;
+const googleAuth = new GoogleAuth();
+export { googleAuth };
 
 // Also expose globally for non-module scripts
-window.GoogleAuth = GoogleAuth;
+window.GoogleAuth = googleAuth;
 
 

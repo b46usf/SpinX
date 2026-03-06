@@ -1,14 +1,12 @@
+
 /**
  * Register Form Handler
  * Handles form logic, validation, and NIS verification
  */
 
-import { RoleFields } from '../config/RoleFields.js';
-import { ErrorHandler } from './ErrorHandler.js';
-
-export class RegisterHandler {
+class RegisterHandler {
   constructor(options = {}) {
-    this.GoogleAuth = options.GoogleAuth || window.GoogleAuth;
+    this.googleAuth = options.googleAuth || window.GoogleAuth;
   }
 
   toggleFields() {
@@ -34,7 +32,7 @@ export class RegisterHandler {
     this.showNISStatus('Memeriksa NIS...', 'loading');
 
     try {
-      const response = await fetch(this.GoogleAuth?.getScriptUrl(), {
+      const response = await fetch(this.googleAuth?.getScriptUrl(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'verifyNIS', nis })
@@ -119,4 +117,8 @@ export class RegisterHandler {
     document.getElementById('cancel-register')?.addEventListener('click', () => { this.reset(); onCancel(); });
   }
 }
+
+// Export globally
+window.RegisterHandler = RegisterHandler;
+
 

@@ -8,25 +8,60 @@
   <link rel="icon" href="data:,">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="css/style.css">
+  <!-- Font Awesome for icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 
 <body class="min-h-screen flex items-center justify-center p-4">
+
+  <!-- Theme Toggle Button (Fixed Position) -->
   <div id="theme-toggle-container"></div>
-  
-  <main id="app" class="w-full max-w-md">
-    <div class="glass-card p-8 text-center">
+
+  <!-- Main App Container - Components will be rendered here by App.js -->
+  <main id="app">
+    <!-- Loading state while components initialize -->
+    <div class="glass-card p-8 w-full max-w-md text-center">
       <i class="fas fa-spinner fa-spin text-4xl text-indigo-400"></i>
       <p class="text-secondary mt-4">Memuat aplikasi...</p>
     </div>
   </main>
 
-  <!-- Load config first (global) -->
+  <!-- Load scripts in proper order (modular architecture) -->
+  
+  <!-- 1. Config first -->
   <script src="js/auth/Config.js"></script>
   
-  <!-- App Scripts - Modular ES6 Modules -->
-  <script type="module" src="js/App.js" defer></script>
+  <!-- 2. Theme component -->
+  <script src="js/components/ThemeToggle.js"></script>
+  
+  <!-- 3. Templates -->
+  <script src="js/components/templates/LoginTemplates.js"></script>
+  <script src="js/components/templates/RegisterTemplates.js"></script>
+  
+  <!-- 4. Utils -->
+  <script src="js/components/utils/ErrorHandler.js"></script>
+  <script src="js/components/config/RoleFields.js"></script>
+  <script src="js/components/utils/RegisterHandler.js"></script>
+  
+  <!-- 5. Components -->
+  <script src="js/components/LoginComponent.js"></script>
+  <script src="js/components/RegisterComponent.js"></script>
+  
+  <!-- 6. Auth -->
+  <script src="js/auth/GoogleAuth.js"></script>
+  
+  <!-- 7. Main App -->
+  <script src="js/App.js"></script>
+
+  <!-- 8. Initialize app -->
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      const app = new App();
+      await app.init();
+    });
+  </script>
+
 </body>
 </html>
 

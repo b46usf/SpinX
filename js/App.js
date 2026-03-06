@@ -1,25 +1,12 @@
+
 /**
  * Main Application Entry Point
- * Modular ES6 Module Architecture
+ * Modular Architecture - Using global objects
  */
 
-// Import all modules
-import GoogleAuth from './auth/googleAuth.js';
-import { RoleFields } from './components/config/RoleFields.js';
-import { ErrorHandler } from './components/utils/ErrorHandler.js';
-import { RegisterHandler } from './components/utils/RegisterHandler.js';
-import { LoginTemplates } from './components/templates/LoginTemplates.js';
-import { RegisterTemplates } from './components/templates/RegisterTemplates.js';
-import { ThemeToggle } from './components/ThemeToggle.js';
-import { LoginComponent } from './components/LoginComponent.js';
-import { RegisterComponent } from './components/RegisterComponent.js';
-
-/**
- * App - Main Application Orchestrator
- */
 class App {
   constructor() {
-    this.GoogleAuth = GoogleAuth;
+    this.googleAuth = window.GoogleAuth;
     this.themeToggle = null;
     this.loginComponent = null;
     this.registerComponent = null;
@@ -37,8 +24,8 @@ class App {
     this.initTheme();
 
     // Check if already logged in
-    if (this.GoogleAuth.isLoggedIn()) {
-      this.GoogleAuth.routeToDashboard(this.GoogleAuth.getRole());
+    if (this.googleAuth.isLoggedIn()) {
+      this.googleAuth.routeToDashboard(this.googleAuth.getRole());
       return;
     }
 
@@ -46,15 +33,15 @@ class App {
     this.initComponents();
 
     // Initialize Google Auth
-    await this.GoogleAuth.init();
+    await this.googleAuth.init();
 
     // Setup callback
     window.handleGoogleCredentialResponse = async (response) => {
-      await this.GoogleAuth.handleCredentialResponse(response);
+      await this.googleAuth.handleCredentialResponse(response);
     };
 
     // Setup auth change handler
-    this.GoogleAuth.onAuthChange((user, extra) => this.handleAuthChange(user, extra));
+    this.googleAuth.onAuthChange((user, extra) => this.handleAuthChange(user, extra));
 
     // Show login
     this.showLoginSection();
@@ -68,11 +55,11 @@ class App {
   }
 
   initComponents() {
-    this.loginComponent = new LoginComponent({ GoogleAuth: this.GoogleAuth });
+    this.loginComponent = new LoginComponent({ googleAuth: this.googleAuth });
     this.registerComponent = new RegisterComponent({
-      GoogleAuth: this.GoogleAuth,
+      googleAuth: this.googleAuth,
       onSubmit: async (data) => {
-        const result = await this.GoogleAuth.register(data);
+        const result = await this.googleAuth.register(data);
         if (!result.success) this.registerComponent.showError(result.message);
       },
       onCancel: () => this.showLoginSection()
@@ -82,7 +69,7 @@ class App {
   handleAuthChange(user, extra) {
     if (user) {
       // Logged in - redirect handled by module
-    } else if (extra?.needRegister) {
+    } else if (extra && extra.needRegister) {
       this.showRegisterSection(extra.googleUser);
     } else {
       this.showLoginSection();
@@ -103,9 +90,4 @@ class App {
   }
 }
 
-// Initialize app when DOM is ready
-document.addEventListener('DOMContentLoaded', async () => {
-  const app = new App();
-  await app.init();
-});
 

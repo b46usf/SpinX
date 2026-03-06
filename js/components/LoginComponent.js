@@ -4,11 +4,9 @@
  * Handles login UI rendering and events
  */
 
-import { LoginTemplates } from './templates/LoginTemplates.js';
-
-export class LoginComponent {
+class LoginComponent {
   constructor(options = {}) {
-    this.GoogleAuth = options.GoogleAuth || window.GoogleAuth;
+    this.googleAuth = options.googleAuth || window.GoogleAuth;
   }
 
   render() {
@@ -16,7 +14,7 @@ export class LoginComponent {
   }
 
   initEvents() {
-    // Google button is handled by GoogleAuth in setupLoginButton()
+    // Google button is handled by googleAuth in setupLoginButton()
   }
 
   showError(message) {
@@ -40,5 +38,8 @@ export class LoginComponent {
     if (section) section.classList.add('hidden');
   }
 }
+
+// Export globally
+window.LoginComponent = LoginComponent;
 
 

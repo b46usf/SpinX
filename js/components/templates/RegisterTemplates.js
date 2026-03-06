@@ -1,9 +1,10 @@
+
 /**
  * Register Form Templates
  * HTML templates for register form fields
  */
 
-export const RegisterTemplates = {
+const RegisterTemplates = {
   roleField() {
     return `
       <div class="input-group">
@@ -81,4 +82,8 @@ export const RegisterTemplates = {
       </div>`;
   }
 };
+
+// Export globally
+window.RegisterTemplates = RegisterTemplates;
+
 
