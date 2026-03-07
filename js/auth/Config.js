@@ -12,7 +12,7 @@ export const CLIENT_ID = '88663261491-iermq433pje0kinqderrp9lbar5k6fsk.apps.goog
 export const GAS_URL = 'https://script.google.com/macros/s/AKfycby-CC0Kvio5cJsA4n4i8-h1XGdAQweITDzMfScw-08u4lufi-CGfPA0kIoxz4JX1JkR/exec';
 
 // API endpoint - use Vercel proxy to solve CORS
-export const API_URL = '/api/proxy';
+export const API_URL = '/js/api/proxy';
 
 // Export all config as single object
 export const AUTH_CONFIG = {
