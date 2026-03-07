@@ -146,72 +146,25 @@ class GoogleAuth {
         ip: ''
       };
       
+      // Try direct - some browsers handle CORS better
       const res = await fetch(window.AUTH_CONFIG?.API_URL, {
         method: 'POST',
-        body: JSON.stringify(payload),
-        headers: {
-          'Content-Type': 'text/plain;charset=utf-8'
-        }
-      });
-      
-      // Check content type first
-      const contentType = res.headers.get('content-type');
-      
-      // If response is HTML (error page), return error
-      if (contentType && contentType.includes('text/html')) {
-        const text = await res.text();
-        console.error('Backend returned HTML (likely error):', text.substring(0, 200));
-        return { 
-          success: false, 
-          message: 'Server error. Please redeploy the backend.' 
-        };
-      }
-      
-      const text = await res.text();
-      
-      // Try to parse as JSON
-      try {
-        const data = JSON.parse(text);
-        return data;
-      } catch (parseError) {
-        console.error('Failed to parse response:', text.substring(0, 200));
-        return { 
-          success: false, 
-          message: 'Invalid server response' 
-        };
-      }
-    } catch (error) {
-      console.log('CORS approach 1 failed:', error.message);
-      return null;
-    }
-  }
-  
-  async tryValidateTextPlain(userInfo) {
-    try {
-      const payload = {
-        action: 'login',
-        email: userInfo.email,
-        name: userInfo.name,
-        sub: userInfo.sub,
-        device: 'web',
-        ip: ''
-      };
-      
-      const res = await fetch(window.AUTH_CONFIG?.API_URL, {
-        method: 'POST',
-        body: JSON.stringify(payload),
-        headers: {
-          'Content-Type': 'text/plain;charset=utf-8'
-        }
+        body: JSON.stringify(payload)
       });
       
       const text = await res.text();
       const data = JSON.parse(text);
       return data;
+      
     } catch (error) {
-      console.log('CORS approach 2 failed:', error.message);
+      console.log('Direct approach failed:', error.message);
       return null;
     }
+  }
+  
+  async tryValidateTextPlain(userInfo) {
+    // Skip this approach since proxy handles it
+    return null;
   }
 
   async register(userData) {
