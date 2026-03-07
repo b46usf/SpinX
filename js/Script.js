@@ -159,16 +159,31 @@ async function spinWheel() {
 
   try {
     const payload = {
+      action: 'spin',
       wa: wa,
       cid: getCustomerId()
     };
 
     const res = await fetch(getApiUrl(), {
       method: 'POST',
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      redirect: 'follow',
+      mode: 'cors',
+      headers: {
+        'Content-Type': 'text/plain;charset=utf-8'
+      }
     });
 
-    const data = await res.json();
+    const text = await res.text();
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (parseError) {
+      console.error('Failed to parse response:', text);
+      alert('Server error');
+      STATE.spinning = false;
+      return;
+    }
 
     if (data.error) {
       alert('Sudah main hari ini');
@@ -180,7 +195,7 @@ async function spinWheel() {
 
   } catch (err) {
     console.error(err);
-    alert('Server error');
+    alert('Server error. Periksa jaringan Anda.');
     STATE.spinning = false;
   }
 }

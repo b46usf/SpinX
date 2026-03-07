@@ -40,13 +40,24 @@ class AuthApi {
       
       const res = await fetch(this.getApiUrl(), {
         method: 'POST',
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        redirect: 'follow',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8'
+        }
       });
 
-      return await res.json();
+      const text = await res.text();
+      try {
+        return JSON.parse(text);
+      } catch (parseError) {
+        console.error('Failed to parse response:', text);
+        return { success: false, message: 'Invalid server response' };
+      }
     } catch (error) {
       console.error(`API call failed: ${action}`, error);
-      return { success: false, message: 'Koneksi gagal' };
+      return { success: false, message: 'Koneksi gagal. Periksa jaringan Anda.' };
     }
   }
 

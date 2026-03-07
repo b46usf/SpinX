@@ -48,11 +48,14 @@ class GoogleAuth {
     if (!window.google?.accounts?.id) return;
     
     // Initialize with the global callback
+    // Disable FedCM for better COOP compatibility
     google.accounts.id.initialize({
       client_id: window.AUTH_CONFIG?.CLIENT_ID,
       callback: window.handleGoogleCredentialResponse,
       auto_select: false,
-      cancel_on_tap_outside: false
+      cancel_on_tap_outside: false,
+      use_fedcm_for_prompt: false,  // Disable FedCM to avoid COOP issues
+      use_fedcm_for_auto_select: false
     });
   }
 
@@ -117,11 +120,29 @@ class GoogleAuth {
         device: 'web',
         ip: ''
       };
-      const res = await fetch(window.AUTH_CONFIG?.API_URL, { method: 'POST', body: JSON.stringify(payload) });
-      return await res.json();
+      
+      // Use no-redirect mode to avoid CORS issues with Google Apps Script redirect
+      const res = await fetch(window.AUTH_CONFIG?.API_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        redirect: 'follow',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8'
+        }
+      });
+      
+      // Get response text first, then parse
+      const text = await res.text();
+      try {
+        return JSON.parse(text);
+      } catch (parseError) {
+        console.error('Failed to parse response:', text);
+        return { success: false, message: 'Invalid server response' };
+      }
     } catch (error) {
       console.error('Backend validation failed:', error);
-      return { success: false, message: 'Koneksi gagal' };
+      return { success: false, message: 'Koneksi gagal. Periksa jaringan Anda.' };
     }
   }
 
@@ -138,8 +159,25 @@ class GoogleAuth {
         sekolah: userData.sekolah || '',
         foto: this.googleUser.picture || ''
       };
-      const res = await fetch(window.AUTH_CONFIG?.API_URL, { method: 'POST', body: JSON.stringify(payload) });
-      const data = await res.json();
+      
+      const res = await fetch(window.AUTH_CONFIG?.API_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        redirect: 'follow',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8'
+        }
+      });
+      
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (parseError) {
+        console.error('Failed to parse response:', text);
+        return { success: false, message: 'Invalid server response' };
+      }
       
       if (data.success) {
         this.currentUser = {
@@ -162,7 +200,7 @@ class GoogleAuth {
       return { success: false, message: data.message };
     } catch (error) {
       console.error('Registration failed:', error);
-      return { success: false, message: 'Koneksi gagal' };
+      return { success: false, message: 'Koneksi gagal. Periksa jaringan Anda.' };
     }
   }
 
