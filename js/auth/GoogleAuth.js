@@ -146,15 +146,23 @@ class GoogleAuth {
         ip: ''
       };
       
-      // Try direct - some browsers handle CORS better
       const res = await fetch(window.AUTH_CONFIG?.API_URL, {
         method: 'POST',
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        redirect: 'follow',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8'
+        }
       });
       
       const text = await res.text();
-      const data = JSON.parse(text);
-      return data;
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        console.log('Failed to parse response:', text);
+        return null;
+      }
       
     } catch (error) {
       console.log('Direct approach failed:', error.message);
@@ -163,8 +171,37 @@ class GoogleAuth {
   }
   
   async tryValidateTextPlain(userInfo) {
-    // Skip this approach since proxy handles it
-    return null;
+    try {
+      const payload = {
+        action: 'login',
+        email: userInfo.email,
+        name: userInfo.name,
+        sub: userInfo.sub,
+        device: 'web',
+        ip: ''
+      };
+      
+      const res = await fetch(window.AUTH_CONFIG?.API_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        redirect: 'follow',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'text/plain'
+        }
+      });
+      
+      const text = await res.text();
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        return null;
+      }
+      
+    } catch (error) {
+      console.log('Text plain approach failed:', error.message);
+      return null;
+    }
   }
 
   async register(userData) {
