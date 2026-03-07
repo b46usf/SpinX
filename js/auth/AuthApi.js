@@ -28,7 +28,7 @@ class AuthApi {
     if (typeof AUTH_CONFIG !== 'undefined' && AUTH_CONFIG.CLIENT_ID) {
       return AUTH_CONFIG.CLIENT_ID;
     }
-    return '88663261491-uugvuvfgrq20ftg481k1l6evouh98uon.apps.googleusercontent.com';
+    return '88663261491-iermq433pje0kinqderrp9lbar5k6fsk.apps.googleusercontent.com';
   }
 
   /**
