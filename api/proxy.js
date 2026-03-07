@@ -1,14 +1,11 @@
 /**
  * Vercel API Proxy for Google Apps Script
  * Solves CORS issues by calling GAS from server-side
- * Note: Uses global AUTH_CONFIG which must be loaded before this runs
+ * Note: Uses environment variable for GAS_URL
  */
 
-// Note: Cannot use ES6 imports in Vercel API routes without additional config
-// AUTH_CONFIG is exposed to window by Config.js, but we need it server-side
-// For now, we'll use a hardcoded fallback or environment variable
-
-export default async function handler(req, res) {
+// Vercel API route - use module.exports for Vercel
+module.exports = async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -30,7 +27,7 @@ export default async function handler(req, res) {
     
     // Get GAS URL from environment variable or use default
     // In production, set VERCEL_GAS_URL in Vercel project settings
-    const GAS_URL = process.env.GAS_URL || 'https://script.google.com/macros/s/AKfycby-CC0Kvio5cJsA4n4i8-h1XGdAQweITDzMfScw-08u4lufi-CGfPA0kIoxz4JX1JkR/exec';
+    const GAS_URL = process.env.GAS_URL || process.env.GAS_URL || 'https://script.google.com/macros/s/AKfycby-CC0Kvio5cJsA4n4i8-h1XGdAQweITDzMfScw-08u4lufi-CGfPA0kIoxz4JX1JkR/exec';
     
     const payload = JSON.stringify({ action, ...data });
     
@@ -56,5 +53,5 @@ export default async function handler(req, res) {
     console.error('Proxy error:', error);
     return res.status(500).json({ error: 'Internal server error', message: error.message });
   }
-}
+};
 
