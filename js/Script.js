@@ -9,7 +9,7 @@ const getApiUrl = () => {
     return AUTH_CONFIG.API_URL;
   }
   console.warn('AUTH_CONFIG not found, using fallback API URL');
-  return 'https://script.google.com/macros/s/AKfycbzp8PJhJp7Mw6oDIBEjhGzO3qfwLU64rkOG86ZfTL8/dev';
+  return 'https://script.google.com/macros/s/AKfycby-CC0Kvio5cJsA4n4i8-h1XGdAQweITDzMfScw-08u4lufi-CGfPA0kIoxz4JX1JkR/exec';
 };
 
 // Wheel Configuration
