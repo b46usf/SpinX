@@ -1,38 +1,35 @@
 /**
  * Auth API Service
  * Handles all backend API calls
- * Uses single source from AUTH_CONFIG in Config.js
+ * SINGLE SOURCE - Import this for all API calls
+ * Uses AUTH_CONFIG from Config.js - single source of truth
  */
+
+import { AUTH_CONFIG } from './Config.js';
 
 class AuthApi {
   constructor() {
-    // API URL will be taken from AUTH_CONFIG
+    // Already initialized via AUTH_CONFIG import
   }
 
   /**
    * Get API URL (from config)
    */
   getApiUrl() {
-    if (typeof AUTH_CONFIG !== 'undefined' && AUTH_CONFIG.API_URL) {
-      return AUTH_CONFIG.API_URL;
-    }
-    // Fallback - should not happen if Config.js is loaded
-    console.warn('AUTH_CONFIG not found, using fallback API URL');
-    return '/api/proxy';
+    return AUTH_CONFIG.API_URL;
   }
 
   /**
    * Get Client ID (from config)
    */
   getClientId() {
-    if (typeof AUTH_CONFIG !== 'undefined' && AUTH_CONFIG.CLIENT_ID) {
-      return AUTH_CONFIG.CLIENT_ID;
-    }
-    return '88663261491-iermq433pje0kinqderrp9lbar5k6fsk.apps.googleusercontent.com';
+    return AUTH_CONFIG.CLIENT_ID;
   }
 
   /**
    * Generic API call
+   * @param {string} action - Action name
+   * @param {Object} data - Additional data
    */
   async call(action, data = {}) {
     try {
@@ -61,8 +58,11 @@ class AuthApi {
     }
   }
 
+  // ==================== Auth Actions ====================
+
   /**
    * Login user
+   * @param {Object} userInfo - User info from Google
    */
   async login(userInfo) {
     return this.call('login', {
@@ -76,6 +76,8 @@ class AuthApi {
 
   /**
    * Register new user
+   * @param {Object} googleUser - Google user info
+   * @param {Object} userData - Registration data
    */
   async register(googleUser, userData) {
     return this.call('register', {
@@ -92,6 +94,7 @@ class AuthApi {
 
   /**
    * Verify NIS
+   * @param {string} nis - NIS number
    */
   async verifyNIS(nis) {
     return this.call('verifyNIS', { nis });
@@ -99,6 +102,8 @@ class AuthApi {
 
   /**
    * Generate OTP
+   * @param {string} userId - User ID
+   * @param {string} noWa - WhatsApp number
    */
   async generateOTP(userId, noWa) {
     return this.call('generateOTP', { userId, noWa });
@@ -106,6 +111,9 @@ class AuthApi {
 
   /**
    * Verify OTP
+   * @param {string} otpId - OTP ID
+   * @param {string} otpCode - OTP code
+   * @param {string} userId - User ID
    */
   async verifyOTP(otpId, otpCode, userId) {
     return this.call('verifyOTP', { otpId, otpCode, userId });
@@ -113,12 +121,32 @@ class AuthApi {
 
   /**
    * Get user profile
+   * @param {string} userId - User ID
    */
   async getProfile(userId) {
     return this.call('getProfile', { userId });
   }
+
+  // ==================== Game Actions ====================
+
+  /**
+   * Spin the wheel
+   * @param {string} wa - WhatsApp number
+   * @param {string} cid - Customer ID
+   */
+  async spin(wa, cid) {
+    return this.call('spin', { wa, cid });
+  }
 }
 
+// Create singleton instance
+const authApi = new AuthApi();
+
 // Export singleton
-window.AuthApi = new AuthApi();
+export { authApi };
+
+// Also expose to window for backward compatibility
+if (typeof window !== 'undefined') {
+  window.AuthApi = authApi;
+}
 

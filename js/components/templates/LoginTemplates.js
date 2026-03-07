@@ -4,9 +4,12 @@
  * HTML templates for login form
  */
 
+import { AUTH_CONFIG } from '../../auth/Config.js';
+
 export const LoginTemplates = {
   getClientId() {
-    return window.AUTH_CONFIG?.CLIENT_ID || '88663261491-uugvuvfgrq20ftg481k1l6evouh98uon.apps.googleusercontent.com';
+    // Use AUTH_CONFIG from single source
+    return AUTH_CONFIG?.CLIENT_ID || window.AUTH_CONFIG?.CLIENT_ID || '';
   },
 
   loginSection() {

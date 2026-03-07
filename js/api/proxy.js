@@ -1,7 +1,10 @@
 /**
  * Vercel API Proxy for Google Apps Script
  * Solves CORS issues by calling GAS from server-side
+ * Uses GAS_URL from AUTH_CONFIG - single source of truth
  */
+
+import { AUTH_CONFIG } from '../auth/Config.js';
 
 export default async function handler(req, res) {
   // Enable CORS
@@ -23,7 +26,8 @@ export default async function handler(req, res) {
   try {
     const { action, ...data } = req.body;
     
-    const GAS_URL = 'https://script.google.com/macros/s/AKfycby-CC0Kvio5cJsA4n4i8-h1XGdAQweITDzMfScw-08u4lufi-CGfPA0kIoxz4JX1JkR/exec';
+    // Use GAS_URL from AUTH_CONFIG - single source
+    const GAS_URL = AUTH_CONFIG.GAS_URL;
     
     const payload = JSON.stringify({ action, ...data });
     

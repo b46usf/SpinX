@@ -6,6 +6,7 @@
 
 import { RoleFields } from '../config/RoleFields.js';
 import { ErrorHandler } from '../utils/ErrorHandler.js';
+import { authApi } from '../../auth/AuthApi.js';
 
 export class RegisterHandler {
   constructor(options = {}) {
@@ -35,12 +36,8 @@ export class RegisterHandler {
     this.showNISStatus('Memeriksa NIS...', 'loading');
 
     try {
-      const response = await fetch(this.googleAuth?.getScriptUrl(), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'verifyNIS', nis })
-      });
-      const result = await response.json();
+      // Use AuthApi for NIS verification - single source of truth
+      const result = await authApi.verifyNIS(nis);
       
       if (result.success && result.found) {
         document.getElementById('nama').value = result.nama || '';

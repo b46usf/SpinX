@@ -1,9 +1,11 @@
 /**
  * Google Auth Module
  * Handles Google Sign-In with registration flow
+ * Uses AuthApi for all backend calls - single source
  */
 
 import { AUTH_CONFIG } from './Config.js';
+import { authApi } from './AuthApi.js';
 
 class GoogleAuth {
   constructor() {
@@ -83,7 +85,8 @@ class GoogleAuth {
         sub: userInfo.sub
       };
 
-      const authResult = await this.validateWithBackend(userInfo);
+      // Use AuthApi for backend validation
+      const authResult = await authApi.login(userInfo);
       
       if (!authResult.success) {
         this.showError(authResult.message || 'Login gagal');
@@ -115,177 +118,29 @@ class GoogleAuth {
     }
   }
 
-  async validateWithBackend(userInfo) {
-    // Try multiple approaches to handle GAS CORS issues
-    
-    // Approach 1: Try with regular CORS first
-    const result1 = await this.tryValidateCORS(userInfo);
-    if (result1) return result1;
-    
-    // Approach 2: Try with text/plain content type
-    const result2 = await this.tryValidateTextPlain(userInfo);
-    if (result2) return result2;
-    
-    // Approach 3: Try with no-cors mode (will make request but can't read response)
-    const result3 = await this.tryValidateNoCORS(userInfo);
-    if (result3) return result3;
-    
-    // Approach 4: Last resort - assume new user (CORS blocked but request may have gone through)
-    console.warn('All CORS approaches failed, treating as new user');
-    return { 
-      success: true, 
-      registered: false,
-      message: 'Silakan lakukan registrasi'
-    };
-  }
-  
-  async tryValidateCORS(userInfo) {
-    try {
-      const payload = {
-        action: 'login',
-        email: userInfo.email,
-        name: userInfo.name,
-        sub: userInfo.sub,
-        device: 'web',
-        ip: ''
-      };
-      
-const res = await fetch(window.AUTH_CONFIG?.API_URL || '/api/proxy', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-        redirect: 'follow',
-        mode: 'cors',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      const data = await res.json();
-      return data;
-      
-    } catch (error) {
-      console.log('Direct approach failed:', error.message);
-      return null;
-    }
-  }
-  
-  async tryValidateTextPlain(userInfo) {
-    try {
-      const payload = {
-        action: 'login',
-        email: userInfo.email,
-        name: userInfo.name,
-        sub: userInfo.sub,
-        device: 'web',
-        ip: ''
-      };
-      
-      const res = await fetch(window.AUTH_CONFIG?.API_URL, {
-        method: 'POST',
-        body: JSON.stringify(payload),
-        redirect: 'follow',
-        mode: 'cors',
-        headers: {
-          'Content-Type': 'text/plain'
-        }
-      });
-      
-      const text = await res.text();
-      try {
-        return JSON.parse(text);
-      } catch (e) {
-        return null;
-      }
-      
-    } catch (error) {
-      console.log('Text plain approach failed:', error.message);
-      return null;
-    }
-  }
-  
-  async tryValidateNoCORS(userInfo) {
-    // Use no-cors mode - request goes through but we can't read response
-    // This is a last resort that may work on some browsers
-    try {
-      const payload = {
-        action: 'login',
-        email: userInfo.email,
-        name: userInfo.name,
-        sub: userInfo.sub,
-        device: 'web',
-        ip: ''
-      };
-      
-      // Use no-cors mode - makes an opaque request
-      await fetch(window.AUTH_CONFIG?.API_URL, {
-        method: 'POST',
-        body: JSON.stringify(payload),
-        mode: 'no-cors'
-      });
-      
-      // With no-cors, we can't read the response, but request was sent
-      // Assume it's a new user - they'll register
-      return {
-        success: true,
-        registered: false,
-        message: 'Silakan lakukan registrasi'
-      };
-      
-    } catch (error) {
-      console.log('No-cors approach failed:', error.message);
-      return null;
-    }
-  }
-
   async register(userData) {
-    try {
-      const payload = {
-        action: 'register',
-        email: this.googleUser.email,
-        name: this.googleUser.name,
-        sub: this.googleUser.sub,
-        role: userData.role,
-        noWa: userData.noWa,
-        kelas: userData.kelas || '',
-        sekolah: userData.sekolah || '',
-        foto: this.googleUser.picture || ''
+    // Use AuthApi for registration
+    const result = await authApi.register(this.googleUser, userData);
+    
+    if (result.success) {
+      this.currentUser = {
+        userId: result.user.userId,
+        email: result.user.email,
+        name: result.user.name,
+        role: result.user.role,
+        noWa: result.user.noWa,
+        status: result.user.status,
+        picture: this.googleUser.picture
       };
-      
-      const res = await fetch(window.AUTH_CONFIG?.API_URL || '/api/proxy', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-        redirect: 'follow',
-        mode: 'cors',
-        headers: {
-          'Content-Type': 'application/json'
-        }
+      this.triggerCallbacks(null, {
+        needOTPVerification: true,
+        userId: result.user.userId,
+        noWa: result.user.noWa,
+        googleUser: this.googleUser
       });
-      
-      const data = await res.json();
-      
-      if (data.success) {
-        this.currentUser = {
-          userId: data.user.userId,
-          email: data.user.email,
-          name: data.user.name,
-          role: data.user.role,
-          noWa: data.user.noWa,
-          status: data.user.status,
-          picture: this.googleUser.picture
-        };
-        this.triggerCallbacks(null, {
-          needOTPVerification: true,
-          userId: data.user.userId,
-          noWa: data.user.noWa,
-          googleUser: this.googleUser
-        });
-        return { success: true };
-      }
-      return { success: false, message: data.message };
-    } catch (error) {
-      console.error('Registration failed:', error);
-      return { success: false, message: 'Koneksi gagal. Periksa jaringan Anda.' };
+      return { success: true };
     }
+    return { success: false, message: result.message };
   }
 
   parseJwt(token) {
@@ -302,8 +157,8 @@ const res = await fetch(window.AUTH_CONFIG?.API_URL || '/api/proxy', {
     else { this.showError('Role tidak valid'); window.location.href = 'index.html'; }
   }
 
-  getScriptUrl() { return window.AUTH_CONFIG?.API_URL; }
-  getClientId() { return window.AUTH_CONFIG?.CLIENT_ID; }
+  getScriptUrl() { return AUTH_CONFIG.API_URL; }
+  getClientId() { return AUTH_CONFIG.CLIENT_ID; }
 
   isLoggedIn() {
     const user = localStorage.getItem('user');

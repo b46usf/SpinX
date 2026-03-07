@@ -1,16 +1,11 @@
 /**
  * Game Script Module
  * Spin Diskon UMKM - Main game logic
+ * Uses AuthApi for all API calls - single source of truth
  */
 
-// API Configuration - Use single source from AUTH_CONFIG
-const getApiUrl = () => {
-  if (typeof AUTH_CONFIG !== 'undefined' && AUTH_CONFIG.API_URL) {
-    return AUTH_CONFIG.API_URL;
-  }
-  console.warn('AUTH_CONFIG not found, using fallback API URL');
-  return '/api/proxy';
-};
+// Import AuthApi for consistent API calls
+import { authApi } from './auth/AuthApi.js';
 
 // Wheel Configuration
 const CONFIG = {
@@ -138,6 +133,7 @@ function startGame() {
 
 /**
  * Spin the wheel
+ * Uses AuthApi for consistent API calls
  */
 async function spinWheel() {
   // Check authentication
@@ -158,32 +154,8 @@ async function spinWheel() {
   STATE.spinning = true;
 
   try {
-    const payload = {
-      action: 'spin',
-      wa: wa,
-      cid: getCustomerId()
-    };
-
-    const res = await fetch(getApiUrl(), {
-      method: 'POST',
-      body: JSON.stringify(payload),
-      redirect: 'follow',
-      mode: 'cors',
-      headers: {
-        'Content-Type': 'text/plain;charset=utf-8'
-      }
-    });
-
-    const text = await res.text();
-    let data;
-    try {
-      data = JSON.parse(text);
-    } catch (parseError) {
-      console.error('Failed to parse response:', text);
-      alert('Server error');
-      STATE.spinning = false;
-      return;
-    }
+    // Use AuthApi for spin - single source of truth
+    const data = await authApi.spin(wa, getCustomerId());
 
     if (data.error) {
       alert('Sudah main hari ini');
