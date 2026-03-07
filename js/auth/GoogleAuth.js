@@ -126,7 +126,11 @@ class GoogleAuth {
     const result2 = await this.tryValidateTextPlain(userInfo);
     if (result2) return result2;
     
-    // Approach 3: Last resort - use no-cors and assume new user
+    // Approach 3: Try with no-cors mode (will make request but can't read response)
+    const result3 = await this.tryValidateNoCORS(userInfo);
+    if (result3) return result3;
+    
+    // Approach 4: Last resort - assume new user (CORS blocked but request may have gone through)
     console.warn('All CORS approaches failed, treating as new user');
     return { 
       success: true, 
@@ -146,23 +150,18 @@ class GoogleAuth {
         ip: ''
       };
       
-      const res = await fetch(window.AUTH_CONFIG?.API_URL, {
+const res = await fetch(window.AUTH_CONFIG?.API_URL || '/api/proxy', {
         method: 'POST',
         body: JSON.stringify(payload),
         redirect: 'follow',
         mode: 'cors',
         headers: {
-          'Content-Type': 'text/plain;charset=utf-8'
+          'Content-Type': 'application/json'
         }
       });
       
-      const text = await res.text();
-      try {
-        return JSON.parse(text);
-      } catch (e) {
-        console.log('Failed to parse response:', text);
-        return null;
-      }
+      const data = await res.json();
+      return data;
       
     } catch (error) {
       console.log('Direct approach failed:', error.message);
@@ -203,6 +202,40 @@ class GoogleAuth {
       return null;
     }
   }
+  
+  async tryValidateNoCORS(userInfo) {
+    // Use no-cors mode - request goes through but we can't read response
+    // This is a last resort that may work on some browsers
+    try {
+      const payload = {
+        action: 'login',
+        email: userInfo.email,
+        name: userInfo.name,
+        sub: userInfo.sub,
+        device: 'web',
+        ip: ''
+      };
+      
+      // Use no-cors mode - makes an opaque request
+      await fetch(window.AUTH_CONFIG?.API_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        mode: 'no-cors'
+      });
+      
+      // With no-cors, we can't read the response, but request was sent
+      // Assume it's a new user - they'll register
+      return {
+        success: true,
+        registered: false,
+        message: 'Silakan lakukan registrasi'
+      };
+      
+    } catch (error) {
+      console.log('No-cors approach failed:', error.message);
+      return null;
+    }
+  }
 
   async register(userData) {
     try {
@@ -218,24 +251,17 @@ class GoogleAuth {
         foto: this.googleUser.picture || ''
       };
       
-      const res = await fetch(window.AUTH_CONFIG?.API_URL, {
+      const res = await fetch(window.AUTH_CONFIG?.API_URL || '/api/proxy', {
         method: 'POST',
         body: JSON.stringify(payload),
         redirect: 'follow',
         mode: 'cors',
         headers: {
-          'Content-Type': 'text/plain;charset=utf-8'
+          'Content-Type': 'application/json'
         }
       });
       
-      const text = await res.text();
-      let data;
-      try {
-        data = JSON.parse(text);
-      } catch (parseError) {
-        console.error('Failed to parse response:', text);
-        return { success: false, message: 'Invalid server response' };
-      }
+      const data = await res.json();
       
       if (data.success) {
         this.currentUser = {
