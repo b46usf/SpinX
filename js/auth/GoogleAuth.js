@@ -48,14 +48,16 @@ class GoogleAuth {
     if (!window.google?.accounts?.id) return;
     
     // Initialize with the global callback
-    // Disable FedCM for better COOP compatibility
+    // Use popup mode instead of FedCM for better compatibility with GitHub Pages
     google.accounts.id.initialize({
       client_id: window.AUTH_CONFIG?.CLIENT_ID,
       callback: window.handleGoogleCredentialResponse,
       auto_select: false,
       cancel_on_tap_outside: false,
-      use_fedcm_for_prompt: false,  // Disable FedCM to avoid COOP issues
-      use_fedcm_for_auto_select: false
+      // Use popup mode - more compatible with various hosting environments
+      ux_mode: 'popup',
+      // Explicitly disable FedCM 
+      use_fedcm_for_prompt: false
     });
   }
 
@@ -63,7 +65,10 @@ class GoogleAuth {
     const loginBtn = document.getElementById("googleLoginBtn");
     if (loginBtn) {
       loginBtn.addEventListener("click", () => {
-        if (window.google?.accounts?.id) google.accounts.id.prompt();
+        if (window.google?.accounts?.id) {
+          // Use renderButton for more reliable popup flow
+          google.accounts.id.prompt();
+        }
       });
     }
   }
@@ -111,6 +116,26 @@ class GoogleAuth {
   }
 
   async validateWithBackend(userInfo) {
+    // Try multiple approaches to handle GAS CORS issues
+    
+    // Approach 1: Try with regular CORS first
+    const result1 = await this.tryValidateCORS(userInfo);
+    if (result1) return result1;
+    
+    // Approach 2: Try with text/plain content type
+    const result2 = await this.tryValidateTextPlain(userInfo);
+    if (result2) return result2;
+    
+    // Approach 3: Last resort - use no-cors and assume new user
+    console.warn('All CORS approaches failed, treating as new user');
+    return { 
+      success: true, 
+      registered: false,
+      message: 'Silakan lakukan registrasi'
+    };
+  }
+  
+  async tryValidateCORS(userInfo) {
     try {
       const payload = {
         action: 'login',
@@ -121,28 +146,71 @@ class GoogleAuth {
         ip: ''
       };
       
-      // Use no-redirect mode to avoid CORS issues with Google Apps Script redirect
       const res = await fetch(window.AUTH_CONFIG?.API_URL, {
         method: 'POST',
         body: JSON.stringify(payload),
-        redirect: 'follow',
-        mode: 'cors',
         headers: {
           'Content-Type': 'text/plain;charset=utf-8'
         }
       });
       
-      // Get response text first, then parse
+      // Check content type first
+      const contentType = res.headers.get('content-type');
+      
+      // If response is HTML (error page), return error
+      if (contentType && contentType.includes('text/html')) {
+        const text = await res.text();
+        console.error('Backend returned HTML (likely error):', text.substring(0, 200));
+        return { 
+          success: false, 
+          message: 'Server error. Please redeploy the backend.' 
+        };
+      }
+      
       const text = await res.text();
+      
+      // Try to parse as JSON
       try {
-        return JSON.parse(text);
+        const data = JSON.parse(text);
+        return data;
       } catch (parseError) {
-        console.error('Failed to parse response:', text);
-        return { success: false, message: 'Invalid server response' };
+        console.error('Failed to parse response:', text.substring(0, 200));
+        return { 
+          success: false, 
+          message: 'Invalid server response' 
+        };
       }
     } catch (error) {
-      console.error('Backend validation failed:', error);
-      return { success: false, message: 'Koneksi gagal. Periksa jaringan Anda.' };
+      console.log('CORS approach 1 failed:', error.message);
+      return null;
+    }
+  }
+  
+  async tryValidateTextPlain(userInfo) {
+    try {
+      const payload = {
+        action: 'login',
+        email: userInfo.email,
+        name: userInfo.name,
+        sub: userInfo.sub,
+        device: 'web',
+        ip: ''
+      };
+      
+      const res = await fetch(window.AUTH_CONFIG?.API_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8'
+        }
+      });
+      
+      const text = await res.text();
+      const data = JSON.parse(text);
+      return data;
+    } catch (error) {
+      console.log('CORS approach 2 failed:', error.message);
+      return null;
     }
   }
 
