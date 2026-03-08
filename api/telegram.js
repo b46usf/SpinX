@@ -11,7 +11,8 @@
 // Get Telegram Bot Token from environment
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
-module.exports = async function handler(req, res) {
+/** @type {import('vercel').VercelApiHandler} */
+export default async function handler(req, res) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');

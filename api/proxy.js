@@ -12,7 +12,8 @@
 // In production, set this in Vercel Dashboard Environment Variables
 const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbxi5p-pmWs9sNpOK5IW0AbMlMgUBY7KbLr8UKQfAMGKfifYn1FKWIF26Hj-P6T5YceK/exec';
 
-module.exports = async function handler(req, res) {
+/** @type {import('vercel').VercelApiHandler} */
+export default async function handler(req, res) {
   // Get GAS_URL from environment - with fallback for development
   const envGAS_URL = process.env.GAS_URL;
   const GAS_URL = envGAS_URL || DEFAULT_GAS_URL;
