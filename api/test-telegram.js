@@ -5,7 +5,7 @@
  * Usage: GET /api/test-telegram
  */
 
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const TELEGRAM_BOT_TOKEN = process.env.VITE_TELEGRAM_BOT_TOKEN;
 
 /** @type {import('vercel').VercelApiHandler} */
 export default async function handler(req, res) {
