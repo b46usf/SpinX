@@ -24,10 +24,16 @@ module.exports = async function handler(req, res) {
   try {
     const { action, ...data } = req.body;
     
+    // Get client IP from Vercel request headers
+    const clientIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim() 
+      || req.headers['x-real-ip'] 
+      || req.socket?.remoteAddress 
+      || '';
+    
     // Get GAS URL from environment variable or use default from Config
     const GAS_URL = process.env.GAS_URL || 'https://script.google.com/macros/s/AKfycby-CC0Kvio5cJsA4n4i8-h1XGdAQweITDzMfScw-08u4lufi-CGfPA0kIoxz4JX1JkR/exec';
     
-    const payload = JSON.stringify({ action, ...data });
+    const payload = JSON.stringify({ action, ...data, ip: clientIP });
     
     // Make request with redirect follow mode
     const response = await fetch(GAS_URL, {
