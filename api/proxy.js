@@ -8,22 +8,10 @@
  * Note: This runs on server-side (Vercel Serverless Functions)
  */
 
-// Default fallback for development - HARDCODED HERE FOR NOW
-// In production, set this in Vercel Dashboard Environment Variables
-const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbxi5p-pmWs9sNpOK5IW0AbMlMgUBY7KbLr8UKQfAMGKfifYn1FKWIF26Hj-P6T5YceK/exec';
-
 /** @type {import('vercel').VercelApiHandler} */
 export default async function handler(req, res) {
   // Get GAS_URL from environment - with fallback for development
-  const envGAS_URL = process.env.GAS_URL;
-  const GAS_URL = envGAS_URL || DEFAULT_GAS_URL;
-  
-  // Log for debugging
-  console.log('=== Vercel API Proxy ===');
-  console.log('GAS_URL from env:', !!envGAS_URL);
-  console.log('Using GAS_URL:', GAS_URL);
-  console.log('Request method:', req.method);
-  console.log('Request body:', JSON.stringify(req.body).substring(0, 200));
+  const GAS_URL = process.env.GAS_URL;
 
   // Validate environment
   if (!GAS_URL) {
