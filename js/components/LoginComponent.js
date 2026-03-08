@@ -22,7 +22,7 @@ export class LoginComponent {
       // Reinitialize Google Auth to render the button
       window.google.accounts.id.renderButton(
         document.getElementById("googleLoginBtn"),
-        { theme: 'outline', size: 'large', width: '100%' }
+        { theme: 'outline', size: 'large', width: '300' }
       );
     }
     
