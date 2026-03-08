@@ -1,11 +1,15 @@
 /**
  * OTP Verification Handler
  * Handles OTP form display and verification
- * Uses Toast for notifications
+ * Uses Toast for notifications (SweetAlert2)
+ * 
+ * Note: Toast functions are accessed via global window.Toast
  */
 
 import { authApi } from '../../auth/AuthApi.js';
-import { showSuccess, showError, showLoading, closeLoading } from './Toast.js';
+
+// Get Toast functions from global (set by Toast.js)
+const getToast = () => window.Toast || null;
 
 export class OtpHandler {
   constructor(options = {}) {
@@ -19,48 +23,50 @@ export class OtpHandler {
   async handleSubmit(e) {
     e.preventDefault();
     
+    const Toast = getToast();
     const otpCode = document.getElementById('otp-code')?.value.trim();
     if (!otpCode) {
-      await showError('Input Required', 'Masukkan kode OTP');
+      if (Toast) Toast.error('Input Required', 'Masukkan kode OTP');
       return;
     }
 
-    const loading = await showLoading('Memverifikasi OTP...');
+    const loading = Toast ? Toast.loading('Memverifikasi OTP...') : null;
 
     try {
       const result = await authApi.verifyOTP(this.otpId, otpCode, this.userId);
       
-      closeLoading();
+      if (loading) loading.close();
       
       if (result.success && result.verified) {
-        await showSuccess('Verifikasi Berhasil', 'Akun Anda sekarang aktif!');
+        if (Toast) Toast.success('Verifikasi Berhasil', 'Akun Anda sekarang aktif!');
         setTimeout(() => {
           this.onSuccess();
         }, 1500);
       } else {
-        await showError('Verifikasi Gagal', result.message || 'Kode OTP tidak valid');
+        if (Toast) Toast.error('Verifikasi Gagal', result.message || 'Kode OTP tidak valid');
       }
     } catch (error) {
-      closeLoading();
+      if (loading) loading.close();
       console.error('OTP verification error:', error);
-      await showError('Error', 'Gagal memverifikasi OTP. Silakan coba lagi.');
+      if (Toast) Toast.error('Error', 'Gagal memverifikasi OTP. Silakan coba lagi.');
     }
   }
 
   async handleResend() {
-    const loading = await showLoading('Mengirim ulang OTP...');
+    const Toast = getToast();
+    const loading = Toast ? Toast.loading('Mengirim ulang OTP...') : null;
     
     try {
       const result = await authApi.generateOTP(this.userId, this.email);
       
-      closeLoading();
+      if (loading) loading.close();
       
       if (result.success) {
         this.otpId = result.otpId;
-        await showSuccess('OTP Terkirim', 'Kode OTP telah dikirim ulang ke Telegram Anda');
+        if (Toast) Toast.success('OTP Terkirim', 'Kode OTP telah dikirim ulang ke Telegram Anda');
         this.onResend();
       } else if (result.error === 'TELEGRAM_NOT_LINKED') {
-        await showError('Telegram Belum Terhubung', 'Silakan hubungkan Telegram terlebih dahulu');
+        if (Toast) Toast.error('Telegram Belum Terhubung', 'Silakan hubungkan Telegram terlebih dahulu');
         // Optionally redirect to Telegram link
         if (result.telegramLink) {
           setTimeout(() => {
@@ -68,12 +74,12 @@ export class OtpHandler {
           }, 2000);
         }
       } else {
-        await showError('Gagal Mengirim OTP', result.message || 'Terjadi kesalahan');
+        if (Toast) Toast.error('Gagal Mengirim OTP', result.message || 'Terjadi kesalahan');
       }
     } catch (error) {
-      closeLoading();
+      if (loading) loading.close();
       console.error('Resend OTP error:', error);
-      await showError('Error', 'Gagal mengirim OTP. Silakan coba lagi.');
+      if (Toast) Toast.error('Error', 'Gagal mengirim OTP. Silakan coba lagi.');
     }
   }
 

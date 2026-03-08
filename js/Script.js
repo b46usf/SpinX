@@ -7,7 +7,9 @@
 
 // Import AuthApi for consistent API calls
 import { authApi } from './auth/AuthApi.js';
-import { showError, showSuccess, showWarning } from './components/utils/Toast.js';
+
+// Get Toast functions from global (set by Toast.js)
+const getToast = () => window.Toast || null;
 
 // Wheel Configuration
 const CONFIG = {
@@ -118,19 +120,22 @@ function isAuthenticated() {
 function startGame() {
   // Check authentication
   if (!isAuthenticated()) {
-    showWarning('Login Diperlukan', 'Silakan login terlebih dahulu dengan Google');
+    const Toast = getToast();
+    if (Toast) Toast.warning('Login Diperlukan', 'Silakan login terlebih dahulu dengan Google');
     return;
   }
 
   const wa = document.getElementById('wa').value.trim();
 
   if (!wa) {
-    showWarning('WhatsApp Diperlukan', 'Silakan isi nomor WhatsApp terlebih dahulu');
+    const Toast = getToast();
+    if (Toast) Toast.warning('WhatsApp Diperlukan', 'Silakan isi nomor WhatsApp terlebih dahulu');
     return;
   }
 
   localStorage.setItem('wa', wa);
-  showSuccess('Siap Spin!', '🎡 Sekarang Anda bisa memutar roda');
+  const Toast1 = getToast();
+  if (Toast1) Toast1.success('Siap Spin!', '🎡 Sekarang Anda bisa memutar roda');
 }
 
 /**
@@ -140,7 +145,8 @@ function startGame() {
 async function spinWheel() {
   // Check authentication
   if (!isAuthenticated()) {
-    showWarning('Login Diperlukan', 'Silakan login terlebih dahulu dengan Google');
+    const Toast = getToast();
+    if (Toast) Toast.warning('Login Diperlukan', 'Silakan login terlebih dahulu dengan Google');
     return;
   }
 
@@ -149,7 +155,8 @@ async function spinWheel() {
   const wa = localStorage.getItem('wa');
 
   if (!wa) {
-    showWarning('WhatsApp Diperlukan', 'Silakan isi nomor WhatsApp terlebih dahulu');
+    const Toast = getToast();
+    if (Toast) Toast.warning('WhatsApp Diperlukan', 'Silakan isi nomor WhatsApp terlebih dahulu');
     return;
   }
 
@@ -160,7 +167,8 @@ async function spinWheel() {
     const data = await authApi.spin(wa, getCustomerId());
 
     if (data.error) {
-      showWarning('Tidak Bisa Spin', 'Anda sudah bermain hari ini. Cobain lagi besok ya!');
+      const Toast = getToast();
+      if (Toast) Toast.warning('Tidak Bisa Spin', 'Anda sudah bermain hari ini. Cobain lagi besok ya!');
       STATE.spinning = false;
       return;
     }
@@ -169,7 +177,8 @@ async function spinWheel() {
 
   } catch (err) {
     console.error(err);
-    showError('Server Error', 'Terjadi kesalahan. Periksa jaringan Anda.');
+    const Toast = getToast();
+    if (Toast) Toast.error('Server Error', 'Terjadi kesalahan. Periksa jaringan Anda.');
     STATE.spinning = false;
   }
 }

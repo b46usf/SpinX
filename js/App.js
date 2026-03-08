@@ -15,7 +15,13 @@ import { RegisterHandler } from './components/utils/RegisterHandler.js';
 import { OtpHandler, OtpTemplates } from './components/utils/OtpHandler.js';
 import { LoginComponent } from './components/LoginComponent.js';
 import { RegisterComponent } from './components/RegisterComponent.js';
-import { showInfo } from './components/utils/Toast.js';
+
+// Get showInfo from global window.Toast (set by Toast.js)
+// This avoids ES6 module import issues with SweetAlert2
+const getShowInfo = () => {
+  const Toast = window.Toast;
+  return Toast ? Toast.info : () => {};
+};
 
 // Make everything available globally
 window.ThemeToggle = ThemeToggle;
@@ -163,6 +169,7 @@ class App {
     });
     
     document.getElementById('open-telegram')?.addEventListener('click', () => {
+      const showInfo = getShowInfo();
       showInfo('Buka Telegram', 'Klik START di bot Telegram untuk menghubungkan akun');
     });
   }

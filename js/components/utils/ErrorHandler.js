@@ -2,9 +2,13 @@
  * Error Handler Utility
  * Reusable error display functions with Toast integration
  * Uses SweetAlert2 for professional notifications
+ * 
+ * Note: Toast functions are accessed via global window.Toast 
+ * which is set after Toast.js loads
  */
 
-import { showError, showWarning, showInfo } from './Toast.js';
+// Access Toast functions from global (set by Toast.js)
+const getToast = () => window.Toast || null;
 
 export class ErrorHandler {
   /**
@@ -44,7 +48,8 @@ export class ErrorHandler {
    */
   static showAuthError(message) {
     this.show('auth-error', message);
-    showError('Login Error', message);
+    const Toast = getToast();
+    if (Toast) Toast.error('Login Error', message);
   }
 
   /**
@@ -60,7 +65,8 @@ export class ErrorHandler {
    */
   static showRegisterError(message) {
     this.show('register-error', message);
-    showError('Registrasi Error', message);
+    const Toast = getToast();
+    if (Toast) Toast.error('Registrasi Error', message);
   }
 
   /**
@@ -86,7 +92,8 @@ export class ErrorHandler {
       message = error.response.data.message;
     }
     
-    showError(title, message);
+    const Toast = getToast();
+    if (Toast) Toast.error(title, message);
     console.error(`${title}:`, error);
   }
 
@@ -96,7 +103,8 @@ export class ErrorHandler {
    * @param {string} message - Warning message
    */
   static showWarning(title, message) {
-    showWarning(title, message);
+    const Toast = getToast();
+    if (Toast) Toast.warning(title, message);
   }
 
   /**
@@ -105,7 +113,8 @@ export class ErrorHandler {
    * @param {string} message - Info message
    */
   static showInfo(title, message) {
-    showInfo(title, message);
+    const Toast = getToast();
+    if (Toast) Toast.info(title, message);
   }
 }
 

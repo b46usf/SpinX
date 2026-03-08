@@ -2,9 +2,13 @@
  * Toast Notification Module
  * Wrapper for SweetAlert2 with customized defaults
  * SINGLE SOURCE - Import this for all toast notifications
+ * 
+ * Note: SweetAlert2 is loaded via CDN script tag in index.html
+ * We access it via the global Swal object
  */
 
-import Swal from 'sweetalert2';
+// Access SweetAlert2 from global (loaded via CDN in index.html)
+const Swal = window.SweetAlert2 || window.Swal;
 
 // Configure SweetAlert2 defaults
 const ToastDefaults = {
@@ -170,8 +174,8 @@ export async function showInput(title, message = '', placeholder = '') {
 // Export default configuration
 export const toastConfig = ToastDefaults;
 
-// Export Swal for direct access if needed
-export { Swal };
+// Export Swal for direct access if needed (check if Swal is available)
+export const SwalExport = Swal || window.Swal;
 
 // Also expose to window for non-module scripts
 if (typeof window !== 'undefined') {
@@ -184,7 +188,7 @@ if (typeof window !== 'undefined') {
     closeLoading: closeLoading,
     confirm: showConfirm,
     input: showInput,
-    Swal
+    Swal: Swal || window.Swal
   };
 }
 

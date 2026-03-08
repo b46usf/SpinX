@@ -2,12 +2,16 @@
  * Google Auth Module
  * Handles Google Sign-In with registration flow
  * Uses AuthApi for all backend calls - single source
- * Uses Toast for notifications
+ * Uses Toast for notifications (SweetAlert2)
+ * 
+ * Note: Toast functions are accessed via global window.Toast
  */
 
 import { AUTH_CONFIG } from './Config.js';
 import { authApi } from './AuthApi.js';
-import { showError, showSuccess, showLoading, closeLoading } from '../components/utils/Toast.js';
+
+// Get Toast functions from global (set by Toast.js)
+const getToast = () => window.Toast || null;
 
 class GoogleAuth {
   constructor() {
@@ -75,7 +79,8 @@ class GoogleAuth {
   }
 
   async handleCredentialResponse(response) {
-    const loading = await showLoading('Sedang memproses login...');
+    const Toast = getToast();
+    const loading = Toast ? Toast.loading('Sedang memproses login...') : null;
     
     try {
       const userInfo = this.parseJwt(response.credential);
@@ -89,10 +94,10 @@ class GoogleAuth {
       // Use AuthApi for backend validation
       const authResult = await authApi.login(userInfo);
       
-      closeLoading();
+      if (loading) loading.close();
       
       if (!authResult.success) {
-        await showError('Login Gagal', authResult.message || 'Terjadi kesalahan');
+        if (Toast) Toast.error('Login Gagal', authResult.message || 'Terjadi kesalahan');
         return;
       }
 
@@ -100,9 +105,9 @@ class GoogleAuth {
         if (authResult.needVerification) {
           if (authResult.telegramLinked) {
             // User has linked Telegram - generate OTP and show verification form
-            const otpLoading = await showLoading('Mengirim OTP...');
+            const otpLoading = Toast ? Toast.loading('Mengirim OTP...') : null;
             const otpResult = await authApi.generateOTP(authResult.userId, userInfo.email);
-            closeLoading();
+            if (otpLoading) otpLoading.close();
             
             if (otpResult.success) {
               this.triggerCallbacks(null, {
@@ -113,7 +118,7 @@ class GoogleAuth {
                 googleUser: this.googleUser
               });
             } else {
-              await showError('Gagal Mengirim OTP', otpResult.message || 'Silakan coba lagi');
+              if (Toast) Toast.error('Gagal Mengirim OTP', otpResult.message || 'Silakan coba lagi');
             }
           } else {
             // User needs to link Telegram first
@@ -132,7 +137,7 @@ class GoogleAuth {
         this.role = authResult.role;
         localStorage.setItem('user', JSON.stringify(this.currentUser));
         
-        await showSuccess('Login Berhasil', `Selamat datang, ${userInfo.name}!`);
+        if (Toast) Toast.success('Login Berhasil', `Selamat datang, ${userInfo.name}!`);
         
         this.triggerCallbacks(this.currentUser);
         this.routeToDashboard(this.role);
@@ -140,19 +145,20 @@ class GoogleAuth {
         this.triggerCallbacks(null, { needRegister: true, googleUser: this.googleUser });
       }
     } catch (error) {
-      closeLoading();
+      if (loading) loading.close();
       console.error('Auth error:', error);
-      await showError('Login Gagal', 'Terjadi kesalahan. Silakan coba lagi.');
+      if (Toast) Toast.error('Login Gagal', 'Terjadi kesalahan. Silakan coba lagi.');
     }
   }
 
   async register(userData) {
-    const loading = await showLoading('Sedang mendaftar...');
+    const Toast = getToast();
+    const loading = Toast ? Toast.loading('Sedang mendaftar...') : null;
     
     // Use AuthApi for registration
     const result = await authApi.register(this.googleUser, userData);
     
-    closeLoading();
+    if (loading) loading.close();
     
     if (result.success) {
       this.currentUser = {
@@ -165,7 +171,7 @@ class GoogleAuth {
         picture: this.googleUser.picture
       };
       
-      await showSuccess('Registrasi Berhasil', 'Silakan hubungkan Telegram untuk verifikasi');
+      if (Toast) Toast.success('Registrasi Berhasil', 'Silakan hubungkan Telegram untuk verifikasi');
       
       // Show Telegram link for verification
       this.triggerCallbacks(null, {
@@ -179,7 +185,7 @@ class GoogleAuth {
       return { success: true };
     }
     
-    await showError('Registrasi Gagal', result.message || 'Terjadi kesalahan');
+    if (Toast) Toast.error('Registrasi Gagal', result.message || 'Terjadi kesalahan');
     return { success: false, message: result.message };
   }
 
@@ -238,7 +244,8 @@ class GoogleAuth {
     const dashboard = dashboards[role];
     if (dashboard) window.location.href = dashboard;
     else { 
-      showError('Role Tidak Valid', 'Role pengguna tidak dikenali'); 
+      const Toast = getToast();
+      if (Toast) Toast.error('Role Tidak Valid', 'Role pengguna tidak dikenali'); 
       window.location.href = 'index.html'; 
     }
   }
