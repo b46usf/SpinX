@@ -10,6 +10,7 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
 
   // Handle preflight
   if (req.method === 'OPTIONS') {
@@ -24,16 +25,12 @@ module.exports = async function handler(req, res) {
   try {
     const { action, ...data } = req.body;
     
-    // Get client IP from Vercel request headers
-    const clientIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim() 
-      || req.headers['x-real-ip'] 
-      || req.socket?.remoteAddress 
-      || '';
-    
     // Get GAS URL from environment variable or use default from Config
+    // IP is now captured from frontend via ipify
     const GAS_URL = process.env.GAS_URL || 'https://script.google.com/macros/s/AKfycby-CC0Kvio5cJsA4n4i8-h1XGdAQweITDzMfScw-08u4lufi-CGfPA0kIoxz4JX1JkR/exec';
     
-    const payload = JSON.stringify({ action, ...data, ip: clientIP });
+    // Forward the payload as-is (includes IP from frontend)
+    const payload = JSON.stringify({ action, ...data });
     
     // Make request with redirect follow mode
     const response = await fetch(GAS_URL, {

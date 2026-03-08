@@ -27,13 +27,30 @@ class AuthApi {
   }
 
   /**
+   * Get client IP address from browser
+   */
+  async getClientIP() {
+    try {
+      const response = await fetch('https://api.ipify.org?format=json');
+      const data = await response.json();
+      return data.ip || '';
+    } catch (error) {
+      console.error('Failed to get IP:', error);
+      return '';
+    }
+  }
+
+  /**
    * Generic API call
    * @param {string} action - Action name
    * @param {Object} data - Additional data
    */
   async call(action, data = {}) {
     try {
-      const payload = { action, ...data };
+      // Get client IP
+      const clientIP = await this.getClientIP();
+      
+      const payload = { action, ...data, ip: clientIP };
       
       const res = await fetch(this.getApiUrl(), {
         method: 'POST',
@@ -69,8 +86,7 @@ class AuthApi {
       email: userInfo.email,
       name: userInfo.name,
       sub: userInfo.sub,
-      device: 'web',
-      ip: ''
+      device: 'web'
     });
   }
 
