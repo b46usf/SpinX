@@ -3,10 +3,13 @@
  * Tests if Telegram Bot Token is properly configured
  * 
  * Usage: GET /api/test-telegram
+ * 
+ * Note: API routes use process.env directly (Node.js context)
  */
 
-// Import config from single source
-import { TELEGRAM_BOT_TOKEN, VERCEL_URL } from '../js/auth/Config.js';
+// Get environment variables directly - VITE_ prefix for Vercel
+const TELEGRAM_BOT_TOKEN = process.env.VITE_TELEGRAM_BOT_TOKEN;
+const VERCEL_URL = process.env.VITE_VERCEL_URL;
 
 /** @type {import('vercel').VercelApiHandler} */
 export default async function handler(req, res) {

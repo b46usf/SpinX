@@ -4,10 +4,12 @@
  * 
  * Usage: GET /api/debug?userId=xxx
  * Returns user data from Google Sheets
+ * 
+ * Note: API routes use process.env directly (Node.js context)
  */
 
-// Import config from single source
-import { GAS_URL } from '../js/auth/Config.js';
+// Get GAS_URL from environment - VITE_ prefix for Vercel
+const GAS_URL = process.env.VITE_GAS_URL;
 
 /** @type {import('vercel').VercelApiHandler} */
 export default async function handler(req, res) {

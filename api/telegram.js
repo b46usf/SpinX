@@ -2,10 +2,12 @@
  * Telegram Webhook Handler
  * Receives Telegram updates and processes /start commands
  * Forwards to Google Apps Script for user linking
+ * 
+ * Note: API routes use process.env directly (Node.js context)
  */
 
-// Import config from single source
-import { TELEGRAM_BOT_TOKEN } from '../js/auth/Config.js';
+// Get Telegram Bot Token from environment - VITE_ prefix for Vercel
+const TELEGRAM_BOT_TOKEN = process.env.VITE_TELEGRAM_BOT_TOKEN;
 
 /** @type {import('vercel').VercelApiHandler} */
 export default async function handler(req, res) {
@@ -30,7 +32,7 @@ export default async function handler(req, res) {
     console.error('TELEGRAM_BOT_TOKEN not configured');
     return res.status(500).json({ 
       error: 'Bot configuration error',
-      message: 'TELEGRAM_BOT_TOKEN is not set in environment variables'
+      message: 'VITE_TELEGRAM_BOT_TOKEN is not set in environment variables'
     });
   }
 
