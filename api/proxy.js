@@ -10,7 +10,7 @@
 
 // Default fallback for development - HARDCODED HERE FOR NOW
 // In production, set this in Vercel Dashboard Environment Variables
-const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycby-CC0Kvio5cJsA4n4i8-h1XGdAQweITDzMfScw-08u4lufi-CGfPA0kIoxz4JX1JkR/exec';
+const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbxi5p-pmWs9sNpOK5IW0AbMlMgUBY7KbLr8UKQfAMGKfifYn1FKWIF26Hj-P6T5YceK/exec';
 
 module.exports = async function handler(req, res) {
   // Get GAS_URL from environment - with fallback for development
