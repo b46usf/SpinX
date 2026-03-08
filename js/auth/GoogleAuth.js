@@ -95,10 +95,14 @@ class GoogleAuth {
 
       if (authResult.registered) {
         if (authResult.needVerification) {
+          // Generate OTP and show verification form
+          const otpResult = await authApi.generateOTP(authResult.userId, userInfo.email);
+          
           this.triggerCallbacks(null, {
             needOTPVerification: true,
             userId: authResult.userId,
-            noWa: authResult.noWa,
+            email: userInfo.email,
+            otpId: otpResult.otpId,
             googleUser: this.googleUser
           });
           return;
@@ -132,10 +136,15 @@ class GoogleAuth {
         status: result.user.status,
         picture: this.googleUser.picture
       };
+      
+      // Generate OTP via email
+      const otpResult = await authApi.generateOTP(result.user.userId, this.googleUser.email);
+      
       this.triggerCallbacks(null, {
         needOTPVerification: true,
         userId: result.user.userId,
-        noWa: result.user.noWa,
+        email: this.googleUser.email,
+        otpId: otpResult.otpId,
         googleUser: this.googleUser
       });
       return { success: true };

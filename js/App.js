@@ -11,18 +11,19 @@ import { RegisterTemplates } from './components/templates/RegisterTemplates.js';
 import { ErrorHandler } from './components/utils/ErrorHandler.js';
 import { RoleFields } from './components/config/RoleFields.js';
 import { RegisterHandler } from './components/utils/RegisterHandler.js';
+import { OtpHandler, OtpTemplates } from './components/utils/OtpHandler.js';
 import { LoginComponent } from './components/LoginComponent.js';
 import { RegisterComponent } from './components/RegisterComponent.js';
 
 // Make everything available globally for backward compatibility
-// Note: Don't reassign GoogleAuth here - it's already set by the GoogleAuth module
-// Note: AUTH_CONFIG is also set by GoogleAuth.js
 window.ThemeToggle = ThemeToggle;
 window.LoginTemplates = LoginTemplates;
 window.RegisterTemplates = RegisterTemplates;
 window.ErrorHandler = ErrorHandler;
 window.RoleFields = RoleFields;
 window.RegisterHandler = RegisterHandler;
+window.OtpHandler = OtpHandler;
+window.OtpTemplates = OtpTemplates;
 window.LoginComponent = LoginComponent;
 window.RegisterComponent = RegisterComponent;
 
@@ -31,11 +32,11 @@ window.RegisterComponent = RegisterComponent;
  */
 class App {
   constructor() {
-    // Use the singleton instance from GoogleAuth module
     this.googleAuth = googleAuthInstance;
     this.themeToggle = null;
     this.loginComponent = null;
     this.registerComponent = null;
+    this.otpHandler = null;
     this.appContainer = null;
   }
 
@@ -90,11 +91,27 @@ class App {
       },
       onCancel: () => this.showLoginSection()
     });
+    
+    // Initialize OTP handler
+    this.otpHandler = new OtpHandler({
+      onSuccess: () => {
+        // After successful verification, go to login
+        this.showLoginSection();
+      },
+      onResend: () => {
+        // Reset form after resend
+        const input = document.getElementById('otp-code');
+        if (input) input.value = '';
+      }
+    });
   }
 
   handleAuthChange(user, extra) {
     if (user) {
       // Logged in - redirect handled by module
+    } else if (extra && extra.needOTPVerification) {
+      // Show OTP verification
+      this.showOtpSection(extra);
     } else if (extra && extra.needRegister) {
       this.showRegisterSection(extra.googleUser);
     } else {
@@ -113,6 +130,44 @@ class App {
     this.appContainer.innerHTML = this.registerComponent.render();
     this.registerComponent.initEvents();
     this.registerComponent.show(googleUser);
+  }
+
+  showOtpSection(extra) {
+    if (!this.appContainer) return;
+    
+    // Store OTP data
+    this.otpHandler.setData(extra.userId, extra.email);
+    if (extra.otpId) {
+      this.otpHandler.setOtpId(extra.otpId);
+    }
+    
+    // Render OTP form
+    this.appContainer.innerHTML = OtpTemplates.otpSection();
+    
+    // Update email display
+    const emailEl = document.getElementById('otp-email');
+    if (emailEl) emailEl.textContent = extra.email;
+    
+    // If no otpId, generate one
+    if (!extra.otpId) {
+      this.otpHandler.handleResend = () => {};
+    }
+    
+    // Initialize events
+    this.otpHandler.initEvents({
+      onSuccess: () => {
+        this.showLoginSection();
+      },
+      onResend: () => {
+        const input = document.getElementById('otp-code');
+        if (input) input.value = '';
+      }
+    });
+    
+    // Back to login button
+    document.getElementById('back-to-login')?.addEventListener('click', () => {
+      this.showLoginSection();
+    });
   }
 }
 

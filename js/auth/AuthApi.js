@@ -98,7 +98,7 @@ class AuthApi {
   async register(googleUser, userData) {
     return this.call('register', {
       email: googleUser.email,
-      name: googleUser.name,
+      name: userData.name,
       sub: googleUser.sub,
       role: userData.role,
       noWa: userData.noWa,
@@ -119,10 +119,10 @@ class AuthApi {
   /**
    * Generate OTP
    * @param {string} userId - User ID
-   * @param {string} noWa - WhatsApp number
+   * @param {string} email - Email address
    */
-  async generateOTP(userId, noWa) {
-    return this.call('generateOTP', { userId, noWa });
+  async generateOTP(userId, email) {
+    return this.call('generateOTP', { userId, email });
   }
 
   /**
