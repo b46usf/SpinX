@@ -14,11 +14,22 @@ export const GAS_URL = 'https://script.google.com/macros/s/AKfycby-CC0Kvio5cJsA4
 // API endpoint - use Vercel proxy to solve CORS
 export const API_URL = '/api/proxy';
 
+// Telegram Bot Username (without @)
+export const TELEGRAM_BOT_USERNAME = 'spinXsmahada_bot';
+
+// Vercel URL for webhook (set by Vercel or manually)
+export const VERCEL_URL = process.env.VERCEL_URL || 'your-project.vercel.app';
+
+// Full Telegram webhook URL
+export const TELEGRAM_WEBHOOK_URL = 'https://' + VERCEL_URL + '/api/telegram';
+
 // Export all config as single object
 export const AUTH_CONFIG = {
   CLIENT_ID,
   GAS_URL,
-  API_URL
+  API_URL,
+  TELEGRAM_BOT_USERNAME,
+  TELEGRAM_WEBHOOK_URL
 };
 
 // Also expose to window for non-module scripts

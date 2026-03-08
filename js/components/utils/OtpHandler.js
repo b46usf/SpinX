@@ -51,8 +51,16 @@ export class OtpHandler {
       
       if (result.success) {
         this.otpId = result.otpId;
-        this.showSuccess('OTP telah dikirim ulang ke email Anda');
+        this.showSuccess('OTP telah dikirim ulang ke Telegram Anda');
         this.onResend();
+      } else if (result.error === 'TELEGRAM_NOT_LINKED') {
+        this.showError('Telegram belum terhubung. Silakan hubungkan Telegram terlebih dahulu.');
+        // Optionally redirect to Telegram link
+        if (result.telegramLink) {
+          setTimeout(() => {
+            window.open(result.telegramLink, '_blank');
+          }, 2000);
+        }
       } else {
         this.showError(result.message || 'Gagal mengirim OTP');
       }
@@ -129,7 +137,7 @@ export const OtpTemplates = {
     <div id="otp-section" class="max-w-md mx-auto p-6 bg-gray-800 rounded-lg shadow-lg">
       <h2 class="text-2xl font-bold text-center mb-4 text-white">Verifikasi OTP</h2>
       <p class="text-gray-400 text-center mb-6">
-        Kami telah发送kode OTP ke email Anda.<br>
+        Kami telah mengirim kode OTP ke Telegram Anda.<br>
         Silakan masukkan kode tersebut di bawah.
       </p>
       

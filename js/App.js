@@ -5,6 +5,7 @@
 
 // Import all modules (for type checking and IDE support)
 import { googleAuthInstance } from './auth/GoogleAuth.js';
+import { AUTH_CONFIG } from './auth/Config.js';
 import { ThemeToggle } from './components/ThemeToggle.js';
 import { LoginTemplates } from './components/templates/LoginTemplates.js';
 import { RegisterTemplates } from './components/templates/RegisterTemplates.js';
@@ -38,6 +39,7 @@ class App {
     this.registerComponent = null;
     this.otpHandler = null;
     this.appContainer = null;
+    this.pendingUserData = null; // Store data for Telegram verification
   }
 
   async init() {
@@ -109,6 +111,9 @@ class App {
   handleAuthChange(user, extra) {
     if (user) {
       // Logged in - redirect handled by module
+    } else if (extra && extra.needTelegramLink) {
+      // Show Telegram link section
+      this.showTelegramLinkSection(extra);
     } else if (extra && extra.needOTPVerification) {
       // Show OTP verification
       this.showOtpSection(extra);
@@ -132,8 +137,152 @@ class App {
     this.registerComponent.show(googleUser);
   }
 
+  showTelegramLinkSection(extra) {
+    if (!this.appContainer) return;
+    
+    // Store pending data for refresh
+    this.pendingUserData = {
+      userId: extra.userId,
+      email: extra.email,
+      googleUser: extra.googleUser
+    };
+    
+    // Render Telegram link section
+    this.appContainer.innerHTML = this.getTelegramLinkTemplate(extra);
+    
+    // Setup polling to check if Telegram is linked
+    this.startTelegramCheck(extra.userId);
+    
+    // Back to login button
+    document.getElementById('back-to-login')?.addEventListener('click', () => {
+      this.showLoginSection();
+    });
+  }
+
+  getTelegramLinkTemplate(extra) {
+    return `
+      <div class="max-w-md mx-auto p-6 bg-gray-800 rounded-lg shadow-lg">
+        <div class="text-center mb-6">
+          <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+            <i class="fab fa-telegram text-4xl text-white"></i>
+          </div>
+          <h2 class="text-2xl font-bold text-white mb-2">Hubungkan Telegram</h2>
+          <p class="text-gray-400 text-sm">
+            Untuk verifikasi OTP, silakan hubungkan akun Telegram Anda terlebih dahulu.
+          </p>
+        </div>
+        
+        <div class="bg-gray-700 rounded-lg p-4 mb-6">
+          <p class="text-gray-300 text-sm mb-3">Langkah-langkah:</p>
+          <ol class="list-decimal list-inside text-gray-300 text-sm space-y-2">
+            <li>Klik tombol <strong>"Buka Telegram"</strong> di bawah</li>
+            <li>Di Telegram, klik tombol <strong>START</strong></li>
+            <li>Tunggu beberapa saat hingga verifikasi selesai</li>
+          </ol>
+        </div>
+        
+        <a 
+          href="${extra.telegramLink}" 
+          target="_blank"
+          class="block w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg text-center transition-colors mb-4"
+        >
+          <i class="fab fa-telegram mr-2"></i> Buka Telegram
+        </a>
+        
+        <div id="telegram-status" class="text-center text-sm text-gray-400 mb-4">
+          Menunggu verifikasi Telegram...
+        </div>
+        
+        <button 
+          id="refresh-telegram-status"
+          class="w-full py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors text-sm"
+        >
+          <i class="fas fa-sync-alt mr-2"></i> Periksa Status
+        </button>
+        
+        <div class="text-center mt-4">
+          <button 
+            type="button" 
+            id="back-to-login"
+            class="text-gray-400 hover:text-white text-sm"
+          >
+            ← Kembali ke Login
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  startTelegramCheck(userId) {
+    const statusEl = document.getElementById('telegram-status');
+    const refreshBtn = document.getElementById('refresh-telegram-status');
+    
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', () => {
+        this.checkTelegramStatus(userId);
+      });
+    }
+    
+    // Auto check every 5 seconds
+    this.telegramCheckInterval = setInterval(() => {
+      this.checkTelegramStatus(userId);
+    }, 5000);
+  }
+
+  async checkTelegramStatus(userId) {
+    const statusEl = document.getElementById('telegram-status');
+    
+    if (!this.pendingUserData) return;
+    
+    try {
+      // Try to generate OTP - if Telegram is linked, it will succeed
+      const result = await window.AuthApi.generateOTP(userId, this.pendingUserData.email);
+      
+      if (result.success) {
+        // Telegram is linked! Clear interval and show OTP section
+        if (this.telegramCheckInterval) {
+          clearInterval(this.telegramCheckInterval);
+        }
+        
+        // Show success message briefly
+        if (statusEl) {
+          statusEl.innerHTML = '<span class="text-green-400">✅ Telegram terhubung! Mengarahkan ke verifikasi OTP...</span>';
+        }
+        
+        // Show OTP section
+        setTimeout(() => {
+          this.showOtpSection({
+            userId: this.pendingUserData.userId,
+            email: this.pendingUserData.email,
+            otpId: result.otpId,
+            googleUser: this.pendingUserData.googleUser
+          });
+        }, 1500);
+        
+      } else if (result.error === 'TELEGRAM_NOT_LINKED') {
+        if (statusEl) {
+          statusEl.innerHTML = '<span class="text-yellow-400">⏳ Menunggu koneksi Telegram...</span>';
+        }
+      } else {
+        if (statusEl) {
+          statusEl.innerHTML = '<span class="text-red-400">❌ ' + (result.message || 'Gagal memeriksa status') + '</span>';
+        }
+      }
+    } catch (error) {
+      console.error('Check Telegram status error:', error);
+      if (statusEl) {
+        statusEl.innerHTML = '<span class="text-red-400">❌ Gagal memeriksa status</span>';
+      }
+    }
+  }
+
   showOtpSection(extra) {
     if (!this.appContainer) return;
+    
+    // Stop any existing telegram check
+    if (this.telegramCheckInterval) {
+      clearInterval(this.telegramCheckInterval);
+    }
     
     // Store OTP data
     this.otpHandler.setData(extra.userId, extra.email);
@@ -147,11 +296,6 @@ class App {
     // Update email display
     const emailEl = document.getElementById('otp-email');
     if (emailEl) emailEl.textContent = extra.email;
-    
-    // If no otpId, generate one
-    if (!extra.otpId) {
-      this.otpHandler.handleResend = () => {};
-    }
     
     // Initialize events
     this.otpHandler.initEvents({

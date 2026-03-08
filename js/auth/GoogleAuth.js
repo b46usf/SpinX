@@ -95,16 +95,27 @@ class GoogleAuth {
 
       if (authResult.registered) {
         if (authResult.needVerification) {
-          // Generate OTP and show verification form
-          const otpResult = await authApi.generateOTP(authResult.userId, userInfo.email);
-          
-          this.triggerCallbacks(null, {
-            needOTPVerification: true,
-            userId: authResult.userId,
-            email: userInfo.email,
-            otpId: otpResult.otpId,
-            googleUser: this.googleUser
-          });
+          if (authResult.telegramLinked) {
+            // User has linked Telegram - generate OTP and show verification form
+            const otpResult = await authApi.generateOTP(authResult.userId, userInfo.email);
+            
+            this.triggerCallbacks(null, {
+              needOTPVerification: true,
+              userId: authResult.userId,
+              email: userInfo.email,
+              otpId: otpResult.otpId,
+              googleUser: this.googleUser
+            });
+          } else {
+            // User needs to link Telegram first
+            this.triggerCallbacks(null, {
+              needTelegramLink: true,
+              userId: authResult.userId,
+              email: userInfo.email,
+              telegramLink: authResult.telegramLink,
+              googleUser: this.googleUser
+            });
+          }
           return;
         }
 
@@ -137,19 +148,56 @@ class GoogleAuth {
         picture: this.googleUser.picture
       };
       
-      // Generate OTP via email
-      const otpResult = await authApi.generateOTP(result.user.userId, this.googleUser.email);
-      
+      // Show Telegram link for verification
       this.triggerCallbacks(null, {
-        needOTPVerification: true,
+        needTelegramLink: true,
         userId: result.user.userId,
         email: this.googleUser.email,
-        otpId: otpResult.otpId,
+        telegramLink: result.user.telegramLink,
         googleUser: this.googleUser
       });
+      
       return { success: true };
     }
     return { success: false, message: result.message };
+  }
+
+  // Check if user has linked Telegram (called after user clicks /start in Telegram)
+  async checkTelegramLink(userId) {
+    try {
+      // Try to generate OTP - if Telegram is linked, it will succeed
+      const result = await authApi.generateOTP(userId, this.googleUser.email);
+      
+      if (result.success) {
+        return { linked: true, otpId: result.otpId };
+      } else if (result.error === 'TELEGRAM_NOT_LINKED') {
+        return { linked: false, telegramLink: result.telegramLink };
+      }
+      
+      return { linked: false, error: result.message };
+    } catch (error) {
+      console.error('Check Telegram link error:', error);
+      return { linked: false, error: error.message };
+    }
+  }
+
+  // Refresh verification status after Telegram link
+  async refreshVerificationStatus(userId) {
+    try {
+      const result = await authApi.generateOTP(userId, this.googleUser.email);
+      
+      if (result.success) {
+        this.triggerCallbacks(null, {
+          needOTPVerification: true,
+          userId: userId,
+          email: this.googleUser.email,
+          otpId: result.otpId,
+          googleUser: this.googleUser
+        });
+      }
+    } catch (error) {
+      console.error('Refresh verification status error:', error);
+    }
   }
 
   parseJwt(token) {
