@@ -16,9 +16,6 @@ export default defineConfig({
     }
   },
   
-  // Environment variables - prefix with VITE_ to expose to client
-  envPrefix: 'VITE_',
-  
   // Optimize dependencies
   optimizeDeps: {
     exclude: [],
