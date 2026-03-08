@@ -12,5 +12,7 @@
   "rewrites": [
     { "source": "/api/proxy", "destination": "/api/proxy.js" },
     { "source": "/api/telegram", "destination": "/api/telegram.js" }
-  ]
+  ],
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist"
 }
