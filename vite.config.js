@@ -8,6 +8,12 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     emptyOutDir: true,
+    // Exclude API routes from build - serve them separately
+    rollupOptions: {
+      input: {
+        main: './index.html'
+      }
+    }
   },
   
   // Environment variables - prefix with VITE_ to expose to client
@@ -28,5 +34,8 @@ export default defineConfig({
   preview: {
     port: 3000,
   },
+  
+  // Tell Vite to not process these directories
+  publicDir: 'public',
 });
 

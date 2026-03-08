@@ -5,20 +5,32 @@
  * Environment variables (set in Vercel dashboard):
  * - GAS_URL: Google Apps Script deployment URL
  * 
- * Note: This runs on server-side, so process.env is available
+ * Note: This runs on server-side (Vercel Serverless Functions)
  */
 
-// Default fallback (for development only - should be set in Vercel)
+// Default fallback for development - HARDCODED HERE FOR NOW
+// In production, set this in Vercel Dashboard Environment Variables
 const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycby-CC0Kvio5cJsA4n4i8-h1XGdAQweITDzMfScw-08u4lufi-CGfPA0kIoxz4JX1JkR/exec';
 
 module.exports = async function handler(req, res) {
-  // Get GAS_URL from environment - try multiple ways for compatibility
-  let GAS_URL = process.env.GAS_URL;
+  // Get GAS_URL from environment - with fallback for development
+  const envGAS_URL = process.env.GAS_URL;
+  const GAS_URL = envGAS_URL || DEFAULT_GAS_URL;
   
-  // Fallback to default if not set (for development)
+  // Log for debugging
+  console.log('=== Vercel API Proxy ===');
+  console.log('GAS_URL from env:', !!envGAS_URL);
+  console.log('Using GAS_URL:', GAS_URL);
+  console.log('Request method:', req.method);
+  console.log('Request body:', JSON.stringify(req.body).substring(0, 200));
+
+  // Validate environment
   if (!GAS_URL) {
-    console.warn('⚠️ GAS_URL not set, using default fallback. Set in Vercel dashboard for production.');
-    GAS_URL = DEFAULT_GAS_URL;
+    console.error('❌ GAS_URL not configured in Vercel environment variables');
+    return res.status(500).json({ 
+      error: 'Configuration Error', 
+      message: 'GAS_URL is not configured. Please set it in Vercel dashboard.'
+    });
   }
 
   // CORS headers
@@ -38,19 +50,16 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    // Get the body
     const body = req.body || {};
-    
-    // Debug log
-    console.log('Proxy received:', { action: body?.action, timestamp: new Date().toISOString() });
-    
-    // Extract action for logging
     const action = body?.action || 'unknown';
+    
+    console.log(`Processing action: ${action}`);
     
     // Forward the payload to GAS
     const payload = JSON.stringify(body);
     
-    console.log(`Forwarding to GAS [${action}]:`, payload);
+    console.log(`Forwarding to GAS: ${GAS_URL}`);
+    console.log('Payload:', payload);
     
     // Make request to GAS
     const response = await fetch(GAS_URL, {
@@ -67,14 +76,17 @@ module.exports = async function handler(req, res) {
     const status = response.status;
     const text = await response.text();
     
-    // Handle error responses
+    console.log(`GAS response status: ${status}`);
+    console.log(`GAS response text: ${text.substring(0, 500)}`);
+    
+    // Handle error responses from GAS
     if (status >= 400) {
       console.error(`GAS error [${action}]:`, status, text);
       return res.status(502).json({ 
         error: 'Bad Gateway', 
         message: 'Failed to connect to GAS',
-        action: action,
-        details: text.substring(0, 500)
+        gasStatus: status,
+        gasResponse: text.substring(0, 500)
       });
     }
     
@@ -85,6 +97,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).json(jsonData);
     } catch (parseError) {
       console.error(`Failed to parse GAS response [${action}]:`, text);
+      // Return as raw text if not JSON
       return res.status(200).json({ 
         success: true, 
         action: action,
@@ -96,7 +109,8 @@ module.exports = async function handler(req, res) {
     console.error('Proxy error:', error);
     return res.status(500).json({ 
       error: 'Internal Server Error', 
-      message: error.message 
+      message: error.message,
+      stack: error.stack
     });
   }
 };
