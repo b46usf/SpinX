@@ -5,7 +5,8 @@
  * Usage: GET /api/test-telegram
  */
 
-const TELEGRAM_BOT_TOKEN = process.env.VITE_TELEGRAM_BOT_TOKEN;
+// Import config from single source
+import { TELEGRAM_BOT_TOKEN, VERCEL_URL } from '../js/auth/Config.js';
 
 /** @type {import('vercel').VercelApiHandler} */
 export default async function handler(req, res) {
@@ -19,9 +20,9 @@ export default async function handler(req, res) {
   const result = {
     telegramBotTokenConfigured: !!TELEGRAM_BOT_TOKEN,
     telegramBotTokenPrefix: TELEGRAM_BOT_TOKEN ? TELEGRAM_BOT_TOKEN.substring(0, 15) + '...' : 'NOT SET',
-    vercelUrl: process.env.VERCEL_URL || 'NOT SET',
-    telegramWebhookUrl: process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}/api/telegram` 
+    vercelUrl: VERCEL_URL || 'NOT SET',
+    telegramWebhookUrl: VERCEL_URL 
+      ? `https://${VERCEL_URL}/api/telegram` 
       : 'NOT SET (VERCEL_URL not set)'
   };
 
@@ -68,7 +69,7 @@ export default async function handler(req, res) {
   result.instructions = [];
   
   if (!TELEGRAM_BOT_TOKEN) {
-    result.instructions.push('❌ Set TELEGRAM_BOT_TOKEN in Vercel environment variables');
+    result.instructions.push('❌ Set VITE_TELEGRAM_BOT_TOKEN in Vercel environment variables');
   }
   
   if (TELEGRAM_BOT_TOKEN && !result.botApiStatus) {

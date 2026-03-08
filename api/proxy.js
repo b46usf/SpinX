@@ -1,24 +1,19 @@
 /**
  * Vercel API Proxy for Google Apps Script
  * Solves CORS issues by calling GAS from server-side
- * 
- * Environment variables (set in Vercel dashboard):
- * - GAS_URL: Google Apps Script deployment URL
- * 
- * Note: This runs on server-side (Vercel Serverless Functions)
  */
+
+// Import config from single source
+import { GAS_URL } from '../js/auth/Config.js';
 
 /** @type {import('vercel').VercelApiHandler} */
 export default async function handler(req, res) {
-  // Get GAS_URL from environment - with fallback for development
-  const GAS_URL = process.env.GAS_URL;
-
   // Validate environment
   if (!GAS_URL) {
-    console.error('❌ GAS_URL not configured in Vercel environment variables');
+    console.error('❌ VITE_GAS_URL not configured in Vercel environment variables');
     return res.status(500).json({ 
       error: 'Configuration Error', 
-      message: 'GAS_URL is not configured. Please set it in Vercel dashboard.'
+      message: 'VITE_GAS_URL is not configured. Please set it in Vercel dashboard.'
     });
   }
 

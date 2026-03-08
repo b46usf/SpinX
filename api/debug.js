@@ -6,6 +6,9 @@
  * Returns user data from Google Sheets
  */
 
+// Import config from single source
+import { GAS_URL } from '../js/auth/Config.js';
+
 /** @type {import('vercel').VercelApiHandler} */
 export default async function handler(req, res) {
   // CORS headers
@@ -16,10 +19,8 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  const GAS_URL = process.env.GAS_URL;
-
   if (!GAS_URL) {
-    return res.status(500).json({ error: 'GAS_URL not configured' });
+    return res.status(500).json({ error: 'VITE_GAS_URL not configured' });
   }
 
   try {

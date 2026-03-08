@@ -1,61 +1,56 @@
 /**
  * Auth Configuration Module
- * Contains Google Sign-In client ID and app settings
  * SINGLE SOURCE - Import this in all other modules
  * 
- * IMPORTANT: Set environment variables in Vercel Dashboard with prefix 
- * Example: GOOGLE_CLIENT_ID, GAS_URL, etc.
- * 
- * These values are exposed via Vite's import.meta.env
+ * Environment variables (set in Vercel Dashboard with VITE_ prefix):
+ * - VITE_GOOGLE_CLIENT_ID
+ * - VITE_GAS_URL
+ * - VITE_TELEGRAM_BOT_TOKEN
+ * - VITE_TELEGRAM_BOT_USERNAME
+ * - VITE_VERCEL_URL
  */
 
-// Helper function to get environment variable (Vite way)
-function getEnvVar(name, required = false) {
-  // Vite exposes env vars with VITE_ prefix to client-side
-  // eslint-disable-next-line no-undef
-  const value = import.meta.env[`VITE_${name}`];
-  
-  if (!value && required) {
-    console.warn(`⚠️ Warning: VITE_${name} is not set. Please configure in Vercel dashboard (VITE_${name})`);
-  }
-  
-  return value;
-}
+// Access environment variables directly (Vite exposes VITE_ prefix to client)
+const ENV = import.meta.env;
 
-// Google OAuth Client ID (REQUIRED - set in Vercel)
-export const CLIENT_ID = getEnvVar('GOOGLE_CLIENT_ID', true) || '';
+// Google OAuth Client ID
+export const CLIENT_ID = ENV.VITE_GOOGLE_CLIENT_ID || '';
 
-// Google Apps Script Deployment URL (REQUIRED - set in Vercel)
-export const GAS_URL = getEnvVar('GAS_URL', true) || '';
+// Google Apps Script Deployment URL
+export const GAS_URL = ENV.VITE_GAS_URL || '';
 
-// API endpoint - use Vercel proxy to solve CORS
-export const API_URL = '/api/proxy';
+// Telegram Bot Token (for server-side API routes)
+export const TELEGRAM_BOT_TOKEN = ENV.VITE_TELEGRAM_BOT_TOKEN || '';
 
-// Telegram Bot Username (optional)
-export const TELEGRAM_BOT_USERNAME = getEnvVar('TELEGRAM_BOT_USERNAME', false) || '';
+// Telegram Bot Username
+export const TELEGRAM_BOT_USERNAME = ENV.VITE_TELEGRAM_BOT_USERNAME || '';
 
-// Vercel URL for webhook (optional)
-export const VERCEL_URL = getEnvVar('VERCEL_URL', false) || '';
+// Vercel URL for webhook
+export const VERCEL_URL = ENV.VITE_VERCEL_URL || '';
 
 // Full Telegram webhook URL
 export const TELEGRAM_WEBHOOK_URL = VERCEL_URL ? `https://${VERCEL_URL}/api/telegram` : '';
+
+// API endpoint - use Vercel proxy to solve CORS
+export const API_URL = '/api/proxy';
 
 // Validate required config
 const isConfigured = !!(CLIENT_ID && GAS_URL);
 
 if (!isConfigured) {
-  console.error('❌ Error: Missing required environment variables!');
-  console.error('Please set GOOGLE_CLIENT_ID and GAS_URL in Vercel dashboard');
+  console.warn('⚠️ Warning: Missing required environment variables!');
+  console.warn('Please set VITE_GOOGLE_CLIENT_ID and VITE_GAS_URL in Vercel dashboard');
 }
 
 // Export all config as single object
 export const AUTH_CONFIG = {
   CLIENT_ID,
   GAS_URL,
-  API_URL,
+  TELEGRAM_BOT_TOKEN,
   TELEGRAM_BOT_USERNAME,
   TELEGRAM_WEBHOOK_URL,
   VERCEL_URL,
+  API_URL,
   isConfigured
 };
 
