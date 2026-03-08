@@ -1,16 +1,17 @@
 /**
  * Vercel API Proxy for Google Apps Script
  * Solves CORS issues by calling GAS from server-side
- * Note: Uses environment variable for GAS_URL
  */
 
-// Vercel API route - use module.exports for Vercel
+// Vercel API route
 module.exports = async function handler(req, res) {
-  // Enable CORS
+  // Enhanced CORS headers
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+  res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
 
   // Handle preflight
   if (req.method === 'OPTIONS') {
@@ -25,33 +26,54 @@ module.exports = async function handler(req, res) {
   try {
     const { action, ...data } = req.body;
     
-    // Get GAS URL from environment variable or use default
-    // In production, set VERCEL_GAS_URL in Vercel project settings
-    const GAS_URL = process.env.GAS_URL || process.env.GAS_URL || 'https://script.google.com/macros/s/AKfycby-CC0Kvio5cJsA4n4i8-h1XGdAQweITDzMfScw-08u4lufi-CGfPA0kIoxz4JX1JkR/exec';
+    // Get GAS URL from environment variable or use default from Config
+    const GAS_URL = process.env.GAS_URL || 'https://script.google.com/macros/s/AKfycby-CC0Kvio5cJsA4n4i8-h1XGdAQweITDzMfScw-08u4lufi-CGfPA0kIoxz4JX1JkR/exec';
     
     const payload = JSON.stringify({ action, ...data });
     
+    // Make request with redirect follow mode
     const response = await fetch(GAS_URL, {
       method: 'POST',
+      redirect: 'follow',
       headers: {
-        'Content-Type': 'text/plain;charset=utf-8'
+        'Content-Type': 'text/plain;charset=utf-8',
+        'Accept': 'application/json'
       },
       body: payload
     });
     
+    // Get response status and text
+    const status = response.status;
     const text = await response.text();
+    
+    // Check if response is valid
+    if (status >= 400) {
+      console.error('GAS returned error:', status, text);
+      return res.status(502).json({ 
+        error: 'Bad Gateway', 
+        message: 'Failed to connect to GAS',
+        details: text.substring(0, 500)
+      });
+    }
     
     try {
       const jsonData = JSON.parse(text);
       return res.status(200).json(jsonData);
     } catch (parseError) {
       console.error('Failed to parse GAS response:', text);
-      return res.status(502).json({ error: 'Invalid response from GAS', details: text });
+      // Try to return as text if JSON parsing fails
+      return res.status(200).json({ 
+        success: true, 
+        raw: text 
+      });
     }
     
   } catch (error) {
     console.error('Proxy error:', error);
-    return res.status(500).json({ error: 'Internal server error', message: error.message });
+    return res.status(500).json({ 
+      error: 'Internal Server Error', 
+      message: error.message 
+    });
   }
 };
 
