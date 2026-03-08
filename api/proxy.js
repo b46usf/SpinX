@@ -1,11 +1,28 @@
 /**
  * Vercel API Proxy for Google Apps Script
  * Solves CORS issues by calling GAS from server-side
+ * 
+ * Environment variables (set in Vercel dashboard or .env file):
+ * - GAS_URL: Google Apps Script deployment URL (REQUIRED)
+ * 
+ * IMPORTANT: Configure GAS_URL in your environment variables!
  */
 
 module.exports = async function handler(req, res) {
+  // Get GAS URL from environment
+  const GAS_URL = process.env.GAS_URL;
+  
+  // Validate required environment variable
+  if (!GAS_URL) {
+    console.error('❌ Error: GAS_URL environment variable is not set!');
+    return res.status(500).json({ 
+      error: 'Configuration Error', 
+      message: 'GAS_URL is not configured. Please set it in Vercel dashboard or .env file.'
+    });
+  }
+
   // CORS headers
-  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -21,28 +38,21 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    // Get the body - Vercel should parse JSON automatically
+    // Get the body
     const body = req.body || {};
     
-    // Debug: Log what we received
-    console.log('Received body:', JSON.stringify(body));
+    // Debug log
+    console.log('Proxy received:', { action: body?.action, timestamp: new Date().toISOString() });
     
-    // Extract action
-    const action = body?.action || '';
+    // Extract action for logging
+    const action = body?.action || 'unknown';
     
-    // Debug: Log the action
-    console.log('Action:', action);
-    
-    // Get GAS URL from environment variable or use default
-    const GAS_URL = process.env.GAS_URL || 'https://script.google.com/macros/s/AKfycby-CC0Kvio5cJsA4n4i8-h1XGdAQweITDzMfScw-08u4lufi-CGfPA0kIoxz4JX1JkR/exec';
-    
-    // Forward the payload as-is
+    // Forward the payload to GAS
     const payload = JSON.stringify(body);
     
-    // Debug: Log the payload we're sending to GAS
-    console.log('Sending to GAS:', payload);
+    console.log(`Forwarding to GAS [${action}]:`, payload);
     
-    // Make request with redirect follow mode
+    // Make request to GAS
     const response = await fetch(GAS_URL, {
       method: 'POST',
       redirect: 'follow',
@@ -53,27 +63,31 @@ module.exports = async function handler(req, res) {
       body: payload
     });
     
-    // Get response status and text
+    // Get response
     const status = response.status;
     const text = await response.text();
     
-    // Check if response is valid
+    // Handle error responses
     if (status >= 400) {
-      console.error('GAS returned error:', status, text);
+      console.error(`GAS error [${action}]:`, status, text);
       return res.status(502).json({ 
         error: 'Bad Gateway', 
         message: 'Failed to connect to GAS',
+        action: action,
         details: text.substring(0, 500)
       });
     }
     
+    // Parse JSON response
     try {
       const jsonData = JSON.parse(text);
+      console.log(`GAS response [${action}]:`, jsonData);
       return res.status(200).json(jsonData);
     } catch (parseError) {
-      console.error('Failed to parse GAS response:', text);
+      console.error(`Failed to parse GAS response [${action}]:`, text);
       return res.status(200).json({ 
         success: true, 
+        action: action,
         raw: text 
       });
     }

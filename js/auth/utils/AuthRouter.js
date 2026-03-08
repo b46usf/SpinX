@@ -1,7 +1,11 @@
 /**
  * Auth Router Utility
  * Handles routing to dashboard pages
+ * Uses Toast for notifications (SweetAlert2)
  */
+
+// Import Toast functions
+import { showError as showToastError } from '../../components/utils/Toast.js';
 
 const AuthRouter = {
   // Dashboard mapping by role
@@ -34,15 +38,21 @@ const AuthRouter = {
   },
 
   /**
-   * Show error message
+   * Show error message using Toast
    */
   showError(message) {
     const errorEl = document.getElementById('auth-error');
     if (errorEl) {
       errorEl.textContent = message;
       errorEl.classList.remove('hidden');
+      // Auto hide after 5 seconds
+      setTimeout(() => {
+        errorEl.classList.add('hidden');
+        errorEl.textContent = '';
+      }, 5000);
     } else {
-      alert(message);
+      // Fallback to Toast if no error element
+      showToastError('Error', message);
     }
   },
 

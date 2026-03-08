@@ -2,11 +2,18 @@
  * Telegram Webhook Handler
  * Receives Telegram updates and processes /start commands
  * Forwards to Google Apps Script for user linking
+ * 
+ * Environment variables (set in Vercel dashboard or .env file):
+ * - TELEGRAM_BOT_TOKEN: Telegram Bot API Token
+ * - GAS_URL: Google Apps Script deployment URL (optional, uses proxy)
  */
+
+// Get Telegram Bot Token from environment
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
 module.exports = async function handler(req, res) {
   // CORS headers
-  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -19,6 +26,12 @@ module.exports = async function handler(req, res) {
   // Only allow POST
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // Check if bot token is configured
+  if (!TELEGRAM_BOT_TOKEN) {
+    console.error('TELEGRAM_BOT_TOKEN not configured');
+    return res.status(500).json({ error: 'Bot configuration error' });
   }
 
   try {
@@ -45,7 +58,7 @@ module.exports = async function handler(req, res) {
       const userId = parts.length > 1 ? parts[1] : null;
 
       if (userId) {
-        // Forward to GAS via Vercel proxy to avoid CORS issues
+        // Forward to GAS via proxy to avoid CORS issues
         const PROXY_URL = '/api/proxy';
         
         const payload = JSON.stringify({
@@ -136,15 +149,10 @@ module.exports = async function handler(req, res) {
 
 /**
  * Send message to Telegram
+ * @param {string} chatId - Telegram chat ID
+ * @param {string} text - Message text
  */
 async function sendTelegramMessage(chatId, text) {
-  const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-  
-  if (!TELEGRAM_BOT_TOKEN) {
-    console.error('TELEGRAM_BOT_TOKEN not configured');
-    return;
-  }
-
   const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
   
   try {

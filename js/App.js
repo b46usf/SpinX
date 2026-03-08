@@ -1,11 +1,11 @@
 /**
  * Main Application Entry Point
  * Modular Architecture using ES6 Modules
+ * Uses Toast for notifications
  */
 
-// Import all modules (for type checking and IDE support)
+// Import all modules
 import { googleAuthInstance } from './auth/GoogleAuth.js';
-import { AUTH_CONFIG } from './auth/Config.js';
 import { ThemeToggle } from './components/ThemeToggle.js';
 import { LoginTemplates } from './components/templates/LoginTemplates.js';
 import { RegisterTemplates } from './components/templates/RegisterTemplates.js';
@@ -15,8 +15,9 @@ import { RegisterHandler } from './components/utils/RegisterHandler.js';
 import { OtpHandler, OtpTemplates } from './components/utils/OtpHandler.js';
 import { LoginComponent } from './components/LoginComponent.js';
 import { RegisterComponent } from './components/RegisterComponent.js';
+import { showInfo } from './components/utils/Toast.js';
 
-// Make everything available globally for backward compatibility
+// Make everything available globally
 window.ThemeToggle = ThemeToggle;
 window.LoginTemplates = LoginTemplates;
 window.RegisterTemplates = RegisterTemplates;
@@ -39,7 +40,8 @@ class App {
     this.registerComponent = null;
     this.otpHandler = null;
     this.appContainer = null;
-    this.pendingUserData = null; // Store data for Telegram verification
+    this.pendingUserData = null;
+    this.telegramCheckInterval = null;
   }
 
   async init() {
@@ -58,10 +60,10 @@ class App {
       return;
     }
 
-    // Initialize Google Auth FIRST - this sets up the callback
+    // Initialize Google Auth
     await this.googleAuth.init();
 
-    // Setup callback BEFORE rendering components
+    // Setup callback
     window.handleGoogleCredentialResponse = async (response) => {
       await this.googleAuth.handleCredentialResponse(response);
     };
@@ -69,7 +71,7 @@ class App {
     // Setup auth change handler
     this.googleAuth.onAuthChange((user, extra) => this.handleAuthChange(user, extra));
 
-    // Initialize components AFTER Google Auth is ready
+    // Initialize components
     this.initComponents();
 
     // Show login
@@ -89,7 +91,9 @@ class App {
       googleAuth: this.googleAuth,
       onSubmit: async (data) => {
         const result = await this.googleAuth.register(data);
-        if (!result.success) this.registerComponent.showError(result.message);
+        if (!result.success) {
+          // Error shown in GoogleAuth.register()
+        }
       },
       onCancel: () => this.showLoginSection()
     });
@@ -97,11 +101,9 @@ class App {
     // Initialize OTP handler
     this.otpHandler = new OtpHandler({
       onSuccess: () => {
-        // After successful verification, go to login
         this.showLoginSection();
       },
       onResend: () => {
-        // Reset form after resend
         const input = document.getElementById('otp-code');
         if (input) input.value = '';
       }
@@ -112,10 +114,8 @@ class App {
     if (user) {
       // Logged in - redirect handled by module
     } else if (extra && extra.needTelegramLink) {
-      // Show Telegram link section
       this.showTelegramLinkSection(extra);
     } else if (extra && extra.needOTPVerification) {
-      // Show OTP verification
       this.showOtpSection(extra);
     } else if (extra && extra.needRegister) {
       this.showRegisterSection(extra.googleUser);
@@ -126,12 +126,14 @@ class App {
 
   showLoginSection() {
     if (!this.appContainer) return;
+    this.cleanup();
     this.appContainer.innerHTML = this.loginComponent.render();
     this.loginComponent.initEvents();
   }
 
   showRegisterSection(googleUser) {
     if (!this.appContainer) return;
+    this.cleanup();
     this.appContainer.innerHTML = this.registerComponent.render();
     this.registerComponent.initEvents();
     this.registerComponent.show(googleUser);
@@ -140,30 +142,36 @@ class App {
   showTelegramLinkSection(extra) {
     if (!this.appContainer) return;
     
-    // Store pending data for refresh
+    this.cleanup();
+    
+    // Store pending data
     this.pendingUserData = {
       userId: extra.userId,
       email: extra.email,
       googleUser: extra.googleUser
     };
     
-    // Render Telegram link section
+    // Render with improved UI
     this.appContainer.innerHTML = this.getTelegramLinkTemplate(extra);
     
-    // Setup polling to check if Telegram is linked
+    // Setup polling
     this.startTelegramCheck(extra.userId);
     
-    // Back to login button
+    // Event listeners
     document.getElementById('back-to-login')?.addEventListener('click', () => {
       this.showLoginSection();
+    });
+    
+    document.getElementById('open-telegram')?.addEventListener('click', () => {
+      showInfo('Buka Telegram', 'Klik START di bot Telegram untuk menghubungkan akun');
     });
   }
 
   getTelegramLinkTemplate(extra) {
     return `
-      <div class="max-w-md mx-auto p-6 bg-gray-800 rounded-lg shadow-lg">
+      <div class="max-w-md mx-auto p-6 bg-gray-800 rounded-xl shadow-2xl animate-scale-in">
         <div class="text-center mb-6">
-          <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+          <div class="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg">
             <i class="fab fa-telegram text-4xl text-white"></i>
           </div>
           <h2 class="text-2xl font-bold text-white mb-2">Hubungkan Telegram</h2>
@@ -172,41 +180,48 @@ class App {
           </p>
         </div>
         
-        <div class="bg-gray-700 rounded-lg p-4 mb-6">
-          <p class="text-gray-300 text-sm mb-3">Langkah-langkah:</p>
+        <div class="bg-gray-700/50 rounded-xl p-4 mb-6 space-y-3">
+          <p class="text-gray-300 text-sm font-medium mb-3">
+            <i class="fas fa-list-ol mr-2 text-blue-400"></i>Langkah-langkah:
+          </p>
           <ol class="list-decimal list-inside text-gray-300 text-sm space-y-2">
-            <li>Klik tombol <strong>"Buka Telegram"</strong> di bawah</li>
-            <li>Di Telegram, klik tombol <strong>START</strong></li>
-            <li>Tunggu beberapa saat hingga verifikasi selesai</li>
+            <li>Klik tombol <strong class="text-blue-400">"Buka Telegram"</strong> di bawah</li>
+            <li>Di Telegram, klik tombol <strong class="text-green-400">START</strong></li>
+            <li>Tunggu hingga verifikasi selesai</li>
           </ol>
         </div>
         
         <a 
+          id="open-telegram"
           href="${extra.telegramLink}" 
           target="_blank"
-          class="block w-full py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg text-center transition-colors mb-4"
+          class="flex items-center justify-center gap-3 w-full py-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg"
         >
-          <i class="fab fa-telegram mr-2"></i> Buka Telegram
+          <i class="fab fa-telegram text-xl"></i>
+          <span>Buka Telegram</span>
         </a>
         
-        <div id="telegram-status" class="text-center text-sm text-gray-400 mb-4">
-          Menunggu verifikasi Telegram...
+        <div id="telegram-status" class="mt-4 p-3 bg-gray-700/30 rounded-lg">
+          <div class="flex items-center justify-center gap-2 text-sm text-gray-400">
+            <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
+            <span>Menunggu verifikasi Telegram...</span>
+          </div>
         </div>
         
         <button 
           id="refresh-telegram-status"
-          class="w-full py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors text-sm"
+          class="w-full mt-3 py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors text-sm font-medium"
         >
-          <i class="fas fa-sync-alt mr-2"></i> Periksa Status
+          <i class="fas fa-sync-alt mr-2"></i>Periksa Status
         </button>
         
-        <div class="text-center mt-4">
+        <div class="text-center mt-4 pt-4 border-t border-gray-700">
           <button 
             type="button" 
             id="back-to-login"
-            class="text-gray-400 hover:text-white text-sm"
+            class="text-gray-400 hover:text-white text-sm transition-colors"
           >
-            ← Kembali ke Login
+            <i class="fas fa-arrow-left mr-1"></i>Kembali ke Login
           </button>
         </div>
       </div>
@@ -214,7 +229,6 @@ class App {
   }
 
   startTelegramCheck(userId) {
-    const statusEl = document.getElementById('telegram-status');
     const refreshBtn = document.getElementById('refresh-telegram-status');
     
     if (refreshBtn) {
@@ -235,21 +249,23 @@ class App {
     if (!this.pendingUserData) return;
     
     try {
-      // Try to generate OTP - if Telegram is linked, it will succeed
       const result = await window.AuthApi.generateOTP(userId, this.pendingUserData.email);
       
       if (result.success) {
-        // Telegram is linked! Clear interval and show OTP section
+        // Telegram linked!
         if (this.telegramCheckInterval) {
           clearInterval(this.telegramCheckInterval);
         }
         
-        // Show success message briefly
         if (statusEl) {
-          statusEl.innerHTML = '<span class="text-green-400">✅ Telegram terhubung! Mengarahkan ke verifikasi OTP...</span>';
+          statusEl.innerHTML = `
+            <div class="flex items-center justify-center gap-2 text-sm text-green-400">
+              <i class="fas fa-check-circle"></i>
+              <span>Telegram terhubung! Mengarahkan ke verifikasi OTP...</span>
+            </div>
+          `;
         }
         
-        // Show OTP section
         setTimeout(() => {
           this.showOtpSection({
             userId: this.pendingUserData.userId,
@@ -261,17 +277,32 @@ class App {
         
       } else if (result.error === 'TELEGRAM_NOT_LINKED') {
         if (statusEl) {
-          statusEl.innerHTML = '<span class="text-yellow-400">⏳ Menunggu koneksi Telegram...</span>';
+          statusEl.innerHTML = `
+            <div class="flex items-center justify-center gap-2 text-sm text-yellow-400">
+              <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
+              <span>Menunggu koneksi Telegram...</span>
+            </div>
+          `;
         }
       } else {
         if (statusEl) {
-          statusEl.innerHTML = '<span class="text-red-400">❌ ' + (result.message || 'Gagal memeriksa status') + '</span>';
+          statusEl.innerHTML = `
+            <div class="flex items-center justify-center gap-2 text-sm text-red-400">
+              <i class="fas fa-exclamation-circle"></i>
+              <span>${result.message || 'Gagal memeriksa status'}</span>
+            </div>
+          `;
         }
       }
     } catch (error) {
       console.error('Check Telegram status error:', error);
       if (statusEl) {
-        statusEl.innerHTML = '<span class="text-red-400">❌ Gagal memeriksa status</span>';
+        statusEl.innerHTML = `
+          <div class="flex items-center justify-center gap-2 text-sm text-red-400">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>Gagal memeriksa status</span>
+          </div>
+        `;
       }
     }
   }
@@ -279,10 +310,7 @@ class App {
   showOtpSection(extra) {
     if (!this.appContainer) return;
     
-    // Stop any existing telegram check
-    if (this.telegramCheckInterval) {
-      clearInterval(this.telegramCheckInterval);
-    }
+    this.cleanup();
     
     // Store OTP data
     this.otpHandler.setData(extra.userId, extra.email);
@@ -292,10 +320,6 @@ class App {
     
     // Render OTP form
     this.appContainer.innerHTML = OtpTemplates.otpSection();
-    
-    // Update email display
-    const emailEl = document.getElementById('otp-email');
-    if (emailEl) emailEl.textContent = extra.email;
     
     // Initialize events
     this.otpHandler.initEvents({
@@ -312,6 +336,15 @@ class App {
     document.getElementById('back-to-login')?.addEventListener('click', () => {
       this.showLoginSection();
     });
+  }
+
+  // Cleanup interval on section change
+  cleanup() {
+    if (this.telegramCheckInterval) {
+      clearInterval(this.telegramCheckInterval);
+      this.telegramCheckInterval = null;
+    }
+    this.pendingUserData = null;
   }
 }
 

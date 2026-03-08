@@ -2,10 +2,12 @@
  * Game Script Module
  * Spin Diskon UMKM - Main game logic
  * Uses AuthApi for all API calls - single source of truth
+ * Uses Toast for notifications (SweetAlert2)
  */
 
 // Import AuthApi for consistent API calls
 import { authApi } from './auth/AuthApi.js';
+import { showError, showSuccess, showWarning } from './components/utils/Toast.js';
 
 // Wheel Configuration
 const CONFIG = {
@@ -116,19 +118,19 @@ function isAuthenticated() {
 function startGame() {
   // Check authentication
   if (!isAuthenticated()) {
-    alert('Silakan login terlebih dahulu dengan Google');
+    showWarning('Login Diperlukan', 'Silakan login terlebih dahulu dengan Google');
     return;
   }
 
   const wa = document.getElementById('wa').value.trim();
 
   if (!wa) {
-    alert('Isi WhatsApp dulu');
+    showWarning('WhatsApp Diperlukan', 'Silakan isi nomor WhatsApp terlebih dahulu');
     return;
   }
 
   localStorage.setItem('wa', wa);
-  alert('Siap spin 🎡');
+  showSuccess('Siap Spin!', '🎡 Sekarang Anda bisa memutar roda');
 }
 
 /**
@@ -138,7 +140,7 @@ function startGame() {
 async function spinWheel() {
   // Check authentication
   if (!isAuthenticated()) {
-    alert('Silakan login terlebih dahulu dengan Google');
+    showWarning('Login Diperlukan', 'Silakan login terlebih dahulu dengan Google');
     return;
   }
 
@@ -147,7 +149,7 @@ async function spinWheel() {
   const wa = localStorage.getItem('wa');
 
   if (!wa) {
-    alert('Isi WA dulu');
+    showWarning('WhatsApp Diperlukan', 'Silakan isi nomor WhatsApp terlebih dahulu');
     return;
   }
 
@@ -158,7 +160,7 @@ async function spinWheel() {
     const data = await authApi.spin(wa, getCustomerId());
 
     if (data.error) {
-      alert('Sudah main hari ini');
+      showWarning('Tidak Bisa Spin', 'Anda sudah bermain hari ini. Cobain lagi besok ya!');
       STATE.spinning = false;
       return;
     }
@@ -167,7 +169,7 @@ async function spinWheel() {
 
   } catch (err) {
     console.error(err);
-    alert('Server error. Periksa jaringan Anda.');
+    showError('Server Error', 'Terjadi kesalahan. Periksa jaringan Anda.');
     STATE.spinning = false;
   }
 }

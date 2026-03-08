@@ -1,10 +1,11 @@
 /**
  * OTP Verification Handler
  * Handles OTP form display and verification
+ * Uses Toast for notifications
  */
 
 import { authApi } from '../../auth/AuthApi.js';
-import { ErrorHandler } from '../utils/ErrorHandler.js';
+import { showSuccess, showError, showLoading, closeLoading } from './Toast.js';
 
 export class OtpHandler {
   constructor(options = {}) {
@@ -20,41 +21,46 @@ export class OtpHandler {
     
     const otpCode = document.getElementById('otp-code')?.value.trim();
     if (!otpCode) {
-      this.showError('Masukkan kode OTP');
+      await showError('Input Required', 'Masukkan kode OTP');
       return;
     }
 
-    this.showLoading('Memverifikasi OTP...');
+    const loading = await showLoading('Memverifikasi OTP...');
 
     try {
       const result = await authApi.verifyOTP(this.otpId, otpCode, this.userId);
       
+      closeLoading();
+      
       if (result.success && result.verified) {
-        this.showSuccess('Verifikasi berhasil! Mengarahkan ke login...');
+        await showSuccess('Verifikasi Berhasil', 'Akun Anda sekarang aktif!');
         setTimeout(() => {
           this.onSuccess();
         }, 1500);
       } else {
-        this.showError(result.message || 'Kode OTP tidak valid');
+        await showError('Verifikasi Gagal', result.message || 'Kode OTP tidak valid');
       }
     } catch (error) {
+      closeLoading();
       console.error('OTP verification error:', error);
-      this.showError('Gagal memverifikasi OTP. Silakan coba lagi.');
+      await showError('Error', 'Gagal memverifikasi OTP. Silakan coba lagi.');
     }
   }
 
   async handleResend() {
-    this.showLoading('Mengirim ulang OTP...');
+    const loading = await showLoading('Mengirim ulang OTP...');
     
     try {
       const result = await authApi.generateOTP(this.userId, this.email);
       
+      closeLoading();
+      
       if (result.success) {
         this.otpId = result.otpId;
-        this.showSuccess('OTP telah dikirim ulang ke Telegram Anda');
+        await showSuccess('OTP Terkirim', 'Kode OTP telah dikirim ulang ke Telegram Anda');
         this.onResend();
       } else if (result.error === 'TELEGRAM_NOT_LINKED') {
-        this.showError('Telegram belum terhubung. Silakan hubungkan Telegram terlebih dahulu.');
+        await showError('Telegram Belum Terhubung', 'Silakan hubungkan Telegram terlebih dahulu');
         // Optionally redirect to Telegram link
         if (result.telegramLink) {
           setTimeout(() => {
@@ -62,55 +68,13 @@ export class OtpHandler {
           }, 2000);
         }
       } else {
-        this.showError(result.message || 'Gagal mengirim OTP');
+        await showError('Gagal Mengirim OTP', result.message || 'Terjadi kesalahan');
       }
     } catch (error) {
+      closeLoading();
       console.error('Resend OTP error:', error);
-      this.showError('Gagal mengirim OTP. Silakan coba lagi.');
+      await showError('Error', 'Gagal mengirim OTP. Silakan coba lagi.');
     }
-  }
-
-  showError(message) {
-    const errorEl = document.getElementById('otp-error');
-    if (errorEl) {
-      errorEl.textContent = message;
-      errorEl.classList.remove('hidden');
-    }
-    this.hideLoading();
-  }
-
-  showSuccess(message) {
-    const errorEl = document.getElementById('otp-error');
-    if (errorEl) {
-      errorEl.textContent = message;
-      errorEl.className = 'mt-2 p-2 rounded text-sm bg-green-500/20 text-green-400';
-      errorEl.classList.remove('hidden');
-    }
-  }
-
-  hideError() {
-    const errorEl = document.getElementById('otp-error');
-    if (errorEl) {
-      errorEl.textContent = '';
-      errorEl.classList.add('hidden');
-    }
-  }
-
-  showLoading(message) {
-    const btn = document.getElementById('verify-otp-btn');
-    const loadingEl = document.getElementById('otp-loading');
-    if (btn) btn.disabled = true;
-    if (loadingEl) {
-      loadingEl.textContent = message;
-      loadingEl.classList.remove('hidden');
-    }
-  }
-
-  hideLoading() {
-    const btn = document.getElementById('verify-otp-btn');
-    const loadingEl = document.getElementById('otp-loading');
-    if (btn) btn.disabled = false;
-    if (loadingEl) loadingEl.classList.add('hidden');
   }
 
   initEvents(options = {}) {
@@ -134,56 +98,60 @@ export class OtpHandler {
 // OTP Template
 export const OtpTemplates = {
   otpSection: () => `
-    <div id="otp-section" class="max-w-md mx-auto p-6 bg-gray-800 rounded-lg shadow-lg">
-      <h2 class="text-2xl font-bold text-center mb-4 text-white">Verifikasi OTP</h2>
-      <p class="text-gray-400 text-center mb-6">
-        Kami telah mengirim kode OTP ke Telegram Anda.<br>
-        Silakan masukkan kode tersebut di bawah.
-      </p>
+    <div id="otp-section" class="max-w-md mx-auto p-6 bg-gray-800 rounded-lg shadow-lg animate-scale-in">
+      <div class="text-center mb-6">
+        <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+          <i class="fas fa-shield-alt text-2xl text-white"></i>
+        </div>
+        <h2 class="text-2xl font-bold text-white mb-2">Verifikasi OTP</h2>
+        <p class="text-gray-400 text-sm">
+          Kami telah mengirim kode OTP ke Telegram Anda.<br>
+          Silakan masukkan kode tersebut di bawah.
+        </p>
+      </div>
       
       <form id="otp-form" class="space-y-4">
         <div>
-          <label for="otp-code" class="block text-sm font-medium text-gray-300 mb-1">
-            Kode OTP
+          <label for="otp-code" class="block text-sm font-medium text-gray-300 mb-2">
+            <i class="fas fa-lock mr-2"></i>Kode OTP
           </label>
           <input 
             type="text" 
             id="otp-code" 
             maxlength="6"
-            class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-center text-2xl tracking-widest"
+            class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white text-center text-2xl tracking-widest focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
             placeholder="------"
             required
+            autocomplete="one-time-code"
           />
         </div>
-        
-        <div id="otp-error" class="hidden mt-2 p-2 rounded text-sm bg-red-500/20 text-red-400"></div>
-        <div id="otp-loading" class="hidden mt-2 p-2 rounded text-sm bg-blue-500/20 text-blue-400"></div>
         
         <button 
           type="submit" 
           id="verify-otp-btn"
-          class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
+          class="w-full py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98]"
         >
-          Verifikasi
+          <i class="fas fa-check-circle mr-2"></i>Verifikasi
         </button>
         
         <div class="text-center">
+          <p class="text-gray-400 text-sm mb-2">Tidak menerima kode OTP?</p>
           <button 
             type="button" 
             id="resend-otp-btn"
-            class="text-blue-400 hover:text-blue-300 text-sm"
+            class="text-blue-400 hover:text-blue-300 font-medium transition-colors"
           >
-            Kirim ulang OTP
+            <i class="fas fa-redo mr-1"></i>Kirim ulang OTP
           </button>
         </div>
         
-        <div class="text-center mt-4">
+        <div class="text-center mt-4 pt-4 border-t border-gray-700">
           <button 
             type="button" 
             id="back-to-login"
-            class="text-gray-400 hover:text-white text-sm"
+            class="text-gray-400 hover:text-white text-sm transition-colors"
           >
-            ← Kembali ke Login
+            <i class="fas fa-arrow-left mr-1"></i>Kembali ke Login
           </button>
         </div>
       </form>

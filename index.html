@@ -6,14 +6,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SpinX - Lucky Wheel Festival</title>
   <link rel="icon" href="data:,">
+  
   <!-- Disable FedCM for better compatibility with COOP policies -->
-  <meta name="google-signin-client_id" content="88663261491-iermq433pje0kinqderrp9lbar5k6fsk.apps.googleusercontent.com">
+  <!-- Note: Client ID should be configured in js/auth/Config.js via environment variables -->
   <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups">
+  
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Custom Styles -->
   <link rel="stylesheet" href="css/style.css">
+  
   <!-- Font Awesome for icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- SweetAlert2 for toast notifications -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.all.min.js"></script>
+  
+  <!-- Google Sign-In -->
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 
 <body class="min-h-screen flex items-center justify-center p-4">

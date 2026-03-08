@@ -2,10 +2,12 @@
  * Google Auth Module
  * Handles Google Sign-In with registration flow
  * Uses AuthApi for all backend calls - single source
+ * Uses Toast for notifications
  */
 
 import { AUTH_CONFIG } from './Config.js';
 import { authApi } from './AuthApi.js';
+import { showError, showSuccess, showLoading, closeLoading } from '../components/utils/Toast.js';
 
 class GoogleAuth {
   constructor() {
@@ -50,15 +52,13 @@ class GoogleAuth {
     if (!window.google?.accounts?.id) return;
     
     // Initialize with the global callback
-    // Use popup mode instead of FedCM for better compatibility with GitHub Pages
+    // Use popup mode instead of FedCM for better compatibility
     google.accounts.id.initialize({
       client_id: window.AUTH_CONFIG?.CLIENT_ID,
       callback: window.handleGoogleCredentialResponse,
       auto_select: false,
       cancel_on_tap_outside: false,
-      // Use popup mode - more compatible with various hosting environments
       ux_mode: 'popup',
-      // Explicitly disable FedCM 
       use_fedcm_for_prompt: false
     });
   }
@@ -68,7 +68,6 @@ class GoogleAuth {
     if (loginBtn) {
       loginBtn.addEventListener("click", () => {
         if (window.google?.accounts?.id) {
-          // Use renderButton for more reliable popup flow
           google.accounts.id.prompt();
         }
       });
@@ -76,6 +75,8 @@ class GoogleAuth {
   }
 
   async handleCredentialResponse(response) {
+    const loading = await showLoading('Sedang memproses login...');
+    
     try {
       const userInfo = this.parseJwt(response.credential);
       this.googleUser = {
@@ -88,8 +89,10 @@ class GoogleAuth {
       // Use AuthApi for backend validation
       const authResult = await authApi.login(userInfo);
       
+      closeLoading();
+      
       if (!authResult.success) {
-        this.showError(authResult.message || 'Login gagal');
+        await showError('Login Gagal', authResult.message || 'Terjadi kesalahan');
         return;
       }
 
@@ -97,15 +100,21 @@ class GoogleAuth {
         if (authResult.needVerification) {
           if (authResult.telegramLinked) {
             // User has linked Telegram - generate OTP and show verification form
+            const otpLoading = await showLoading('Mengirim OTP...');
             const otpResult = await authApi.generateOTP(authResult.userId, userInfo.email);
+            closeLoading();
             
-            this.triggerCallbacks(null, {
-              needOTPVerification: true,
-              userId: authResult.userId,
-              email: userInfo.email,
-              otpId: otpResult.otpId,
-              googleUser: this.googleUser
-            });
+            if (otpResult.success) {
+              this.triggerCallbacks(null, {
+                needOTPVerification: true,
+                userId: authResult.userId,
+                email: userInfo.email,
+                otpId: otpResult.otpId,
+                googleUser: this.googleUser
+              });
+            } else {
+              await showError('Gagal Mengirim OTP', otpResult.message || 'Silakan coba lagi');
+            }
           } else {
             // User needs to link Telegram first
             this.triggerCallbacks(null, {
@@ -122,20 +131,28 @@ class GoogleAuth {
         this.currentUser = { ...authResult.user, picture: userInfo.picture };
         this.role = authResult.role;
         localStorage.setItem('user', JSON.stringify(this.currentUser));
+        
+        await showSuccess('Login Berhasil', `Selamat datang, ${userInfo.name}!`);
+        
         this.triggerCallbacks(this.currentUser);
         this.routeToDashboard(this.role);
       } else {
         this.triggerCallbacks(null, { needRegister: true, googleUser: this.googleUser });
       }
     } catch (error) {
+      closeLoading();
       console.error('Auth error:', error);
-      this.showError('Login gagal. Silakan coba lagi.');
+      await showError('Login Gagal', 'Terjadi kesalahan. Silakan coba lagi.');
     }
   }
 
   async register(userData) {
+    const loading = await showLoading('Sedang mendaftar...');
+    
     // Use AuthApi for registration
     const result = await authApi.register(this.googleUser, userData);
+    
+    closeLoading();
     
     if (result.success) {
       this.currentUser = {
@@ -148,6 +165,8 @@ class GoogleAuth {
         picture: this.googleUser.picture
       };
       
+      await showSuccess('Registrasi Berhasil', 'Silakan hubungkan Telegram untuk verifikasi');
+      
       // Show Telegram link for verification
       this.triggerCallbacks(null, {
         needTelegramLink: true,
@@ -159,6 +178,8 @@ class GoogleAuth {
       
       return { success: true };
     }
+    
+    await showError('Registrasi Gagal', result.message || 'Terjadi kesalahan');
     return { success: false, message: result.message };
   }
 
@@ -208,10 +229,18 @@ class GoogleAuth {
   }
 
   routeToDashboard(role) {
-    const dashboards = { 'admin': 'dashboard-admin.html', 'siswa': 'dashboard-siswa.html', 'mitra': 'dashboard-mitra.html', 'guru': 'dashboard-guru.html' };
+    const dashboards = { 
+      'admin': 'dashboard-admin.html', 
+      'siswa': 'dashboard-siswa.html', 
+      'mitra': 'dashboard-mitra.html', 
+      'guru': 'dashboard-guru.html' 
+    };
     const dashboard = dashboards[role];
     if (dashboard) window.location.href = dashboard;
-    else { this.showError('Role tidak valid'); window.location.href = 'index.html'; }
+    else { 
+      showError('Role Tidak Valid', 'Role pengguna tidak dikenali'); 
+      window.location.href = 'index.html'; 
+    }
   }
 
   getScriptUrl() { return AUTH_CONFIG.API_URL; }
@@ -249,15 +278,13 @@ class GoogleAuth {
     this.callbacks.forEach(cb => cb(user, extra));
   }
 
+  // Legacy methods for backward compatibility
   showError(message) {
-    const errorEl = document.getElementById('auth-error');
-    if (errorEl) { errorEl.textContent = message; errorEl.classList.remove('hidden'); }
-    else { alert(message); }
+    showError('Error', message);
   }
 
   hideError() {
-    const errorEl = document.getElementById('auth-error');
-    if (errorEl) { errorEl.textContent = ''; errorEl.classList.add('hidden'); }
+    // No-op, handled by Toast
   }
 }
 
