@@ -10,8 +10,8 @@
     }
   ],
   "rewrites": [
-    { "source": "/api/proxy", "destination": "/api/proxy.js" },
-    { "source": "/api/telegram", "destination": "/api/telegram.js" }
+    { "source": "/api/proxy", "destination": "/api/proxy" },
+    { "source": "/api/telegram", "destination": "/api/telegram" }
   ],
   "buildCommand": "npm run build",
   "outputDirectory": "dist",

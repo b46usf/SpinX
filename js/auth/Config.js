@@ -11,12 +11,12 @@
 
 // Helper function to get environment variable (Vite way)
 function getEnvVar(name, required = false) {
-  // Vite uses import.meta.env with  prefix
+  // Vite exposes env vars with VITE_ prefix to client-side
   // eslint-disable-next-line no-undef
-  const value = import.meta.env[`${name}`];
+  const value = import.meta.env[`VITE_${name}`];
   
   if (!value && required) {
-    console.warn(`⚠️ Warning: ${name} is not set. Please configure in Vercel dashboard (${name})`);
+    console.warn(`⚠️ Warning: VITE_${name} is not set. Please configure in Vercel dashboard (VITE_${name})`);
   }
   
   return value;
