@@ -3,7 +3,6 @@
  * Solves CORS issues by calling GAS from server-side
  */
 
-// Vercel API route
 module.exports = async function handler(req, res) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Credentials', true);
@@ -22,14 +21,26 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { action, ...data } = req.body;
+    // Get the body - Vercel should parse JSON automatically
+    const body = req.body || {};
     
-    // Get GAS URL from environment variable or use default from Config
-    // IP is now captured from frontend via ipify
+    // Debug: Log what we received
+    console.log('Received body:', JSON.stringify(body));
+    
+    // Extract action
+    const action = body?.action || '';
+    
+    // Debug: Log the action
+    console.log('Action:', action);
+    
+    // Get GAS URL from environment variable or use default
     const GAS_URL = process.env.GAS_URL || 'https://script.google.com/macros/s/AKfycby-CC0Kvio5cJsA4n4i8-h1XGdAQweITDzMfScw-08u4lufi-CGfPA0kIoxz4JX1JkR/exec';
     
-    // Forward the payload as-is (includes IP from frontend)
-    const payload = JSON.stringify({ action, ...data });
+    // Forward the payload as-is
+    const payload = JSON.stringify(body);
+    
+    // Debug: Log the payload we're sending to GAS
+    console.log('Sending to GAS:', payload);
     
     // Make request with redirect follow mode
     const response = await fetch(GAS_URL, {
@@ -61,7 +72,6 @@ module.exports = async function handler(req, res) {
       return res.status(200).json(jsonData);
     } catch (parseError) {
       console.error('Failed to parse GAS response:', text);
-      // Try to return as text if JSON parsing fails
       return res.status(200).json({ 
         success: true, 
         raw: text 
