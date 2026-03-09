@@ -89,10 +89,42 @@ export const RegisterTemplates = {
     return `
       <div class="input-group">
         <label class="block text-xs font-medium mb-2 text-left text-gray-400">
-          <i class="fas fa-building mr-1 text-pink-400"></i>Sekolah (Opsional)
+          <i class="fas fa-building mr-1 text-pink-400"></i>Sekolah
         </label>
-        <input type="text" id="sekolah" name="sekolah" placeholder="Nama sekolah" 
-          class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600 rounded-xl text-white text-sm focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20">
+        <input type="text" id="sekolah-guru" name="sekolah-guru" readonly placeholder="Akan diisi otomatis setelah pilih kelas" 
+          class="w-full px-3 py-2.5 bg-gray-800/30 border border-gray-700 rounded-xl text-gray-400 text-sm cursor-not-allowed">
+      </div>`;
+  },
+
+  kodeGuruField() {
+    return `
+      <div class="input-group">
+        <label class="block text-xs font-medium mb-2 text-left text-gray-400">
+          <i class="fas fa-id-card-alt mr-1 text-orange-400"></i>Kode Guru *
+        </label>
+        <div class="relative">
+          <input type="text" id="kode-guru" name="kodeGuru" placeholder="Masukkan Kode Guru" 
+            class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600 rounded-xl text-white text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 pl-10">
+          <i class="input-icon fas fa-id-card-alt absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+        </div>
+        <button type="button" id="verify-kode-guru-btn" class="mt-2 w-full py-2 bg-orange-600/20 hover:bg-orange-600/30 text-orange-400 rounded-lg text-xs font-medium transition-colors">
+          <i class="fas fa-search mr-1"></i> Cek Kode Guru
+        </button>
+        <div id="kode-guru-status" class="hidden mt-2 p-2 rounded-lg text-xs"></div>
+      </div>`;
+  },
+
+  kelasFieldGuru() {
+    return `
+      <div class="input-group">
+        <label class="block text-xs font-medium mb-2 text-left text-gray-400">
+          <i class="fas fa-users mr-1 text-cyan-400"></i>Kelas (Wali Kelas) *
+        </label>
+        <select id="kelas-guru" name="kelasGuru" required
+          class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600 rounded-xl text-white text-sm focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20">
+          <option value="">Pilih kelas...</option>
+        </select>
+        <p class="text-xs text-gray-500 mt-1">Pilih "Bukan Walas" jika bukan wali kelas</p>
       </div>`;
   },
 
@@ -163,9 +195,12 @@ export const RegisterTemplates = {
               ${this.roleField()}
               ${this.whatsappField()}
               <div id="nis-field" class="hidden">${this.nisField()}</div>
+              <div id="kode-guru-field" class="hidden">${this.kodeGuruField()}</div>
               <div id="nama-field" class="hidden">${this.namaField()}</div>
               <div id="kelas-field" class="hidden">${this.kelasField()}</div>
+              <div id="kelas-field-guru" class="hidden">${this.kelasFieldGuru()}</div>
               <div id="sekolah-field-siswa" class="hidden">${this.sekolahSiswaField()}</div>
+              <div id="sekolah-field-guru" class="hidden">${this.sekolahGuruField()}</div>
               <div id="sekolah-field" class="hidden">${this.sekolahGuruField()}</div>
               <div id="mitra-fields" class="hidden">${this.mitraFields()}</div>
               

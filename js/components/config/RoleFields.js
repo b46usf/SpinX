@@ -7,7 +7,7 @@
 export const RoleFields = {
   mapping: {
     siswa: ['nis-field', 'nama-field', 'kelas-field', 'sekolah-field-siswa'],
-    guru: ['sekolah-field'],
+    guru: ['kode-guru-field', 'nama-field', 'kelas-field-guru', 'sekolah-field-guru'],
     mitra: ['mitra-fields']
   },
 

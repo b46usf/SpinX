@@ -200,6 +200,29 @@ class AuthApi {
   }
 
   /**
+   * Verify Kode Guru
+   * @param {string} kodeGuru - Kode Guru
+   */
+  async verifyKodeGuru(kodeGuru) {
+    return this.call('verifykodeguru', { kode_guru: kodeGuru }, false); // Don't show toast for queries
+  }
+
+  /**
+   * Get unique kelas options
+   */
+  async getUniqueKelas() {
+    return this.call('getuniquekelas', {}, false); // Don't show toast for queries
+  }
+
+  /**
+   * Get sekolah by kelas
+   * @param {string} kelas - Kelas name
+   */
+  async getSekolahByKelas(kelas) {
+    return this.call('getsekolahbykelas', { kelas: kelas }, false); // Don't show toast for queries
+  }
+
+  /**
    * Generate OTP
    * @param {string} userId - User ID
    * @param {string} email - Email address
