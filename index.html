@@ -34,9 +34,16 @@
   <!-- Main App Container - Components will be rendered here by App.js -->
   <main id="app">
     <!-- Loading state while components initialize -->
-    <div class="glass-card p-8 w-full max-w-md text-center">
-      <i class="fas fa-spinner fa-spin text-4xl text-indigo-400"></i>
-      <p class="text-secondary mt-4">Memuat Informasi...</p>
+    <div class="loading-container">
+      <div class="loading-spinner">
+        <div class="spinner-ring"></div>
+        <div class="spinner-ring"></div>
+        <div class="spinner-ring"></div>
+        <div class="spinner-center">
+          <i class="fas fa-dharmachakra text-white text-2xl"></i>
+        </div>
+      </div>
+      <p class="loading-text">Memuat informasi</p>
     </div>
   </main>
 

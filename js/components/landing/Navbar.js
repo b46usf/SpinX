@@ -1,34 +1,57 @@
 /**
  * Navbar Component
- * Navigation bar for landing page
+ * Navigation bar for landing page - Enhanced glassmorphism design
  */
 
 export const Navbar = {
   render: () => `
-    <nav class="fixed top-0 left-0 right-0 z-50 nav-blur">
+    <nav class="fixed top-0 left-0 right-0 z-50 navbar-enhanced">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex items-center justify-between h-16">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center">
-              <i class="fas fa-dharmachakra text-white text-lg"></i>
+        <div class="flex items-center justify-between h-18">
+          <!-- Logo Section -->
+          <div class="flex items-center gap-3 group cursor-pointer" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/40 group-hover:shadow-indigo-500/60 transition-all duration-300 group-hover:scale-110">
+              <i class="fas fa-dharmachakra text-white text-xl animate-spin-slow"></i>
             </div>
-            <span class="font-bold text-xl text-white">spin<span class="text-indigo-400">X</span></span>
+            <span class="font-bold text-2xl text-white tracking-tight">spin<span class="gradient-text">X</span></span>
           </div>
-          <div class="hidden md:flex items-center gap-8">
-            <a href="#features" class="text-gray-300 hover:text-white transition-colors text-sm">Fitur</a>
-            <a href="#pricing" class="text-gray-300 hover:text-white transition-colors text-sm">Harga</a>
-            <a href="#testimonials" class="text-gray-300 hover:text-white transition-colors text-sm">Testimoni</a>
+          
+          <!-- Navigation Links -->
+          <div class="hidden lg:flex items-center gap-1">
+            <a href="#features" class="nav-link group">
+              <i class="fas fa-star text-xs opacity-0 group-hover:opacity-100 transition-opacity"></i>
+              <span>Fitur</span>
+            </a>
+            <a href="#pricing" class="nav-link group">
+              <i class="fas fa-tag text-xs opacity-0 group-hover:opacity-100 transition-opacity"></i>
+              <span>Harga</span>
+            </a>
+            <a href="#testimonials" class="nav-link group">
+              <i class="fas fa-heart text-xs opacity-0 group-hover:opacity-100 transition-opacity"></i>
+              <span>Testimoni</span>
+            </a>
+            <a href="#cta" class="nav-link group">
+              <i class="fas fa-rocket text-xs opacity-0 group-hover:opacity-100 transition-opacity"></i>
+              <span>Kontak</span>
+            </a>
           </div>
+          
+          <!-- Action Buttons -->
           <div class="flex items-center gap-3">
-            <a href="#pricing" class="hidden sm:inline-flex items-center px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded-lg transition-all">
+            <a href="#pricing" class="hidden md:inline-flex items-center px-5 py-2.5 bg-white/5 hover:bg-white/15 border border-white/10 text-white text-sm font-semibold rounded-xl transition-all duration-300 hover:scale-105 backdrop-blur-sm">
+              <i class="fas fa-gift mr-2 text-indigo-400"></i>
               Coba Gratis
             </a>
-            <button id="login-btn" class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-sm font-medium rounded-lg transition-all shadow-lg shadow-indigo-500/30">
+            <button id="login-btn" class="px-6 py-2.5 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 text-white text-sm font-bold rounded-xl transition-all duration-300 shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-105 active:scale-95">
+              <i class="fas fa-sign-in-alt mr-2"></i>
               Login
             </button>
           </div>
         </div>
       </div>
+      
+      <!-- Animated border line -->
+      <div class="navbar-border"></div>
     </nav>
   `,
   
@@ -46,6 +69,18 @@ export const Navbar = {
           target.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
       });
+    });
+    
+    // Navbar scroll effect
+    window.addEventListener('scroll', () => {
+      const navbar = document.querySelector('.navbar-enhanced');
+      if (navbar) {
+        if (window.scrollY > 50) {
+          navbar.classList.add('scrolled');
+        } else {
+          navbar.classList.remove('scrolled');
+        }
+      }
     });
   }
 };
