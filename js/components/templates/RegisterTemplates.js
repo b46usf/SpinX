@@ -58,7 +58,7 @@ export const RegisterTemplates = {
         <label class="block text-xs font-medium mb-2 text-left text-gray-400">
           <i class="fas fa-user mr-1 text-purple-400"></i>Nama
         </label>
-        <input type="text" id="nama" name="nama" readonly placeholder="Nama dari NIS" 
+        <input type="text" id="nama" name="nama" readonly placeholder="Nama akan diisi otomatis setelah verifikasi" 
           class="w-full px-3 py-2.5 bg-gray-800/30 border border-gray-700 rounded-xl text-gray-400 text-sm cursor-not-allowed">
       </div>`;
   },
@@ -69,7 +69,7 @@ export const RegisterTemplates = {
         <label class="block text-xs font-medium mb-2 text-left text-gray-400">
           <i class="fas fa-school mr-1 text-cyan-400"></i>Kelas
         </label>
-        <input type="text" id="kelas" name="kelas" readonly placeholder="Kelas dari NIS" 
+        <input type="text" id="kelas" name="kelas" readonly placeholder="Kelas akan diisi otomatis setelah verifikasi" 
           class="w-full px-3 py-2.5 bg-gray-800/30 border border-gray-700 rounded-xl text-gray-400 text-sm cursor-not-allowed">
       </div>`;
   },
@@ -80,7 +80,7 @@ export const RegisterTemplates = {
         <label class="block text-xs font-medium mb-2 text-left text-gray-400">
           <i class="fas fa-building mr-1 text-pink-400"></i>Sekolah
         </label>
-        <input type="text" id="sekolah-siswa" name="sekolah-siswa" readonly placeholder="Sekolah dari NIS" 
+        <input type="text" id="sekolah-siswa" name="sekolah-siswa" readonly placeholder="Sekolah akan diisi otomatis setelah verifikasi" 
           class="w-full px-3 py-2.5 bg-gray-800/30 border border-gray-700 rounded-xl text-gray-400 text-sm cursor-not-allowed">
       </div>`;
   },
