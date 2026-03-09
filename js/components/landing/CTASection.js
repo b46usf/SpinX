@@ -12,7 +12,7 @@ export const CTASection = {
           <div class="absolute bottom-0 right-0 w-32 h-32 bg-white/10 rounded-full translate-x-16 translate-y-16"></div>
           <div class="relative z-10">
             <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">Siap Booster Kantin Anda?</h2>
-            <p class="text-white/80 mb-8 max-w-xl mx-auto">Mulai sekarang dan rasakan perbedaan dalam bisnis kantin Anda. Gratis tanpa kartu kredit!</p>
+            <p class="text-white/80 mb-8 max-w-xl mx-auto">Mulai sekarang dan rasakan perbedaan dalam bisnis kantin Anda.</p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
               <button data-plan="starter" class="cta-start-btn inline-flex items-center justify-center px-8 py-4 bg-white text-indigo-600 font-bold rounded-xl hover:bg-gray-100 transition-all shadow-lg">
                 <i class="fas fa-rocket mr-2"></i>Coba Gratis Sekarang
