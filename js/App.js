@@ -2,13 +2,19 @@
 /**
  * Main Application Entry Point
  * Modular Architecture using ES6 Modules
- * Uses Toast for notifications
+ * Supports both Landing Page and Auth flows
  */
 
 // Import Toast FIRST to ensure it's available globally
 import './components/utils/Toast.js';
 
-// Import all modules
+// Import Landing Page
+import LandingPage from './pages/LandingPage.js';
+
+// Import Auth Components
+import { TelegramLinkSection, OtpSection } from './components/auth/index.js';
+
+// Import all auth modules
 import { googleAuthInstance } from './auth/GoogleAuth.js';
 import { ThemeToggle } from './components/ThemeToggle.js';
 import { LoginTemplates } from './components/templates/LoginTemplates.js';
@@ -34,6 +40,7 @@ window.OtpHandler = OtpHandler;
 window.OtpTemplates = OtpTemplates;
 window.LoginComponent = LoginComponent;
 window.RegisterComponent = RegisterComponent;
+window.LandingPage = LandingPage;
 
 /**
  * Main Application Class
@@ -47,11 +54,10 @@ class App {
     this.otpHandler = null;
     this.appContainer = null;
     this.pendingUserData = null;
-    this.otpRequested = false; // Prevent duplicate OTP requests
+    this.otpRequested = false;
   }
 
   async init() {
-    // Wait for Toast to be available
     await this.waitForToast();
     
     this.appContainer = document.getElementById('app');
@@ -60,7 +66,6 @@ class App {
       return;
     }
 
-    // Initialize theme
     this.initTheme();
 
     // Check if already logged in
@@ -69,7 +74,10 @@ class App {
       return;
     }
 
-    // Initialize Google Auth
+    // Show Landing Page first (for index.html)
+    this.showLandingPage();
+    
+    // Initialize Google Auth (but don't show login yet)
     await this.googleAuth.init();
 
     // Setup callback
@@ -82,12 +90,21 @@ class App {
 
     // Initialize components
     this.initComponents();
-
-    // Show login
-    this.showLoginSection();
   }
 
-  // Wait for Toast to be available
+  /**
+   * Show landing page
+   */
+  showLandingPage() {
+    if (!this.appContainer) return;
+    this.cleanup();
+    LandingPage.init('app');
+    window.showLoginSection = () => this.showLoginSection();
+  }
+
+  /**
+   * Wait for Toast to be available
+   */
   waitForToast() {
     return new Promise((resolve) => {
       let attempts = 0;
@@ -106,6 +123,9 @@ class App {
     });
   }
 
+  /**
+   * Initialize theme toggle
+   */
   initTheme() {
     this.themeToggle = new ThemeToggle();
     this.themeToggle.init();
@@ -113,8 +133,14 @@ class App {
     if (container) container.appendChild(this.themeToggle.render());
   }
 
+  /**
+   * Initialize auth components
+   */
   initComponents() {
-    this.loginComponent = new LoginComponent({ googleAuth: this.googleAuth });
+    this.loginComponent = new LoginComponent({ 
+      googleAuth: this.googleAuth 
+    });
+    
     this.registerComponent = new RegisterComponent({
       googleAuth: this.googleAuth,
       onSubmit: async (data) => {
@@ -126,11 +152,8 @@ class App {
       onCancel: () => this.showLoginSection()
     });
     
-    // Initialize OTP handler
     this.otpHandler = new OtpHandler({
-      onSuccess: () => {
-        this.showLoginSection();
-      },
+      onSuccess: () => this.showLoginSection(),
       onResend: () => {
         const input = document.getElementById('otp-code');
         if (input) input.value = '';
@@ -138,20 +161,26 @@ class App {
     });
   }
 
+  /**
+   * Handle auth state changes
+   */
   handleAuthChange(user, extra) {
     if (user) {
       // Logged in - redirect handled by module
-    } else if (extra && extra.needTelegramLink) {
+    } else if (extra?.needTelegramLink) {
       this.showTelegramLinkSection(extra);
-    } else if (extra && extra.needOTPVerification) {
+    } else if (extra?.needOTPVerification) {
       this.showOtpSection(extra);
-    } else if (extra && extra.needRegister) {
+    } else if (extra?.needRegister) {
       this.showRegisterSection(extra.googleUser);
     } else {
       this.showLoginSection();
     }
   }
 
+  /**
+   * Show login section
+   */
   showLoginSection() {
     if (!this.appContainer) return;
     this.cleanup();
@@ -159,6 +188,9 @@ class App {
     this.loginComponent.initEvents();
   }
 
+  /**
+   * Show register section
+   */
   showRegisterSection(googleUser) {
     if (!this.appContainer) return;
     this.cleanup();
@@ -167,6 +199,9 @@ class App {
     this.registerComponent.show(googleUser);
   }
 
+  /**
+   * Show Telegram link section
+   */
   showTelegramLinkSection(extra) {
     if (!this.appContainer) return;
     
@@ -179,83 +214,21 @@ class App {
       googleUser: extra.googleUser
     };
     
-    // Reset flag
     this.otpRequested = false;
     
-    // Render UI - SIMPLE VERSION
-    this.appContainer.innerHTML = this.getTelegramLinkTemplate(extra);
+    // Use modular component
+    this.appContainer.innerHTML = TelegramLinkSection.render(extra);
     
-    // Event listeners
-    document.getElementById('back-to-login')?.addEventListener('click', () => {
-      this.showLoginSection();
+    TelegramLinkSection.initEvents({
+      onBack: () => this.showLoginSection(),
+      onRefresh: () => this.checkTelegramStatus()
     });
-    
-    // Refresh/Check button
-    document.getElementById('refresh-telegram-status')?.addEventListener('click', () => {
-      this.checkTelegramStatus();
-    });
-    
-    // Auto check once when page loads
-    setTimeout(() => {
-      this.checkTelegramStatus();
-    }, 1000);
   }
 
-  getTelegramLinkTemplate(extra) {
-    return `
-      <div class="max-w-sm mx-auto p-5 bg-gray-800/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-700/50 animate-scale-in">
-        <!-- Header -->
-        <div class="text-center mb-4">
-          <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg">
-            <i class="fab fa-telegram text-2xl text-white"></i>
-          </div>
-          <h2 class="text-lg font-bold text-white">Hubungkan Telegram</h2>
-          <p class="text-gray-400 text-xs mt-1">Verifikasi akun Anda via Telegram</p>
-        </div>
-        
-        <!-- Telegram Button -->
-        <a 
-          id="open-telegram"
-          href="${extra.telegramLink}" 
-          target="_blank"
-          class="flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg text-sm"
-        >
-          <i class="fab fa-telegram"></i>
-          <span>Buka Telegram</span>
-        </a>
-        
-        <!-- Status -->
-        <div id="telegram-status" class="mt-3 p-3 bg-gray-700/30 rounded-lg">
-          <div class="flex items-center justify-center gap-2 text-xs text-gray-400">
-            <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
-            <span>Klik tombol di atas</span>
-          </div>
-        </div>
-        
-        <!-- Refresh Button -->
-        <button 
-          id="refresh-telegram-status"
-          class="w-full mt-2 py-2 bg-gray-700/50 hover:bg-gray-600/50 text-gray-400 rounded-lg transition-colors text-xs font-medium"
-        >
-          <i class="fas fa-sync-alt mr-1"></i>Periksa Status
-        </button>
-        
-        <!-- Back Link -->
-        <div class="text-center mt-3 pt-3 border-t border-gray-700/50">
-          <button 
-            type="button" 
-            id="back-to-login"
-            class="text-gray-500 hover:text-white text-xs transition-colors"
-          >
-            <i class="fas fa-arrow-left mr-1"></i>Kembali
-          </button>
-        </div>
-      </div>
-    `;
-  }
-
+  /**
+   * Check Telegram verification status
+   */
   async checkTelegramStatus() {
-    const statusEl = document.getElementById('telegram-status');
     const Toast = getToast();
     
     if (!this.pendingUserData || this.otpRequested) return;
@@ -278,29 +251,18 @@ class App {
       const result = await res.json();
       
       if (result.success) {
-        // Mark as requested to prevent duplicate
         this.otpRequested = true;
         
-        // Update status UI
-        if (statusEl) {
-          statusEl.innerHTML = `
-            <div class="flex items-center justify-center gap-2 text-xs text-green-400">
-              <i class="fas fa-check-circle"></i>
-              <span>Terkoneksi! Mengirim OTP...</span>
-            </div>
-          `;
-        }
+        TelegramLinkSection.updateStatus('success', result.debug_otp 
+          ? `Telegram Terhubung! Kode OTP: ${result.debug_otp}`
+          : 'Telegram Terhubung! Mengirim OTP...');
         
-        // Show success toast
         if (Toast) {
-          if (result.debug_otp) {
-            Toast.success('Telegram Terhubung!', 'Kode OTP: ' + result.debug_otp);
-          } else {
-            Toast.success('Telegram Terhubung!', 'Kode OTP dikirim ke Telegram Anda');
-          }
+          Toast.success('Telegram Terhubung!', result.debug_otp 
+            ? 'Kode OTP: ' + result.debug_otp 
+            : 'Kode OTP dikirim ke Telegram Anda');
         }
         
-        // Redirect to OTP page
         setTimeout(() => {
           this.showOtpSection({
             userId: this.pendingUserData.userId,
@@ -312,38 +274,19 @@ class App {
         }, 2000);
         
       } else if (result.error === 'TELEGRAM_NOT_LINKED') {
-        if (statusEl) {
-          statusEl.innerHTML = `
-            <div class="flex items-center justify-center gap-2 text-xs text-yellow-400">
-              <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
-              <span>Belum terhubung. Klik START di Telegram</span>
-            </div>
-          `;
-        }
+        TelegramLinkSection.updateStatus('not_linked');
       } else {
-        if (statusEl) {
-          statusEl.innerHTML = `
-            <div class="flex items-center justify-center gap-2 text-xs text-red-400">
-              <i class="fas fa-exclamation-circle"></i>
-              <span>${result.message || 'Gagal'}</span>
-            </div>
-          `;
-        }
+        TelegramLinkSection.updateStatus('error', result.message);
       }
     } catch (error) {
       console.error('Check Telegram status error:', error);
-      if (statusEl) {
-        statusEl.innerHTML = `
-          <div class="flex items-center justify-center gap-2 text-xs text-red-400">
-            <i class="fas fa-exclamation-circle"></i>
-            <span>Error koneksi</span>
-          </div>
-        `;
-      }
+      TelegramLinkSection.updateStatus('error', 'Error koneksi');
     }
   }
 
-  // Helper to get client IP
+  /**
+   * Get client IP address
+   */
   async getClientIP() {
     try {
       const response = await fetch('https://api.ipify.org?format=json');
@@ -354,99 +297,37 @@ class App {
     }
   }
 
+  /**
+   * Show OTP verification section
+   */
   showOtpSection(extra) {
     if (!this.appContainer) return;
     
     this.cleanup();
     
-    // Store OTP data
     this.otpHandler.setData(extra.userId, extra.email);
     if (extra.otpId) {
       this.otpHandler.setOtpId(extra.otpId);
     }
     
-    // Render OTP form
-    this.appContainer.innerHTML = this.getOtpTemplate();
+    this.appContainer.innerHTML = OtpSection.render();
     
-    // Initialize events
-    this.otpHandler.initEvents({
-      onSuccess: () => {
-        this.showLoginSection();
-      },
-      onResend: () => {
-        const input = document.getElementById('otp-code');
-        if (input) input.value = '';
+    OtpSection.initEvents({
+      onBack: () => this.showLoginSection(),
+      onResend: () => this.otpHandler.handleResend(),
+      onSubmit: (e) => {
+        e.preventDefault();
+        const otpCode = document.getElementById('otp-code')?.value;
+        if (otpCode) {
+          this.otpHandler.verify(otpCode);
+        }
       }
     });
-    
-    // Back to login button
-    document.getElementById('back-to-login')?.addEventListener('click', () => {
-      this.showLoginSection();
-    });
   }
 
-  getOtpTemplate() {
-    return `
-      <div class="max-w-sm mx-auto p-5 bg-gray-800/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-700/50 animate-scale-in">
-        <!-- Header -->
-        <div class="text-center mb-4">
-          <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg">
-            <i class="fas fa-shield-alt text-2xl text-white"></i>
-          </div>
-          <h2 class="text-lg font-bold text-white">Verifikasi OTP</h2>
-          <p class="text-gray-400 text-xs mt-1">Masukkan kode dari Telegram</p>
-        </div>
-        
-        <!-- OTP Form -->
-        <form id="otp-form" class="space-y-3">
-          <div>
-            <input 
-              type="text" 
-              id="otp-code" 
-              maxlength="6"
-              class="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white text-center text-2xl tracking-[0.5em] focus:border-green-500 focus:ring-2 focus:ring-green-500/20 font-mono"
-              placeholder="------"
-              required
-              autocomplete="one-time-code"
-            />
-          </div>
-          
-          <button 
-            type="submit" 
-            id="verify-otp-btn"
-            class="w-full py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg text-sm"
-          >
-            <i class="fas fa-check-circle mr-2"></i>Verifikasi
-          </button>
-        </form>
-        
-        <!-- Resend -->
-        <div class="text-center mt-4">
-          <p class="text-gray-500 text-xs">Tidak menerima kode?</p>
-          <button 
-            type="button" 
-            id="resend-otp-btn"
-            class="text-green-400 hover:text-green-300 font-medium text-sm transition-colors mt-1"
-          >
-            <i class="fas fa-redo mr-1"></i>Kirim Ulang
-          </button>
-        </div>
-        
-        <!-- Back -->
-        <div class="text-center mt-4 pt-4 border-t border-gray-700/50">
-          <button 
-            type="button" 
-            id="back-to-login"
-            class="text-gray-500 hover:text-white text-xs transition-colors"
-          >
-            <i class="fas fa-arrow-left mr-1"></i>Kembali
-          </button>
-        </div>
-      </div>
-    `;
-  }
-
-  // Cleanup
+  /**
+   * Cleanup state
+   */
   cleanup() {
     this.pendingUserData = null;
     this.otpRequested = false;
@@ -456,10 +337,10 @@ class App {
 // Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', async () => {
   const app = new App();
+  window.App = app;
   await app.init();
 });
 
 // Export for potential external use
 export { App, ThemeToggle };
-
 
