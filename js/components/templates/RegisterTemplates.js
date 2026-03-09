@@ -118,9 +118,9 @@ export const RegisterTemplates = {
     return `
       <div class="input-group">
         <label class="block text-xs font-medium mb-2 text-left text-gray-400">
-          <i class="fas fa-users mr-1 text-cyan-400"></i>Kelas (Wali Kelas) *
+          <i class="fas fa-users mr-1 text-cyan-400"></i>Kelas (Wali Kelas)
         </label>
-        <select id="kelas-guru" name="kelasGuru" required
+        <select id="kelas-guru" name="kelasGuru"
           class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600 rounded-xl text-white text-sm focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20">
           <option value="">Pilih kelas...</option>
         </select>
