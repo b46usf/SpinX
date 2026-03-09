@@ -1,14 +1,13 @@
-
 <!DOCTYPE html>
 <html lang="id" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SpinX - Lucky Wheel Festival</title>
+  <title>spinX Booster - Lucky Wheel Promo for Your School</title>
+  <meta name="description" content="Booster bisnis kantin sekolah Anda dengan spinX Lucky Wheel - promo wheel interaktif untuk menarik pelanggan">
   <link rel="icon" href="data:,">
   
   <!-- Disable FedCM for better compatibility with COOP policies -->
-  <!-- Note: Client ID should be configured in js/auth/Config.js via environment variables -->
   <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups">
   
   <!-- Tailwind CSS -->
@@ -27,29 +26,851 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   
   <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* Landing Page Specific Styles */
+    .landing-hero {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16213e 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .landing-hero::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: 
+        radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.2) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(236, 72, 153, 0.2) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(6, 182, 212, 0.15) 0%, transparent 40%);
+      pointer-events: none;
+      z-index: 0;
+    }
+    
+    .wheel-glow {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.3) 0%, transparent 70%);
+      animation: pulseGlow 4s ease-in-out infinite;
+    }
+    
+    @keyframes pulseGlow {
+      0%, 100% { transform: scale(1); opacity: 0.5; }
+      50% { transform: scale(1.1); opacity: 0.8; }
+    }
+    
+    .gradient-text {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .card-hover {
+      transition: all 0.3s ease;
+    }
+    
+    .card-hover:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(99, 102, 241, 0.2);
+    }
+    
+    .feature-icon {
+      width: 64px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 16px;
+      font-size: 24px;
+    }
+    
+    .price-card {
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .price-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+    
+    .price-card:hover::before {
+      transform: scaleX(1);
+    }
+    
+    .price-card.popular {
+      border: 2px solid #6366f1;
+    }
+    
+    .price-card.popular::after {
+      content: 'POPULAR';
+      position: absolute;
+      top: 12px;
+      right: -30px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 40px;
+      transform: rotate(45deg);
+    }
+    
+    .testimonial-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(10px);
+    }
+    
+    .cta-gradient {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    }
+    
+    .floating {
+      animation: floating 6s ease-in-out infinite;
+    }
+    
+    @keyframes floating {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-20px); }
+    }
+    
+    .section-padding {
+      padding: 80px 0;
+    }
+    
+    .nav-blur {
+      background: rgba(15, 15, 26, 0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    html {
+      scroll-behavior: smooth;
+    }
+  </style>
 </head>
 
-<body class="min-h-screen flex items-center justify-center p-4">
+<body class="landing-hero">
 
-  <!-- Theme Toggle Button (Fixed Position) -->
-  <div id="theme-toggle-container"></div>
-
-  <!-- Main App Container - Components will be rendered here by App.js -->
-  <main id="app">
-    <!-- Loading state while components initialize -->
-    <div class="glass-card p-8 w-full max-w-md text-center">
-      <i class="fas fa-spinner fa-spin text-4xl text-indigo-400"></i>
-      <p class="text-secondary mt-4">Memuat aplikasi...</p>
+  <!-- Navigation -->
+  <nav class="fixed top-0 left-0 right-0 z-50 nav-blur">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- Logo -->
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center">
+            <i class="fas fa-dharmachakra text-white text-lg"></i>
+          </div>
+          <span class="font-bold text-xl text-white">spin<span class="text-indigo-400">X</span></span>
+        </div>
+        
+        <!-- Nav Links (Desktop) -->
+        <div class="hidden md:flex items-center gap-8">
+          <a href="#features" class="text-gray-300 hover:text-white transition-colors text-sm">Fitur</a>
+          <a href="#pricing" class="text-gray-300 hover:text-white transition-colors text-sm">Harga</a>
+          <a href="#testimonials" class="text-gray-300 hover:text-white transition-colors text-sm">Testimoni</a>
+        </div>
+        
+        <!-- CTA Buttons -->
+        <div class="flex items-center gap-3">
+          <a href="#pricing" class="hidden sm:inline-flex items-center px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-sm font-medium rounded-lg transition-all">
+            Coba Gratis
+          </a>
+          <button id="login-btn" class="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-sm font-medium rounded-lg transition-all shadow-lg shadow-indigo-500/30">
+            Login
+          </button>
+        </div>
+      </div>
     </div>
-  </main>
+  </nav>
 
-  <!-- Load scripts in proper order (modular architecture) -->
-  
-  <!-- Single module entry point -->
-  <script type="module" src="js/App.js"></script>
+  <!-- Hero Section -->
+  <section class="relative min-h-screen flex items-center pt-16">
+    <div class="container mx-auto px-4 py-20">
+      <div class="grid lg:grid-cols-2 gap-12 items-center">
+        <!-- Left Content -->
+        <div class="text-center lg:text-left relative z-10">
+          <div class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-500/20 border border-indigo-500/30 rounded-full mb-6">
+            <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+            <span class="text-indigo-300 text-sm">Sekarang di Kantin Sekolah!</span>
+          </div>
+          
+          <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
+            Booster Bisnis Kantin
+            <span class="gradient-text">Sekolah Anda!</span>
+          </h1>
+          
+          <p class="text-gray-400 text-lg sm:text-xl mb-8 max-w-xl mx-auto lg:mx-0">
+            Tingkatkan penjualan kantin dengan Lucky Wheel promo interaktif. Murah, mudah, dan terbukti menambah pelanggan!
+          </p>
+          
+          <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+            <a href="#pricing" class="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white font-bold rounded-xl shadow-xl shadow-indigo-500/30 hover:shadow-indigo-500/50 transition-all transform hover:scale-105">
+              <i class="fas fa-rocket mr-2"></i>
+              Mulai Sekarang
+            </a>
+            <a href="#features" class="inline-flex items-center justify-center px-8 py-4 bg-white/10 border border-white/20 text-white font-semibold rounded-xl hover:bg-white/20 transition-all">
+              <i class="fas fa-play mr-2"></i>
+              Pelajari Lebih Lanjut
+            </a>
+          </div>
+          
+          <!-- Stats -->
+          <div class="grid grid-cols-3 gap-6 mt-12 pt-8 border-t border-white/10">
+            <div>
+              <div class="text-2xl sm:text-3xl font-bold text-white">500+</div>
+              <div class="text-gray-500 text-sm">Sekolah</div>
+            </div>
+            <div>
+              <div class="text-2xl sm:text-3xl font-bold text-white">50rb+</div>
+              <div class="text-gray-500 text-sm">Siswa</div>
+            </div>
+            <div>
+              <div class="text-2xl sm:text-3xl font-bold text-white">4.9</div>
+              <div class="text-gray-500 text-sm">Rating</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Right - Wheel Animation -->
+        <div class="relative flex justify-center lg:justify-end">
+          <div class="wheel-glow"></div>
+          <div class="w-80 h-80 sm:w-96 sm:h-96 relative floating">
+            <!-- Wheel SVG -->
+            <svg viewBox="0 0 400 400" class="w-full h-full transform hover:rotate-12 transition-transform duration-700">
+              <defs>
+                <filter id="glow">
+                  <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                  <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+              </defs>
+              
+              <!-- Outer ring -->
+              <circle cx="200" cy="200" r="190" fill="none" stroke="#6366f1" stroke-width="8" filter="url(#glow)"/>
+              <circle cx="200" cy="200" r="175" fill="#1a1a2e" stroke="rgba(99,102,241,0.3)" stroke-width="2"/>
+              
+              <!-- Wheel slices -->
+              <path d="M200 200 L200 25 A175 175 0 0 1 353 118 Z" fill="#ef4444" opacity="0.8"/>
+              <path d="M200 200 L353 118 A175 175 0 0 1 353 282 Z" fill="#f59e0b" opacity="0.8"/>
+              <path d="M200 200 L353 282 A175 175 0 0 1 200 375 Z" fill="#10b981" opacity="0.8"/>
+              <path d="M200 200 L200 375 A175 175 0 0 1 47 282 Z" fill="#3b82f6" opacity="0.8"/>
+              <path d="M200 200 L47 282 A175 175 0 0 1 47 118 Z" fill="#8b5cf6" opacity="0.8"/>
+              <path d="M200 200 L47 118 A175 175 0 0 1 200 25 Z" fill="#ec4899" opacity="0.8"/>
+              
+              <!-- Center circle -->
+              <circle cx="200" cy="200" r="50" fill="url(#centerGradient)" filter="url(#glow)"/>
+              <defs>
+                <radialGradient id="centerGradient">
+                  <stop offset="0%" stop-color="#6366f1"/>
+                  <stop offset="100%" stop-color="#8b5cf6"/>
+                </radialGradient>
+              </defs>
+              
+              <!-- Center text -->
+              <text x="200" y="195" text-anchor="middle" fill="white" font-size="14" font-weight="bold">spin</text>
+              <text x="200" y="215" text-anchor="middle" fill="white" font-size="14" font-weight="bold">X</text>
+              
+              <!-- Pointer -->
+              <polygon points="200,10 190,40 210,40" fill="#ffffff" filter="url(#glow)"/>
+            </svg>
+            
+            <!-- Floating badges -->
+            <div class="absolute -top-4 -right-4 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+              <i class="fas fa-gift mr-1"></i> Discount 20%
+            </div>
+            <div class="absolute -bottom-2 -left-4 bg-pink-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+              <i class="fas fa-star mr-1"></i> Gratis Spin
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
+  <!-- Features Section -->
+  <section id="features" class="section-padding bg-gray-900/50">
+    <div class="container mx-auto px-4">
+      <div class="text-center mb-16">
+        <span class="inline-block px-4 py-1 bg-indigo-500/20 text-indigo-400 rounded-full text-sm font-medium mb-4">
+          FITUR UNGGULAN
+        </span>
+        <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
+          Semua yang Anda Butuhkan untuk
+          <span class="gradient-text">Booster Kantin</span>
+        </h2>
+        <p class="text-gray-400 max-w-2xl mx-auto">
+          Fitur lengkap untuk menjalankan promo Lucky Wheel di kantin sekolah Anda
+        </p>
+      </div>
+      
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Feature 1 -->
+        <div class="card-hover bg-gray-800/50 border border-gray-700/50 rounded-2xl p-6">
+          <div class="feature-icon bg-gradient-to-br from-red-500 to-orange-500 text-white mb-4">
+            <i class="fas fa-dharmachakra"></i>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-2">Lucky Wheel Interaktif</h3>
+          <p class="text-gray-400 text-sm">
+            Roda putar menarik dengan animasi halus. Siswa akan tertarik untuk mencoba lagi dan lagi!
+          </p>
+        </div>
+        
+        <!-- Feature 2 -->
+        <div class="card-hover bg-gray-800/50 border border-gray-700/50 rounded-2xl p-6">
+          <div class="feature-icon bg-gradient-to-br from-green-500 to-teal-500 text-white mb-4">
+            <i class="fas fa-ticket-alt"></i>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-2">Sistem Voucher Otomatis</h3>
+          <p class="text-gray-400 text-sm">
+            Generate voucher diskon otomatis saat学生 menang. Redeem mudah di kasir!
+          </p>
+        </div>
+        
+        <!-- Feature 3 -->
+        <div class="card-hover bg-gray-800/50 border border-gray-700/50 rounded-2xl p-6">
+          <div class="feature-icon bg-gradient-to-br from-blue-500 to-cyan-500 text-white mb-4">
+            <i class="fas fa-chart-line"></i>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-2">Dashboard Lengkap</h3>
+          <p class="text-gray-400 text-sm">
+            Pantau performa promo, jumlah pemain, dan redemption voucher secara real-time.
+          </p>
+        </div>
+        
+        <!-- Feature 4 -->
+        <div class="card-hover bg-gray-800/50 border border-gray-700/50 rounded-2xl p-6">
+          <div class="feature-icon bg-gradient-to-br from-purple-500 to-pink-500 text-white mb-4">
+            <i class="fas fa-users"></i>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-2">Manajemen Siswa</h3>
+          <p class="text-gray-400 text-sm">
+            Data siswa terintegrasi dengan database sekolah. Validasi otomatis via NIS.
+          </p>
+        </div>
+        
+        <!-- Feature 5 -->
+        <div class="card-hover bg-gray-800/50 border border-gray-700/50 rounded-2xl p-6">
+          <div class="feature-icon bg-gradient-to-br from-yellow-500 to-amber-500 text-white mb-4">
+            <i class="fas fa-mobile-alt"></i>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-2">Responsive Design</h3>
+          <p class="text-gray-400 text-sm">
+            Tampilan optimal di semua device - HP, tablet, maupun laptop.
+          </p>
+        </div>
+        
+        <!-- Feature 6 -->
+        <div class="card-hover bg-gray-800/50 border border-gray-700/50 rounded-2xl p-6">
+          <div class="feature-icon bg-gradient-to-br from-indigo-500 to-blue-500 text-white mb-4">
+            <i class="fas fa-headset"></i>
+          </div>
+          <h3 class="text-xl font-bold text-white mb-2">Bantuan 24/7</h3>
+          <p class="text-gray-400 text-sm">
+            Tim support siap membantu kapan saja via Telegram untuk kelancaran promo Anda.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section id="pricing" class="section-padding">
+    <div class="container mx-auto px-4">
+      <div class="text-center mb-16">
+        <span class="inline-block px-4 py-1 bg-indigo-500/20 text-indigo-400 rounded-full text-sm font-medium mb-4">
+          HARGA TERJANGKAU
+        </span>
+        <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
+          Pilih Paket yang
+          <span class="gradient-text">Tepat Untuk Anda</span>
+        </h2>
+        <p class="text-gray-400 max-w-2xl mx-auto">
+          Mulai gratis, upgrade kapan saja. Tidak ada biaya tersembunyi.
+        </p>
+      </div>
+      
+      <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <!-- Starter Plan -->
+        <div class="price-card bg-gray-800/50 border border-gray-700/50 rounded-2xl p-6">
+          <div class="text-center mb-6">
+            <h3 class="text-xl font-bold text-white mb-2">Starter</h3>
+            <div class="text-4xl font-bold text-white mb-1">Gratis</div>
+            <p class="text-gray-500 text-sm">Untuk mencoba</p>
+          </div>
+          
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-center gap-3 text-gray-300 text-sm">
+              <i class="fas fa-check text-green-400"></i>
+              <span>50 siswa aktif</span>
+            </li>
+            <li class="flex items-center gap-3 text-gray-300 text-sm">
+              <i class="fas fa-check text-green-400"></i>
+              <span>Lucky Wheel basic</span>
+            </li>
+            <li class="flex items-center gap-3 text-gray-300 text-sm">
+              <i class="fas fa-check text-green-400"></i>
+              <span>5 jenis voucher</span>
+            </li>
+            <li class="flex items-center gap-3 text-gray-300 text-sm">
+              <i class="fas fa-check text-green-400"></i>
+              <span>Dashboard simple</span>
+            </li>
+            <li class="flex items-center gap-3 text-gray-500 text-sm">
+              <i class="fas fa-times text-gray-600"></i>
+              <span>Export data</span>
+            </li>
+            <li class="flex items-center gap-3 text-gray-500 text-sm">
+              <i class="fas fa-times text-gray-600"></i>
+              <span>Priority support</span>
+            </li>
+          </ul>
+          
+          <button onclick="selectPlan('starter')" class="w-full py-3 bg-white/10 border border-white/20 text-white font-semibold rounded-xl hover:bg-white/20 transition-all">
+            Mulai Gratis
+          </button>
+        </div>
+        
+        <!-- Pro Plan -->
+        <div class="price-card popular bg-gray-800/50 border border-indigo-500/50 rounded-2xl p-6 transform scale-105">
+          <div class="text-center mb-6">
+            <h3 class="text-xl font-bold text-white mb-2">Pro</h3>
+            <div class="text-4xl font-bold text-white mb-1">
+              <span class="text-2xl">Rp</span>150<span class="text-lg">rb</span>
+            </div>
+            <p class="text-gray-500 text-sm">/bulan</p>
+          </div>
+          
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-center gap-3 text-gray-300 text-sm">
+              <i class="fas fa-check text-green-400"></i>
+              <span>200 siswa aktif</span>
+            </li>
+            <li class="flex items-center gap-3 text-gray-300 text-sm">
+              <i class="fas fa-check text-green-400"></i>
+              <span>Lucky Wheel premium</span>
+            </li>
+            <li class="flex items-center gap-3 text-gray-300 text-sm">
+              <i class="fas fa-check text-green-400"></i>
+              <span>10 jenis voucher</span>
+            </li>
+            <li class="flex items-center gap-3 text-gray-300 text-sm">
+              <i class="fas fa-check text-green-400"></i>
+              <span>Dashboard lengkap</span>
+            </li>
+            <li class="flex items-center gap-3 text-gray-300 text-sm">
+              <i class="fas fa-check text-green-400"></i>
+              <span>Export data Excel</span>
+            </li>
+            <li class="flex items-center gap-3 text-gray-300 text-sm">
+              <i class="fas fa-check text-green-400"></i>
+              <span>Priority support</span>
+            </li>
+          </ul>
+          
+          <button onclick="selectPlan('pro')" class="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 transition-all">
+            Pilih Pro
+          </button>
+        </div>
+        
+        <!-- Enterprise Plan -->
+        <div class="price-card bg-gray-800/50 border border-gray-700/50 rounded-2xl p-6">
+          <div class="text-center mb-6">
+            <h3 class="text-xl font-bold text-white mb-2">Enterprise</h3>
+            <div class="text-4xl font-bold text-white mb-1">
+              <span class="text-2xl">Rp</span>500<span class="text-lg">rb</span>
+            </div>
+            <p class="text-gray-500 text-sm">/bulan</p>
+          </div>
+          
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-center gap-3 text-gray-300 text-sm">
+              <i class="fas fa-check text-green-400"></i>
+              <span>Siswa unlimited</span>
+            </li>
+            <li class="flex items-center gap-3 text-gray-300 text-sm">
+              <i class="fas fa-check text-green-400"></i>
+              <span>Lucky Wheel custom</span>
+            </li>
+            <li class="flex items-center gap-3 text-gray-300 text-sm">
+              <i class="fas fa-check text-green-400"></i>
+              <span>Voucher tak terbatas</span>
+            </li>
+            <li class="flex items-center gap-3 text-gray-300 text-sm">
+              <i class="fas fa-check text-green-400"></i>
+              <span>Dashboard advance</span>
+            </li>
+            <li class="flex items-center gap-3 text-gray-300 text-sm">
+              <i class="fas fa-check text-green-400"></i>
+              <span>API Access</span>
+            </li>
+            <li class="flex items-center gap-3 text-gray-300 text-sm">
+              <i class="fas fa-check text-green-400"></i>
+              <span>Dedicated support</span>
+            </li>
+          </ul>
+          
+          <button onclick="selectPlan('enterprise')" class="w-full py-3 bg-white/10 border border-white/20 text-white font-semibold rounded-xl hover:bg-white/20 transition-all">
+            Hubungi Sales
+          </button>
+        </div>
+      </div>
+      
+      <!-- Payment Info -->
+      <div class="text-center mt-8">
+        <p class="text-gray-500 text-sm">
+          <i class="fas fa-lock mr-1"></i>
+          Pembayaran aman via Transfer Bank • Garansi uang kembali 7 hari
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials Section -->
+  <section id="testimonials" class="section-padding bg-gray-900/50">
+    <div class="container mx-auto px-4">
+      <div class="text-center mb-16">
+        <span class="inline-block px-4 py-1 bg-indigo-500/20 text-indigo-400 rounded-full text-sm font-medium mb-4">
+          TESTIMONI
+        </span>
+        <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
+          Apa Kata Mereka?
+        </h2>
+        <p class="text-gray-400 max-w-2xl mx-auto">
+          Kepuasan pelanggan adalah prioritas utama kami
+        </p>
+      </div>
+      
+      <div class="grid md:grid-cols-3 gap-6">
+        <!-- Testimonial 1 -->
+        <div class="testimonial-card rounded-2xl p-6">
+          <div class="flex items-center gap-1 mb-4">
+            <i class="fas fa-star text-yellow-400"></i>
+            <i class="fas fa-star text-yellow-400"></i>
+            <i class="fas fa-star text-yellow-400"></i>
+            <i class="fas fa-star text-yellow-400"></i>
+            <i class="fas fa-star text-yellow-400"></i>
+          </div>
+          <p class="text-gray-300 mb-6 text-sm">
+            "Sekarang kantin kami rame banget! Siswa-siswa pada excited sama Lucky Wheel-nya. Penjualan naik 30% dalam sebulan!"
+          </p>
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold">
+              B
+            </div>
+            <div>
+              <div class="text-white font-medium text-sm">Bpk. Budi</div>
+              <div class="text-gray-500 text-xs">Kantin SMPN 1</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Testimonial 2 -->
+        <div class="testimonial-card rounded-2xl p-6">
+          <div class="flex items-center gap-1 mb-4">
+            <i class="fas fa-star text-yellow-400"></i>
+            <i class="fas fa-star text-yellow-400"></i>
+            <i class="fas fa-star text-yellow-400"></i>
+            <i class="fas fa-star text-yellow-400"></i>
+            <i class="fas fa-star text-yellow-400"></i>
+          </div>
+          <p class="text-gray-300 mb-6 text-sm">
+            "Mudah banget setup-nya. Hanya butuh 5 menit langsung jadi. Tanya jawab sama admin juga responsif banget!"
+          </p>
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center text-white font-bold">
+              S
+            </div>
+            <div>
+              <div class="text-white font-medium text-sm">Ibu Siti</div>
+              <div class="text-gray-500 text-xs">Kantin SDN Jakarta</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Testimonial 3 -->
+        <div class="testimonial-card rounded-2xl p-6">
+          <div class="flex items-center gap-1 mb-4">
+            <i class="fas fa-star text-yellow-400"></i>
+            <i class="fas fa-star text-yellow-400"></i>
+            <i class="fas fa-star text-yellow-400"></i>
+            <i class="fas fa-star text-yellow-400"></i>
+            <i class="fas fa-star text-yellow-400"></i>
+          </div>
+          <p class="text-gray-300 mb-6 text-sm">
+            "Siswa-siswa jadi lebih semangat makan di kantin. Voucher-nya juga canggih,，老师 bisa monitoring easily."
+          </p>
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold">
+              A
+            </div>
+            <div>
+              <div class="text-white font-medium text-sm">Pak Agus</div>
+              <div class="text-gray-500 text-xs">Kantin SMAN Bandung</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="section-padding">
+    <div class="container mx-auto px-4">
+      <div class="cta-gradient rounded-3xl p-8 sm:p-12 text-center relative overflow-hidden">
+        <!-- Decorative elements -->
+        <div class="absolute top-0 left-0 w-32 h-32 bg-white/10 rounded-full -translate-x-16 -translate-y-16"></div>
+        <div class="absolute bottom-0 right-0 w-32 h-32 bg-white/10 rounded-full translate-x-16 translate-y-16"></div>
+        
+        <div class="relative z-10">
+          <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
+            Siap Booster Kantin Anda?
+          </h2>
+          <p class="text-white/80 mb-8 max-w-xl mx-auto">
+            Mulai sekarang dan rasakan perbedaan dalam bisnis kantin Anda. Gratis tanpa kartu kredit!
+          </p>
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <button onclick="selectPlan('starter')" class="inline-flex items-center justify-center px-8 py-4 bg-white text-indigo-600 font-bold rounded-xl hover:bg-gray-100 transition-all shadow-lg">
+              <i class="fas fa-rocket mr-2"></i>
+              Coba Gratis Sekarang
+            </button>
+            <a href="#pricing" class="inline-flex items-center justify-center px-8 py-4 bg-white/10 border border-white/30 text-white font-semibold rounded-xl hover:bg-white/20 transition-all">
+              <i class="fas fa-comments mr-2"></i>
+              Chat via WhatsApp
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-gray-900/80 border-t border-gray-800">
+    <div class="container mx-auto px-4 py-12">
+      <div class="grid md:grid-cols-4 gap-8">
+        <!-- Brand -->
+        <div class="md:col-span-2">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center">
+              <i class="fas fa-dharmachakra text-white text-lg"></i>
+            </div>
+            <span class="font-bold text-xl text-white">spin<span class="text-indigo-400">X</span></span>
+          </div>
+          <p class="text-gray-400 text-sm mb-4 max-w-sm">
+            Lucky Wheel promo platform untuk kantin sekolah. Tingkatkan penjualan dan engage siswa dengan cara yang fun!
+          </p>
+          <div class="flex gap-4">
+            <a href="#" class="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400 hover:text-white hover:bg-indigo-600 transition-all">
+              <i class="fab fa-instagram"></i>
+            </a>
+            <a href="#" class="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400 hover:text-white hover:bg-indigo-600 transition-all">
+              <i class="fab fa-telegram"></i>
+            </a>
+            <a href="#" class="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400 hover:text-white hover:bg-indigo-600 transition-all">
+              <i class="fab fa-whatsapp"></i>
+            </a>
+          </div>
+        </div>
+        
+        <!-- Links -->
+        <div>
+          <h4 class="text-white font-semibold mb-4">Produk</h4>
+          <ul class="space-y-2">
+            <li><a href="#features" class="text-gray-400 hover:text-white text-sm transition-colors">Fitur</a></li>
+            <li><a href="#pricing" class="text-gray-400 hover:text-white text-sm transition-colors">Harga</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">Demo</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">API</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h4 class="text-white font-semibold mb-4">Perusahaan</h4>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">Tentang Kami</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">Blog</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">Karir</a></li>
+            <li><a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">Kontak</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="border-t border-gray-800 mt-8 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <p class="text-gray-500 text-sm">
+          © 2024 spinX. All rights reserved.
+        </p>
+        <div class="flex gap-4">
+          <a href="#" class="text-gray-500 hover:text-white text-sm transition-colors">Privacy Policy</a>
+          <a href="#" class="text-gray-500 hover:text-white text-sm transition-colors">Terms of Service</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Register Modal -->
+  <div id="register-modal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeRegisterModal()"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md p-4">
+      <div class="bg-gray-800 border border-gray-700 rounded-2xl p-6 shadow-2xl animate-scale-in">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-xl font-bold text-white">Daftar Sekolah</h3>
+          <button onclick="closeRegisterModal()" class="text-gray-400 hover:text-white">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        
+        <form id="register-form" class="space-y-4">
+          <div>
+            <label class="block text-gray-400 text-sm mb-2">Nama Sekolah *</label>
+            <input type="text" id="school-name" required
+              class="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+              placeholder="SMA Negeri 1 Jakarta">
+          </div>
+          
+          <div>
+            <label class="block text-gray-400 text-sm mb-2">Email Admin *</label>
+            <input type="email" id="school-email" required
+              class="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+              placeholder="admin@sekolah.sch.id">
+          </div>
+          
+          <div>
+            <label class="block text-gray-400 text-sm mb-2">No. WhatsApp *</label>
+            <input type="tel" id="school-phone" required
+              class="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+              placeholder="081234567890">
+          </div>
+          
+          <div>
+            <label class="block text-gray-400 text-sm mb-2">Paket Yang Dipilih</label>
+            <div id="selected-plan-badge" class="inline-block px-3 py-1 bg-indigo-500/20 text-indigo-400 rounded-full text-sm font-medium">
+              Starter - Gratis
+            </div>
+            <input type="hidden" id="selected-plan" value="starter">
+          </div>
+          
+          <button type="submit" class="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-xl shadow-lg hover:shadow-indigo-500/50 transition-all">
+            <i class="fas fa-paper-plane mr-2"></i>
+            Daftar Sekarang
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed top-20 right-4 z-50"></div>
+
+  <!-- Scripts -->
+  <script>
+    // Toast function
+    function showToast(type, title, message) {
+      const container = document.getElementById('toast-container');
+      const bgColor = type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-blue-600';
+      
+      const toast = document.createElement('div');
+      toast.className = `${bgColor} text-white px-4 py-3 rounded-lg shadow-lg mb-2 animate-slide-right flex items-center gap-3 min-w-[280px]`;
+      toast.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+        <div>
+          <div class="font-semibold text-sm">${title}</div>
+          <div class="text-xs opacity-80">${message}</div>
+        </div>
+      `;
+      
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
+    
+    // Select plan function
+    function selectPlan(plan) {
+      const planNames = {
+        'starter': 'Starter - Gratis',
+        'pro': 'Pro - Rp 150rb/bulan',
+        'enterprise': 'Enterprise - Rp 500rb/bulan'
+      };
+      
+      document.getElementById('selected-plan').value = plan;
+      document.getElementById('selected-plan-badge').textContent = planNames[plan];
+      document.getElementById('register-modal').classList.remove('hidden');
+    }
+    
+    // Close modal
+    function closeRegisterModal() {
+      document.getElementById('register-modal').classList.add('hidden');
+    }
+    
+    // Handle form submit
+    document.getElementById('register-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const data = {
+        action: 'createschool',
+        schoolName: document.getElementById('school-name').value,
+        email: document.getElementById('school-email').value,
+        noWa: document.getElementById('school-phone').value,
+        plan: document.getElementById('selected-plan').value
+      };
+      
+      try {
+        const btn = e.target.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Mendaftarkan...';
+        
+        const response = await fetch('/api/proxy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          showToast('success', 'Berhasil!', 'Pendaftaran berhasil. Silakan cek email untuk aktivasi.');
+          closeRegisterModal();
+          e.target.reset();
+        } else {
+          showToast('error', 'Gagal', result.message || 'Terjadi kesalahan');
+        }
+      } catch (error) {
+        showToast('error', 'Error', 'Koneksi bermasalah. Silakan coba lagi.');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Daftar Sekarang';
+      }
+    });
+    
+    // Login button
+    document.getElementById('login-btn').addEventListener('click', () => {
+      // Redirect to login page or open login modal
+      window.location.href = 'dashboard-admin.html';
+    });
+    
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+  </script>
 </body>
 </html>
-
 
