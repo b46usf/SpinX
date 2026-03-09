@@ -20,11 +20,8 @@ import { OtpHandler, OtpTemplates } from './components/utils/OtpHandler.js';
 import { LoginComponent } from './components/LoginComponent.js';
 import { RegisterComponent } from './components/RegisterComponent.js';
 
-// Get showInfo from global window.Toast (set by Toast.js)
-const getShowInfo = () => {
-  const Toast = window.Toast;
-  return Toast ? Toast.info : () => {};
-};
+// Get Toast
+const getToast = () => window.Toast || null;
 
 // Make everything available globally
 window.ThemeToggle = ThemeToggle;
@@ -182,10 +179,16 @@ class App {
       googleUser: extra.googleUser
     };
     
-    // Render with improved UI - COMPACT VERSION
+    // Show info toast immediately
+    const Toast = getToast();
+    if (Toast) {
+      Toast.info('Hubungkan Telegram', 'Klik START di bot Telegram untuk verifikasi');
+    }
+    
+    // Render UI
     this.appContainer.innerHTML = this.getTelegramLinkTemplate(extra);
     
-    // Setup polling
+    // Setup polling immediately
     this.startTelegramCheck(extra.userId);
     
     // Event listeners
@@ -193,9 +196,11 @@ class App {
       this.showLoginSection();
     });
     
+    // Open telegram button - show toast on click
     document.getElementById('open-telegram')?.addEventListener('click', () => {
-      const showInfo = getShowInfo();
-      showInfo('Buka Telegram', 'Klik START di bot Telegram untuk menghubungkan akun');
+      if (Toast) {
+        Toast.info('Buka Telegram', '1. Klik START di bot\n2. Tunggu hingga terhubung');
+      }
     });
   }
 
@@ -268,16 +273,20 @@ class App {
   startTelegramCheck(userId) {
     const refreshBtn = document.getElementById('refresh-telegram-status');
     
+    // Handle manual refresh click
     if (refreshBtn) {
       refreshBtn.addEventListener('click', () => {
         this.checkTelegramStatus(userId, true);
       });
     }
     
-    // Auto check every 5 seconds (silent - no toast)
+    // Check immediately
+    this.checkTelegramStatus(userId, false);
+    
+    // Then poll every 3 seconds
     this.telegramCheckInterval = setInterval(() => {
       this.checkTelegramStatus(userId, false);
-    }, 5000);
+    }, 3000);
   }
 
   async checkTelegramStatus(userId, showToast = false) {
@@ -287,8 +296,7 @@ class App {
     if (!this.pendingUserData) return;
     
     try {
-      // Call API directly to avoid toast on polling
-      // We'll manually check the result
+      // Call API directly to control toast behavior
       const clientIP = await this.getClientIP();
       const payload = { action: 'generateOTP', userId, email: this.pendingUserData.email, ip: clientIP };
       
@@ -301,25 +309,28 @@ class App {
       const result = await res.json();
       
       if (result.success) {
-        // Telegram linked!
+        // Telegram linked! Stop polling
         if (this.telegramCheckInterval) {
           clearInterval(this.telegramCheckInterval);
+          this.telegramCheckInterval = null;
         }
         
+        // Update status UI
         if (statusEl) {
           statusEl.innerHTML = `
             <div class="flex items-center justify-center gap-2 text-xs text-green-400">
-              <i class="fas fa-check-circle"></i>
-              <span>Terkoneksi! Mengarahkan...</span>
+              <i class="fas fa-check-circle animate-pulse"></i>
+              <span>Terkoneksi! Mengirim OTP...</span>
             </div>
           `;
         }
         
-        // Show success toast if user clicked refresh
-        if (showToast && Toast) {
-          Toast.success('Telegram Terhubung', 'Kode OTP telah dikirim ke Telegram Anda');
+        // Show success toast
+        if (Toast) {
+          Toast.success('Telegram Terhubung!', 'Kode OTP dikirim ke Telegram Anda');
         }
         
+        // Wait a moment then redirect to OTP page with the otpId
         setTimeout(() => {
           this.showOtpSection({
             userId: this.pendingUserData.userId,
@@ -366,7 +377,7 @@ class App {
     }
   }
 
-  // Helper to get client IP (same as AuthApi)
+  // Helper to get client IP
   async getClientIP() {
     try {
       const response = await fetch('https://api.ipify.org?format=json');
@@ -388,7 +399,7 @@ class App {
       this.otpHandler.setOtpId(extra.otpId);
     }
     
-    // Render OTP form - COMPACT VERSION
+    // Render OTP form
     this.appContainer.innerHTML = this.getOtpTemplate();
     
     // Initialize events
@@ -406,6 +417,13 @@ class App {
     document.getElementById('back-to-login')?.addEventListener('click', () => {
       this.showLoginSection();
     });
+    
+    // Auto-send OTP when page loads (if otpId not provided)
+    if (!extra.otpId) {
+      setTimeout(() => {
+        document.getElementById('resend-otp-btn')?.click();
+      }, 500);
+    }
   }
 
   getOtpTemplate() {
@@ -434,7 +452,7 @@ class App {
             />
           </div>
           
-          <button 
+<button 
             type="submit" 
             id="verify-otp-btn"
             class="w-full py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg text-sm"
