@@ -106,10 +106,7 @@ export default async function handler(req, res) {
           // Send confirmation message to user
           if (result.success) {
             let replyText = '✅ ' + result.message + '\n\n';
-            if (result.debug_otp) {
-              replyText += '📝 *Kode OTP:* `' + result.debug_otp + '`\n';
-            }
-            replyText += 'Silakan masukkan kode OTP di website.';
+            replyText += 'Silakan klik "Kirim OTP" di website untuk mendapatkan kode verifikasi.';
             await sendTelegramMessage(chatId, replyText);
           } else {
             let replyText = '❌ ' + (result.message || 'Terjadi kesalahan');

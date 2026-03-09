@@ -1,11 +1,16 @@
+
 /**
  * Auth API Service
  * Handles all backend API calls
  * SINGLE SOURCE - Import this for all API calls
  * Uses AUTH_CONFIG from Config.js - single source of truth
+ * Shows Toast notifications for all responses
  */
 
 import { AUTH_CONFIG } from './Config.js';
+
+// Get Toast functions from global
+const getToast = () => window.Toast || null;
 
 class AuthApi {
   constructor() {
@@ -41,11 +46,62 @@ class AuthApi {
   }
 
   /**
+   * Show Toast notification based on response
+   */
+  showResponseToast(result, action) {
+    const Toast = getToast();
+    if (!Toast) return;
+
+    // Determine which message to show
+    if (result.success === true) {
+      // Success - show success toast for important actions
+      const successMessages = {
+        'login': 'Login berhasil!',
+        'register': 'Registrasi berhasil!',
+        'generateOTP': 'OTP telah dikirim!',
+        'verifyOTP': 'Verifikasi berhasil!',
+        'spin': 'Berhasil!'
+      };
+      
+      const message = successMessages[action] || result.message || 'Berhasil';
+      Toast.success('Sukses', message);
+    } else if (result.success === false) {
+      // Error from server
+      const errorMessages = {
+        'login': result.message || 'Login gagal',
+        'register': result.message || 'Registrasi gagal',
+        'generateOTP': result.message || 'Gagal mengirim OTP',
+        'verifyOTP': result.message || 'Verifikasi gagal',
+        'spin': result.message || 'Gagal bermain'
+      };
+      
+      const message = errorMessages[action] || result.message || 'Terjadi kesalahan';
+      
+      // Special handling for specific errors
+      if (result.error === 'TELEGRAM_NOT_LINKED') {
+        Toast.warning('Telegram Belum Terhubung', message);
+      } else if (result.error === 'OTP_EXPIRED') {
+        Toast.warning('OTP Expired', message);
+      } else if (result.error === 'OTP_INVALID') {
+        Toast.warning('OTP Salah', message);
+      } else if (result.error === 'USER_BLOCKED') {
+        Toast.error('Akun Diblokir', message);
+      } else {
+        Toast.error('Gagal', message);
+      }
+    }
+    // If success is undefined/null, don't show toast (it's probably a query)
+  }
+
+  /**
    * Generic API call
    * @param {string} action - Action name
    * @param {Object} data - Additional data
+   * @param {boolean} showToast - Whether to show toast notification (default: true)
    */
-  async call(action, data = {}) {
+  async call(action, data = {}, showToast = true) {
+    const Toast = getToast();
+    
     try {
       // Get client IP
       const clientIP = await this.getClientIP();
@@ -63,15 +119,42 @@ class AuthApi {
       });
 
       const text = await res.text();
+      let result;
       try {
-        return JSON.parse(text);
+        result = JSON.parse(text);
       } catch (parseError) {
         console.error('Failed to parse response:', text);
-        return { success: false, message: 'Invalid server response' };
+        
+        if (showToast && Toast) {
+          Toast.error('Error', 'Respons server tidak valid');
+        }
+        
+        return { 
+          success: false, 
+          message: 'Respons server tidak valid',
+          raw: text 
+        };
       }
+
+      // Show Toast notification for the response
+      if (showToast) {
+        this.showResponseToast(result, action);
+      }
+
+      return result;
+      
     } catch (error) {
       console.error(`API call failed: ${action}`, error);
-      return { success: false, message: 'Koneksi gagal. Periksa jaringan Anda.' };
+      
+      if (showToast && Toast) {
+        Toast.error('Koneksi Gagal', 'Tidak dapat terhubung ke server. Periksa jaringan Anda.');
+      }
+      
+      return { 
+        success: false, 
+        message: 'Koneksi gagal. Periksa jaringan Anda.',
+        error: error.message 
+      };
     }
   }
 
@@ -113,7 +196,7 @@ class AuthApi {
    * @param {string} nis - NIS number
    */
   async verifyNIS(nis) {
-    return this.call('verifyNIS', { nis });
+    return this.call('verifyNIS', { nis }, false); // Don't show toast for queries
   }
 
   /**
@@ -140,7 +223,7 @@ class AuthApi {
    * @param {string} userId - User ID
    */
   async getProfile(userId) {
-    return this.call('getProfile', { userId });
+    return this.call('getProfile', { userId }, false); // Don't show toast for queries
   }
 
   // ==================== Game Actions ====================
@@ -165,4 +248,5 @@ export { authApi };
 if (typeof window !== 'undefined') {
   window.AuthApi = authApi;
 }
+
 

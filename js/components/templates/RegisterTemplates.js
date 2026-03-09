@@ -1,15 +1,17 @@
 
 /**
  * Register Form Templates
- * HTML templates for register form fields
+ * HTML templates for register form - COMPACT & MODERN DESIGN
  */
 
 export const RegisterTemplates = {
   roleField() {
     return `
       <div class="input-group">
-        <label class="block text-sm font-medium mb-2 text-left"><i class="fas fa-user-tag mr-2 text-indigo-400"></i>Saya adalah *</label>
-        <select id="role" name="role" required class="select">
+        <label class="block text-xs font-medium mb-2 text-left text-gray-400">
+          <i class="fas fa-user-tag mr-1 text-indigo-400"></i>Saya adalah *
+        </label>
+        <select id="role" name="role" required class="select w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600 rounded-xl text-white text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20">
           <option value="">Pilih role...</option>
           <option value="siswa">🎓 Siswa</option>
           <option value="guru">👨‍🏫 Guru</option>
@@ -19,66 +21,166 @@ export const RegisterTemplates = {
   },
 
   whatsappField() {
-    return `<div class="input-group"><input type="text" id="noWa" name="noWa" required placeholder="Nomor WhatsApp" class="input"><i class="input-icon fas fa-phone"></i></div>`;
+    return `
+      <div class="input-group">
+        <label class="block text-xs font-medium mb-2 text-left text-gray-400">
+          <i class="fas fa-phone mr-1 text-green-400"></i>WhatsApp *
+        </label>
+        <div class="relative">
+          <input type="text" id="noWa" name="noWa" required placeholder="08xxxxxxxxxx" 
+            class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600 rounded-xl text-white text-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 pl-10">
+          <i class="input-icon fas fa-phone absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+        </div>
+      </div>`;
   },
 
   nisField() {
     return `
-      <label class="block text-sm font-medium mb-2 text-left"><i class="fas fa-id-card mr-2 text-blue-400"></i>NIS *</label>
-      <input type="text" id="nis" name="nis" placeholder="Masukkan NIS Anda" class="input">
-      <i class="input-icon fas fa-id-card"></i>
-      <button type="button" id="verify-nis-btn" class="btn btn-secondary mt-2 w-full" style="padding:8px 16px;font-size:13px"><i class="fas fa-search"></i> Cek NIS</button>
-      <div id="nis-status" class="hidden mt-2 p-2 rounded text-sm"></div>`;
+      <div class="input-group">
+        <label class="block text-xs font-medium mb-2 text-left text-gray-400">
+          <i class="fas fa-id-card mr-1 text-blue-400"></i>NIS *
+        </label>
+        <div class="relative">
+          <input type="text" id="nis" name="nis" placeholder="Masukkan NIS" 
+            class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600 rounded-xl text-white text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 pl-10">
+          <i class="input-icon fas fa-id-card absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+        </div>
+        <button type="button" id="verify-nis-btn" class="mt-2 w-full py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded-lg text-xs font-medium transition-colors">
+          <i class="fas fa-search mr-1"></i> Cek NIS
+        </button>
+        <div id="nis-status" class="hidden mt-2 p-2 rounded-lg text-xs"></div>
+      </div>`;
   },
 
   namaField() {
-    return `<label class="block text-sm font-medium mb-2 text-left"><i class="fas fa-user mr-2 text-green-400"></i>Nama</label><input type="text" id="nama" name="nama" readonly placeholder="Nama dari NIS" class="input" style="background:var(--bg-glass-hover)"><i class="input-icon fas fa-user"></i>`;
+    return `
+      <div class="input-group">
+        <label class="block text-xs font-medium mb-2 text-left text-gray-400">
+          <i class="fas fa-user mr-1 text-purple-400"></i>Nama
+        </label>
+        <input type="text" id="nama" name="nama" readonly placeholder="Nama dari NIS" 
+          class="w-full px-3 py-2.5 bg-gray-800/30 border border-gray-700 rounded-xl text-gray-400 text-sm cursor-not-allowed">
+      </div>`;
   },
 
   kelasField() {
-    return `<label class="block text-sm font-medium mb-2 text-left"><i class="fas fa-school mr-2 text-green-400"></i>Kelas</label><input type="text" id="kelas" name="kelas" readonly placeholder="Kelas dari NIS" class="input" style="background:var(--bg-glass-hover)"><i class="input-icon fas fa-door-open"></i>`;
+    return `
+      <div class="input-group">
+        <label class="block text-xs font-medium mb-2 text-left text-gray-400">
+          <i class="fas fa-school mr-1 text-cyan-400"></i>Kelas
+        </label>
+        <input type="text" id="kelas" name="kelas" readonly placeholder="Kelas dari NIS" 
+          class="w-full px-3 py-2.5 bg-gray-800/30 border border-gray-700 rounded-xl text-gray-400 text-sm cursor-not-allowed">
+      </div>`;
   },
 
   sekolahSiswaField() {
-    return `<label class="block text-sm font-medium mb-2 text-left"><i class="fas fa-building mr-2 text-purple-400"></i>Sekolah</label><input type="text" id="sekolah-siswa" name="sekolah-siswa" readonly placeholder="Sekolah dari NIS" class="input" style="background:var(--bg-glass-hover)"><i class="input-icon fas fa-university"></i>`;
+    return `
+      <div class="input-group">
+        <label class="block text-xs font-medium mb-2 text-left text-gray-400">
+          <i class="fas fa-building mr-1 text-pink-400"></i>Sekolah
+        </label>
+        <input type="text" id="sekolah-siswa" name="sekolah-siswa" readonly placeholder="Sekolah dari NIS" 
+          class="w-full px-3 py-2.5 bg-gray-800/30 border border-gray-700 rounded-xl text-gray-400 text-sm cursor-not-allowed">
+      </div>`;
   },
 
   sekolahGuruField() {
-    return `<label class="block text-sm font-medium mb-2 text-left"><i class="fas fa-building mr-2 text-purple-400"></i>Sekolah (Opsional)</label><input type="text" id="sekolah" name="sekolah" placeholder="Nama sekolah" class="input"><i class="input-icon fas fa-university"></i>`;
+    return `
+      <div class="input-group">
+        <label class="block text-xs font-medium mb-2 text-left text-gray-400">
+          <i class="fas fa-building mr-1 text-pink-400"></i>Sekolah (Opsional)
+        </label>
+        <input type="text" id="sekolah" name="sekolah" placeholder="Nama sekolah" 
+          class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600 rounded-xl text-white text-sm focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20">
+      </div>`;
   },
 
   mitraFields() {
     return `
-      <div class="input-group"><label class="block text-sm font-medium mb-2 text-left"><i class="fas fa-store mr-2 text-orange-400"></i>Nama Toko/UMKM *</label><input type="text" id="namaMitra" name="namaMitra" placeholder="Nama toko Anda" class="input"><i class="input-icon fas fa-shopping-bag"></i></div>
-      <div class="input-group"><label class="block text-sm font-medium mb-2 text-left"><i class="fas fa-tags mr-2 text-pink-400"></i>Kategori *</label><select id="kategori" name="kategori" class="select"><option value="">Pilih kategori...</option><option value="makanan">🍔 Makanan</option><option value="minuman">🥤 Minuman</option><option value="jasa">🔧 Jasa</option><option value="lainnya">📦 Lainnya</option></select></div>
-      <div class="input-group"><label class="block text-sm font-medium mb-2 text-left"><i class="fas fa-map-marker-alt mr-2 text-red-400"></i>Alamat *</label><textarea id="alamat" name="alamat" placeholder="Alamat toko" class="textarea"></textarea></div>`;
+      <div class="space-y-3">
+        <div class="input-group">
+          <label class="block text-xs font-medium mb-2 text-left text-gray-400">
+            <i class="fas fa-store mr-1 text-orange-400"></i>Nama Toko/UMKM *
+          </label>
+          <input type="text" id="namaMitra" name="namaMitra" placeholder="Nama toko Anda" 
+            class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600 rounded-xl text-white text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20">
+        </div>
+        <div class="input-group">
+          <label class="block text-xs font-medium mb-2 text-left text-gray-400">
+            <i class="fas fa-tags mr-1 text-pink-400"></i>Kategori *
+          </label>
+          <select id="kategori" name="kategori" 
+            class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600 rounded-xl text-white text-sm focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20">
+            <option value="">Pilih kategori...</option>
+            <option value="makanan">🍔 Makanan</option>
+            <option value="minuman">🥤 Minuman</option>
+            <option value="jasa">🔧 Jasa</option>
+            <option value="lainnya">📦 Lainnya</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label class="block text-xs font-medium mb-2 text-left text-gray-400">
+            <i class="fas fa-map-marker-alt mr-1 text-red-400"></i>Alamat *
+          </label>
+          <textarea id="alamat" name="alamat" placeholder="Alamat toko" rows="2"
+            class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600 rounded-xl text-white text-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 resize-none"></textarea>
+        </div>
+      </div>`;
   },
 
   registerSection() {
     return `
-      <div id="register-section" class="hidden glass-card p-8 w-full max-w-md animate-scale-in">
-        <div class="text-center mb-6">
-          <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-green-500 via-cyan-500 to-blue-500 flex items-center justify-center animate-float"><i class="fas fa-user-plus text-3xl text-white"></i></div>
-          <h2 class="text-2xl font-bold">Daftar Sekarang</h2>
-          <p class="text-secondary mt-2 text-sm">Lengkapi data diri Anda</p>
+      <div class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+        <!-- Animated Background -->
+        <div class="absolute inset-0 bg-gradient-to-br from-green-900 via-emerald-900 to-teal-900 opacity-50"></div>
+        <div class="absolute top-1/4 right-1/4 w-96 h-96 bg-green-500/20 rounded-full blur-3xl animate-pulse"></div>
+        <div class="absolute bottom-1/4 left-1/4 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
+        
+        <!-- Main Card - COMPACT -->
+        <div class="relative w-full max-w-sm">
+          <div class="bg-gray-900/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-700/50 p-5 animate-scale-in">
+            <!-- Header -->
+            <div class="text-center mb-4">
+              <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-green-500 via-cyan-500 to-blue-500 flex items-center justify-center shadow-lg shadow-green-500/30">
+                <i class="fas fa-user-plus text-xl text-white"></i>
+              </div>
+              <h2 class="text-lg font-bold text-white">Daftar Sekarang</h2>
+              <p class="text-gray-400 text-xs mt-1">Lengkapi data diri Anda</p>
+            </div>
+
+            <!-- User Info Card -->
+            <div class="flex items-center gap-3 p-3 bg-gray-800/50 rounded-xl mb-4">
+              <img id="register-avatar" src="" alt="Avatar" class="w-10 h-10 rounded-full object-cover">
+              <div class="text-left min-w-0">
+                <div id="register-name" class="font-semibold text-white text-sm truncate"></div>
+                <div id="register-email" class="text-gray-400 text-xs truncate"></div>
+              </div>
+            </div>
+
+            <!-- Form -->
+            <form id="register-form" class="space-y-3">
+              ${this.roleField()}
+              ${this.whatsappField()}
+              <div id="nis-field" class="hidden">${this.nisField()}</div>
+              <div id="nama-field" class="hidden">${this.namaField()}</div>
+              <div id="kelas-field" class="hidden">${this.kelasField()}</div>
+              <div id="sekolah-field-siswa" class="hidden">${this.sekolahSiswaField()}</div>
+              <div id="sekolah-field" class="hidden">${this.sekolahGuruField()}</div>
+              <div id="mitra-fields" class="hidden">${this.mitraFields()}</div>
+              
+              <div id="register-error" class="hidden p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs text-center"></div>
+              
+              <button type="submit" class="w-full py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg text-sm">
+                <i class="fas fa-rocket mr-2"></i>Daftar Sekarang
+              </button>
+              
+              <button type="button" id="cancel-register" class="w-full py-2.5 bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 rounded-xl transition-colors text-sm">
+                <i class="fas fa-arrow-left mr-2"></i>Batal
+              </button>
+            </form>
+          </div>
         </div>
-        <div class="glass-card p-4 mb-6 flex items-center gap-4">
-          <img id="register-avatar" src="" alt="Avatar" class="avatar avatar-sm">
-          <div class="text-left"><div id="register-name" class="font-semibold"></div><div id="register-email" class="text-sm text-secondary"></div></div>
-        </div>
-        <form id="register-form" class="space-y-4">
-          ${this.roleField()}
-          ${this.whatsappField()}
-          <div id="nis-field" class="hidden input-group">${this.nisField()}</div>
-          <div id="nama-field" class="hidden input-group">${this.namaField()}</div>
-          <div id="kelas-field" class="hidden input-group">${this.kelasField()}</div>
-          <div id="sekolah-field-siswa" class="hidden input-group">${this.sekolahSiswaField()}</div>
-          <div id="sekolah-field" class="hidden input-group">${this.sekolahGuruField()}</div>
-          <div id="mitra-fields" class="hidden space-y-4">${this.mitraFields()}</div>
-          <div id="register-error" class="hidden p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm"></div>
-          <button type="submit" class="btn btn-primary w-full"><i class="fas fa-rocket"></i> Daftar Sekarang</button>
-          <button type="button" id="cancel-register" class="btn btn-secondary w-full"><i class="fas fa-arrow-left"></i> Batal</button>
-        </form>
       </div>`;
   }
 };

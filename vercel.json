@@ -11,12 +11,11 @@
   ],
   "rewrites": [
     { "source": "/api/proxy", "destination": "/api/proxy" },
-    { "source": "/api/telegram", "destination": "/api/telegram" },
-    { "source": "/api/debug", "destination": "/api/debug" },
-    { "source": "/api/test-telegram", "destination": "/api/test-telegram" }
+    { "source": "/api/telegram", "destination": "/api/telegram" }
   ],
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "installCommand": "npm install",
   "framework": null
 }
+

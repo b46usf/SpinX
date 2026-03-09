@@ -1,9 +1,8 @@
+
 /**
  * OTP Verification Handler
  * Handles OTP form display and verification
- * Uses Toast for notifications (SweetAlert2)
- * 
- * Note: Toast functions are accessed via global window.Toast
+ * AuthApi will show Toast notifications for all responses
  */
 
 import { authApi } from '../../auth/AuthApi.js';
@@ -33,6 +32,7 @@ export class OtpHandler {
     const loading = Toast ? Toast.loading('Memverifikasi OTP...') : null;
 
     try {
+      // AuthApi will show toast for the response
       const result = await authApi.verifyOTP(this.otpId, otpCode, this.userId);
       
       if (loading) loading.close();
@@ -42,9 +42,8 @@ export class OtpHandler {
         setTimeout(() => {
           this.onSuccess();
         }, 1500);
-      } else {
-        if (Toast) Toast.error('Verifikasi Gagal', result.message || 'Kode OTP tidak valid');
-      }
+      } 
+      // Failure toast already shown by AuthApi
     } catch (error) {
       if (loading) loading.close();
       console.error('OTP verification error:', error);
@@ -57,25 +56,17 @@ export class OtpHandler {
     const loading = Toast ? Toast.loading('Mengirim ulang OTP...') : null;
     
     try {
+      // AuthApi will show toast for the response
       const result = await authApi.generateOTP(this.userId, this.email);
       
       if (loading) loading.close();
       
       if (result.success) {
         this.otpId = result.otpId;
-        if (Toast) Toast.success('OTP Terkirim', 'Kode OTP telah dikirim ulang ke Telegram Anda');
+        // Success toast already shown by AuthApi
         this.onResend();
-      } else if (result.error === 'TELEGRAM_NOT_LINKED') {
-        if (Toast) Toast.error('Telegram Belum Terhubung', 'Silakan hubungkan Telegram terlebih dahulu');
-        // Optionally redirect to Telegram link
-        if (result.telegramLink) {
-          setTimeout(() => {
-            window.open(result.telegramLink, '_blank');
-          }, 2000);
-        }
-      } else {
-        if (Toast) Toast.error('Gagal Mengirim OTP', result.message || 'Terjadi kesalahan');
-      }
+      } 
+      // Failure toast already shown by AuthApi
     } catch (error) {
       if (loading) loading.close();
       console.error('Resend OTP error:', error);
@@ -104,28 +95,22 @@ export class OtpHandler {
 // OTP Template
 export const OtpTemplates = {
   otpSection: () => `
-    <div id="otp-section" class="max-w-md mx-auto p-6 bg-gray-800 rounded-lg shadow-lg animate-scale-in">
-      <div class="text-center mb-6">
-        <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+    <div id="otp-section" class="max-w-sm mx-auto p-5 bg-gray-800/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-700/50 animate-scale-in">
+      <div class="text-center mb-4">
+        <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg">
           <i class="fas fa-shield-alt text-2xl text-white"></i>
         </div>
-        <h2 class="text-2xl font-bold text-white mb-2">Verifikasi OTP</h2>
-        <p class="text-gray-400 text-sm">
-          Kami telah mengirim kode OTP ke Telegram Anda.<br>
-          Silakan masukkan kode tersebut di bawah.
-        </p>
+        <h2 class="text-lg font-bold text-white">Verifikasi OTP</h2>
+        <p class="text-gray-400 text-xs mt-1">Kode dikirim ke Telegram Anda</p>
       </div>
       
-      <form id="otp-form" class="space-y-4">
+      <form id="otp-form" class="space-y-3">
         <div>
-          <label for="otp-code" class="block text-sm font-medium text-gray-300 mb-2">
-            <i class="fas fa-lock mr-2"></i>Kode OTP
-          </label>
           <input 
             type="text" 
             id="otp-code" 
             maxlength="6"
-            class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white text-center text-2xl tracking-widest focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+            class="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white text-center text-2xl tracking-[0.5em] focus:border-green-500 focus:ring-2 focus:ring-green-500/20 font-mono"
             placeholder="------"
             required
             autocomplete="one-time-code"
@@ -135,33 +120,34 @@ export const OtpTemplates = {
         <button 
           type="submit" 
           id="verify-otp-btn"
-          class="w-full py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+          class="w-full py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg text-sm"
         >
           <i class="fas fa-check-circle mr-2"></i>Verifikasi
         </button>
-        
-        <div class="text-center">
-          <p class="text-gray-400 text-sm mb-2">Tidak menerima kode OTP?</p>
-          <button 
-            type="button" 
-            id="resend-otp-btn"
-            class="text-blue-400 hover:text-blue-300 font-medium transition-colors"
-          >
-            <i class="fas fa-redo mr-1"></i>Kirim ulang OTP
-          </button>
-        </div>
-        
-        <div class="text-center mt-4 pt-4 border-t border-gray-700">
-          <button 
-            type="button" 
-            id="back-to-login"
-            class="text-gray-400 hover:text-white text-sm transition-colors"
-          >
-            <i class="fas fa-arrow-left mr-1"></i>Kembali ke Login
-          </button>
-        </div>
       </form>
+      
+      <div class="text-center mt-4">
+        <p class="text-gray-500 text-xs">Tidak menerima kode?</p>
+        <button 
+          type="button" 
+          id="resend-otp-btn"
+          class="text-green-400 hover:text-green-300 font-medium text-sm transition-colors mt-1"
+        >
+          <i class="fas fa-redo mr-1"></i>Kirim Ulang
+        </button>
+      </div>
+      
+      <div class="text-center mt-4 pt-4 border-t border-gray-700/50">
+        <button 
+          type="button" 
+          id="back-to-login"
+          class="text-gray-500 hover:text-white text-xs transition-colors"
+        >
+          <i class="fas fa-arrow-left mr-1"></i>Kembali
+        </button>
+      </div>
     </div>
   `
 };
+
 

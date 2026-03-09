@@ -1,8 +1,12 @@
+
 /**
  * Main Application Entry Point
  * Modular Architecture using ES6 Modules
  * Uses Toast for notifications
  */
+
+// Import Toast FIRST to ensure it's available globally
+import './components/utils/Toast.js';
 
 // Import all modules
 import { googleAuthInstance } from './auth/GoogleAuth.js';
@@ -17,7 +21,6 @@ import { LoginComponent } from './components/LoginComponent.js';
 import { RegisterComponent } from './components/RegisterComponent.js';
 
 // Get showInfo from global window.Toast (set by Toast.js)
-// This avoids ES6 module import issues with SweetAlert2
 const getShowInfo = () => {
   const Toast = window.Toast;
   return Toast ? Toast.info : () => {};
@@ -51,6 +54,9 @@ class App {
   }
 
   async init() {
+    // Wait for Toast to be available
+    await this.waitForToast();
+    
     this.appContainer = document.getElementById('app');
     if (!this.appContainer) {
       console.error('App container not found');
@@ -82,6 +88,25 @@ class App {
 
     // Show login
     this.showLoginSection();
+  }
+
+  // Wait for Toast to be available
+  waitForToast() {
+    return new Promise((resolve) => {
+      let attempts = 0;
+      const check = () => {
+        if (window.Toast) {
+          resolve();
+        } else if (attempts < 50) {
+          attempts++;
+          setTimeout(check, 100);
+        } else {
+          console.warn('Toast not available, continuing anyway');
+          resolve();
+        }
+      };
+      check();
+    });
   }
 
   initTheme() {
@@ -157,7 +182,7 @@ class App {
       googleUser: extra.googleUser
     };
     
-    // Render with improved UI
+    // Render with improved UI - COMPACT VERSION
     this.appContainer.innerHTML = this.getTelegramLinkTemplate(extra);
     
     // Setup polling
@@ -176,59 +201,64 @@ class App {
 
   getTelegramLinkTemplate(extra) {
     return `
-      <div class="max-w-md mx-auto p-6 bg-gray-800 rounded-xl shadow-2xl animate-scale-in">
-        <div class="text-center mb-6">
-          <div class="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg">
-            <i class="fab fa-telegram text-4xl text-white"></i>
+      <div class="max-w-sm mx-auto p-5 bg-gray-800/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-700/50 animate-scale-in">
+        <!-- Header -->
+        <div class="text-center mb-4">
+          <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg">
+            <i class="fab fa-telegram text-2xl text-white"></i>
           </div>
-          <h2 class="text-2xl font-bold text-white mb-2">Hubungkan Telegram</h2>
-          <p class="text-gray-400 text-sm">
-            Untuk verifikasi OTP, silakan hubungkan akun Telegram Anda terlebih dahulu.
-          </p>
+          <h2 class="text-lg font-bold text-white">Hubungkan Telegram</h2>
+          <p class="text-gray-400 text-xs mt-1">Verifikasi akun Anda via Telegram</p>
         </div>
         
-        <div class="bg-gray-700/50 rounded-xl p-4 mb-6 space-y-3">
-          <p class="text-gray-300 text-sm font-medium mb-3">
-            <i class="fas fa-list-ol mr-2 text-blue-400"></i>Langkah-langkah:
-          </p>
-          <ol class="list-decimal list-inside text-gray-300 text-sm space-y-2">
-            <li>Klik tombol <strong class="text-blue-400">"Buka Telegram"</strong> di bawah</li>
-            <li>Di Telegram, klik tombol <strong class="text-green-400">START</strong></li>
-            <li>Tunggu hingga verifikasi selesai</li>
-          </ol>
+        <!-- Steps - Compact -->
+        <div class="bg-gray-700/40 rounded-lg p-3 mb-4">
+          <p class="text-gray-300 text-xs font-medium mb-2">Langkah mudah:</p>
+          <div class="flex items-center gap-2 text-gray-400 text-xs">
+            <span class="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-[10px]">1</span>
+            <span>Klik <strong class="text-blue-400">Buka Telegram</strong></span>
+          </div>
+          <div class="flex items-center gap-2 text-gray-400 text-xs mt-1">
+            <span class="w-5 h-5 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center text-[10px]">2</span>
+            <span>Klik <strong class="text-green-400">START</strong> di bot</span>
+          </div>
         </div>
         
+        <!-- Telegram Button -->
         <a 
           id="open-telegram"
           href="${extra.telegramLink}" 
           target="_blank"
-          class="flex items-center justify-center gap-3 w-full py-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg"
+          class="flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg text-sm"
         >
-          <i class="fab fa-telegram text-xl"></i>
+          <i class="fab fa-telegram"></i>
           <span>Buka Telegram</span>
         </a>
         
-        <div id="telegram-status" class="mt-4 p-3 bg-gray-700/30 rounded-lg">
-          <div class="flex items-center justify-center gap-2 text-sm text-gray-400">
+        <!-- Status -->
+        <div id="telegram-status" class="mt-3 p-2 bg-gray-700/30 rounded-lg">
+          <div class="flex items-center justify-center gap-2 text-xs text-gray-400">
             <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
-            <span>Menunggu verifikasi Telegram...</span>
+            <span>Menunggu koneksi...</span>
           </div>
         </div>
         
+        <!-- Refresh Button -->
         <button 
           id="refresh-telegram-status"
-          class="w-full mt-3 py-2.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors text-sm font-medium"
+          class="w-full mt-2 py-2 bg-gray-700/50 hover:bg-gray-600/50 text-gray-400 rounded-lg transition-colors text-xs font-medium"
         >
-          <i class="fas fa-sync-alt mr-2"></i>Periksa Status
+          <i class="fas fa-sync-alt mr-1"></i>Periksa Status
         </button>
         
-        <div class="text-center mt-4 pt-4 border-t border-gray-700">
+        <!-- Back Link -->
+        <div class="text-center mt-3 pt-3 border-t border-gray-700/50">
           <button 
             type="button" 
             id="back-to-login"
-            class="text-gray-400 hover:text-white text-sm transition-colors"
+            class="text-gray-500 hover:text-white text-xs transition-colors"
           >
-            <i class="fas fa-arrow-left mr-1"></i>Kembali ke Login
+            <i class="fas fa-arrow-left mr-1"></i>Kembali
           </button>
         </div>
       </div>
@@ -240,23 +270,35 @@ class App {
     
     if (refreshBtn) {
       refreshBtn.addEventListener('click', () => {
-        this.checkTelegramStatus(userId);
+        this.checkTelegramStatus(userId, true);
       });
     }
     
-    // Auto check every 5 seconds
+    // Auto check every 5 seconds (silent - no toast)
     this.telegramCheckInterval = setInterval(() => {
-      this.checkTelegramStatus(userId);
+      this.checkTelegramStatus(userId, false);
     }, 5000);
   }
 
-  async checkTelegramStatus(userId) {
+  async checkTelegramStatus(userId, showToast = false) {
     const statusEl = document.getElementById('telegram-status');
+    const Toast = getToast();
     
     if (!this.pendingUserData) return;
     
     try {
-      const result = await window.AuthApi.generateOTP(userId, this.pendingUserData.email);
+      // Call API directly to avoid toast on polling
+      // We'll manually check the result
+      const clientIP = await this.getClientIP();
+      const payload = { action: 'generateOTP', userId, email: this.pendingUserData.email, ip: clientIP };
+      
+      const res = await fetch(window.AUTH_CONFIG?.API_URL || '/api/proxy', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      const result = await res.json();
       
       if (result.success) {
         // Telegram linked!
@@ -266,11 +308,16 @@ class App {
         
         if (statusEl) {
           statusEl.innerHTML = `
-            <div class="flex items-center justify-center gap-2 text-sm text-green-400">
+            <div class="flex items-center justify-center gap-2 text-xs text-green-400">
               <i class="fas fa-check-circle"></i>
-              <span>Telegram terhubung! Mengarahkan ke verifikasi OTP...</span>
+              <span>Terkoneksi! Mengarahkan...</span>
             </div>
           `;
+        }
+        
+        // Show success toast if user clicked refresh
+        if (showToast && Toast) {
+          Toast.success('Telegram Terhubung', 'Kode OTP telah dikirim ke Telegram Anda');
         }
         
         setTimeout(() => {
@@ -285,18 +332,23 @@ class App {
       } else if (result.error === 'TELEGRAM_NOT_LINKED') {
         if (statusEl) {
           statusEl.innerHTML = `
-            <div class="flex items-center justify-center gap-2 text-sm text-yellow-400">
+            <div class="flex items-center justify-center gap-2 text-xs text-yellow-400">
               <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
               <span>Menunggu koneksi Telegram...</span>
             </div>
           `;
         }
+        
+        // Show warning if user clicked refresh
+        if (showToast && Toast) {
+          Toast.warning('Telegram Belum Terhubung', 'Silakan klik START di bot Telegram');
+        }
       } else {
         if (statusEl) {
           statusEl.innerHTML = `
-            <div class="flex items-center justify-center gap-2 text-sm text-red-400">
+            <div class="flex items-center justify-center gap-2 text-xs text-red-400">
               <i class="fas fa-exclamation-circle"></i>
-              <span>${result.message || 'Gagal memeriksa status'}</span>
+              <span>${result.message || 'Gagal'}</span>
             </div>
           `;
         }
@@ -305,12 +357,23 @@ class App {
       console.error('Check Telegram status error:', error);
       if (statusEl) {
         statusEl.innerHTML = `
-          <div class="flex items-center justify-center gap-2 text-sm text-red-400">
+          <div class="flex items-center justify-center gap-2 text-xs text-red-400">
             <i class="fas fa-exclamation-circle"></i>
-            <span>Gagal memeriksa status</span>
+            <span>Error koneksi</span>
           </div>
         `;
       }
+    }
+  }
+
+  // Helper to get client IP (same as AuthApi)
+  async getClientIP() {
+    try {
+      const response = await fetch('https://api.ipify.org?format=json');
+      const data = await response.json();
+      return data.ip || '';
+    } catch (error) {
+      return '';
     }
   }
 
@@ -325,8 +388,8 @@ class App {
       this.otpHandler.setOtpId(extra.otpId);
     }
     
-    // Render OTP form
-    this.appContainer.innerHTML = OtpTemplates.otpSection();
+    // Render OTP form - COMPACT VERSION
+    this.appContainer.innerHTML = this.getOtpTemplate();
     
     // Initialize events
     this.otpHandler.initEvents({
@@ -343,6 +406,67 @@ class App {
     document.getElementById('back-to-login')?.addEventListener('click', () => {
       this.showLoginSection();
     });
+  }
+
+  getOtpTemplate() {
+    return `
+      <div class="max-w-sm mx-auto p-5 bg-gray-800/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-700/50 animate-scale-in">
+        <!-- Header -->
+        <div class="text-center mb-4">
+          <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg">
+            <i class="fas fa-shield-alt text-2xl text-white"></i>
+          </div>
+          <h2 class="text-lg font-bold text-white">Verifikasi OTP</h2>
+          <p class="text-gray-400 text-xs mt-1">Kode dikirim ke Telegram Anda</p>
+        </div>
+        
+        <!-- OTP Form -->
+        <form id="otp-form" class="space-y-3">
+          <div>
+            <input 
+              type="text" 
+              id="otp-code" 
+              maxlength="6"
+              class="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white text-center text-2xl tracking-[0.5em] focus:border-green-500 focus:ring-2 focus:ring-green-500/20 font-mono"
+              placeholder="------"
+              required
+              autocomplete="one-time-code"
+            />
+          </div>
+          
+          <button 
+            type="submit" 
+            id="verify-otp-btn"
+            class="w-full py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg text-sm"
+          >
+            <i class="fas fa-check-circle mr-2"></i>Verifikasi
+          </button>
+        </form>
+        
+        <!-- Resend -->
+        <div class="text-center mt-4">
+          <p class="text-gray-500 text-xs">Tidak menerima kode?</p>
+          <button 
+            type="button" 
+            id="resend-otp-btn"
+            class="text-green-400 hover:text-green-300 font-medium text-sm transition-colors mt-1"
+          >
+            <i class="fas fa-redo mr-1"></i>Kirim Ulang
+          </button>
+        </div>
+        
+        <!-- Back -->
+        <div class="text-center mt-4 pt-4 border-t border-gray-700/50">
+          <button 
+            type="button" 
+            id="back-to-login"
+            class="text-gray-500 hover:text-white text-xs transition-colors"
+          >
+            <i class="fas fa-arrow-left mr-1"></i>Kembali
+          </button>
+        </div>
+      </div>
+    `;
   }
 
   // Cleanup interval on section change
@@ -363,4 +487,5 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Export for potential external use
 export { App, ThemeToggle };
+
 

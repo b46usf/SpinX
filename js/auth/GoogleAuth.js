@@ -1,8 +1,9 @@
+
 /**
  * Google Auth Module
  * Handles Google Sign-In with registration flow
  * Uses AuthApi for all backend calls - single source
- * Uses Toast for notifications (SweetAlert2)
+ * AuthApi will show Toast notifications for all responses
  * 
  * Note: Toast functions are accessed via global window.Toast
  */
@@ -91,23 +92,23 @@ class GoogleAuth {
         sub: userInfo.sub
       };
 
-      // Use AuthApi for backend validation
+      // Use AuthApi for backend validation (AuthApi will show toast)
       const authResult = await authApi.login(userInfo);
       
       if (loading) loading.close();
       
+      // AuthApi already shows toast, check result for flow control
       if (!authResult.success) {
-        if (Toast) Toast.error('Login Gagal', authResult.message || 'Terjadi kesalahan');
+        // Toast already shown by AuthApi, just return
         return;
       }
 
       if (authResult.registered) {
         if (authResult.needVerification) {
+          // Check telegramLinked status from response
           if (authResult.telegramLinked) {
-            // User has linked Telegram - generate OTP and show verification form
-            const otpLoading = Toast ? Toast.loading('Mengirim OTP...') : null;
+            // User has linked Telegram - generate OTP (AuthApi will show toast)
             const otpResult = await authApi.generateOTP(authResult.userId, userInfo.email);
-            if (otpLoading) otpLoading.close();
             
             if (otpResult.success) {
               this.triggerCallbacks(null, {
@@ -117,9 +118,8 @@ class GoogleAuth {
                 otpId: otpResult.otpId,
                 googleUser: this.googleUser
               });
-            } else {
-              if (Toast) Toast.error('Gagal Mengirim OTP', otpResult.message || 'Silakan coba lagi');
             }
+            // If failed, AuthApi already showed toast
           } else {
             // User needs to link Telegram first
             this.triggerCallbacks(null, {
@@ -133,21 +133,21 @@ class GoogleAuth {
           return;
         }
 
+        // Login successful - save user data
         this.currentUser = { ...authResult.user, picture: userInfo.picture };
         this.role = authResult.role;
         localStorage.setItem('user', JSON.stringify(this.currentUser));
         
-        if (Toast) Toast.success('Login Berhasil', `Selamat datang, ${userInfo.name}!`);
-        
-        this.triggerCallbacks(this.currentUser);
+        // Redirect to dashboard
         this.routeToDashboard(this.role);
       } else {
+        // Need to register
         this.triggerCallbacks(null, { needRegister: true, googleUser: this.googleUser });
       }
     } catch (error) {
       if (loading) loading.close();
       console.error('Auth error:', error);
-      if (Toast) Toast.error('Login Gagal', 'Terjadi kesalahan. Silakan coba lagi.');
+      // Toast already shown by AuthApi catch block
     }
   }
 
@@ -155,11 +155,12 @@ class GoogleAuth {
     const Toast = getToast();
     const loading = Toast ? Toast.loading('Sedang mendaftar...') : null;
     
-    // Use AuthApi for registration
+    // Use AuthApi for registration (AuthApi will show toast)
     const result = await authApi.register(this.googleUser, userData);
     
     if (loading) loading.close();
     
+    // Check result - toast already shown by AuthApi
     if (result.success) {
       this.currentUser = {
         userId: result.user.userId,
@@ -170,8 +171,6 @@ class GoogleAuth {
         status: result.user.status,
         picture: this.googleUser.picture
       };
-      
-      if (Toast) Toast.success('Registrasi Berhasil', 'Silakan hubungkan Telegram untuk verifikasi');
       
       // Show Telegram link for verification
       this.triggerCallbacks(null, {
@@ -185,7 +184,7 @@ class GoogleAuth {
       return { success: true };
     }
     
-    if (Toast) Toast.error('Registrasi Gagal', result.message || 'Terjadi kesalahan');
+    // Toast already shown by AuthApi
     return { success: false, message: result.message };
   }
 
@@ -193,6 +192,7 @@ class GoogleAuth {
   async checkTelegramLink(userId) {
     try {
       // Try to generate OTP - if Telegram is linked, it will succeed
+      // Don't show toast for this check
       const result = await authApi.generateOTP(userId, this.googleUser.email);
       
       if (result.success) {
@@ -287,7 +287,8 @@ class GoogleAuth {
 
   // Legacy methods for backward compatibility
   showError(message) {
-    showError('Error', message);
+    const Toast = getToast();
+    if (Toast) Toast.error('Error', message);
   }
 
   hideError() {
@@ -306,4 +307,5 @@ window.AUTH_CONFIG = AUTH_CONFIG;
 
 // Export only the singleton instance
 export { googleAuth as googleAuthInstance };
+
 
