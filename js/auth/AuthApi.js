@@ -236,6 +236,78 @@ class AuthApi {
   async spin(wa, cid) {
     return this.call('spin', { wa, cid });
   }
+
+  // ==================== Admin Actions ====================
+
+  /**
+   * Get admin dashboard stats
+   */
+  async getStats() {
+    return this.call('getStats', {}, false);
+  }
+
+  /**
+   * Get recent activity
+   */
+  async getRecentActivity() {
+    return this.call('getRecentActivity', {}, false);
+  }
+
+  // ==================== Guru Actions ====================
+
+  /**
+   * Get students activity for guru
+   */
+  async getStudentsActivity() {
+    return this.call('getStudentsActivity', {}, false);
+  }
+
+  /**
+   * Get top vouchers
+   */
+  async getTopVouchers() {
+    return this.call('getTopVouchers', {}, false);
+  }
+
+  // ==================== Mitra Actions ====================
+
+  /**
+   * Get mitra dashboard stats
+   */
+  async getMitraStats() {
+    return this.call('getMitraStats', {}, false);
+  }
+
+  /**
+   * Redeem voucher
+   * @param {string} code - Voucher code
+   */
+  async redeemVoucher(code) {
+    return this.call('redeemVoucher', { kode: code });
+  }
+
+  /**
+   * Get redeem history
+   */
+  async getRedeemHistory() {
+    return this.call('getRedeemHistory', {}, false);
+  }
+
+  // ==================== Siswa Actions ====================
+
+  /**
+   * Get student vouchers
+   */
+  async getVouchers() {
+    return this.call('getVouchers', {}, false);
+  }
+
+  /**
+   * Get play count
+   */
+  async getPlayCount() {
+    return this.call('getPlayCount', {}, false);
+  }
 }
 
 // Create singleton instance

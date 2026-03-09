@@ -185,40 +185,30 @@
     </div>
   </main>
 
+  <!-- Load Toast first for notifications -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.all.min.js"></script>
   <script>
-    function toggleTheme() {
-      const html = document.documentElement;
-      const icon = document.getElementById('theme-icon');
-      if (html.getAttribute('data-theme') === 'dark') {
-        html.setAttribute('data-theme', 'light');
-        icon.className = 'fas fa-sun';
-      } else {
-        html.setAttribute('data-theme', 'dark');
-        icon.className = 'fas fa-moon';
+    // Initialize Toast global
+    window.Toast = Swal.mixin({
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+      didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer);
+        toast.addEventListener('mouseleave', Swal.resumeTimer);
       }
-    }
+    });
   </script>
 
+  <!-- Modular Scripts - Clean & DRY -->
   <script type="module">
-    import GoogleAuth from './js/auth/GoogleAuth.js';
-
-    if (!GoogleAuth.isLoggedIn() || GoogleAuth.getRole() !== 'guru') {
-      alert('Akses ditolak. Silakan login sebagai guru/karyawan.');
-      window.location.href = 'index.html';
-    }
-
-    const user = GoogleAuth.getUser();
-    document.getElementById('user-avatar').src = user.picture;
-    document.getElementById('user-name').textContent = user.name;
-    document.getElementById('welcome-name').textContent = user.name.split(' ')[0];
-
-    if (user.profile && user.profile.sekolah) {
-      document.getElementById('school-name').textContent = user.profile.sekolah;
-    }
-
-    document.getElementById('logout-btn').addEventListener('click', () => {
-      GoogleAuth.logout();
-    });
+    // Import core modules - no more duplicate code!
+    import './js/components/utils/Toast.js';
+    import { GuruDashboard } from './js/pages/GuruDashboard.js';
+    
+    // GuruDashboard auto-initializes on DOMContentLoaded
   </script>
 
 </body>

@@ -152,51 +152,32 @@
     </div>
   </main>
 
+  <!-- Load Toast first for notifications -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.all.min.js"></script>
   <script>
-    // Theme Toggle
-    function toggleTheme() {
-      const html = document.documentElement;
-      const icon = document.getElementById('theme-icon');
-      
-      if (html.getAttribute('data-theme') === 'dark') {
-        html.setAttribute('data-theme', 'light');
-        icon.className = 'fas fa-sun';
-      } else {
-        html.setAttribute('data-theme', 'dark');
-        icon.className = 'fas fa-moon';
+    // Initialize Toast global
+    window.Toast = Swal.mixin({
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+      didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer);
+        toast.addEventListener('mouseleave', Swal.resumeTimer);
       }
-    }
-  </script>
-
-  <script type="module">
-    import GoogleAuth from './js/auth/GoogleAuth.js';
-
-    // Check auth
-    if (!GoogleAuth.isLoggedIn() || GoogleAuth.getRole() !== 'siswa') {
-      alert('Akses ditolak. Silakan login sebagai siswa.');
-      window.location.href = 'index.html';
-    }
-
-    const user = GoogleAuth.getUser();
-    
-    // Display user info
-    document.getElementById('user-avatar').src = user.picture;
-    document.getElementById('user-name').textContent = user.name;
-    document.getElementById('welcome-name').textContent = user.name.split(' ')[0];
-
-    // Load WA from localStorage
-    const savedWa = localStorage.getItem('wa');
-    if (savedWa) {
-      document.getElementById('wa').value = savedWa;
-    }
-
-    // Logout
-    document.getElementById('logout-btn').addEventListener('click', () => {
-      GoogleAuth.logout();
     });
   </script>
 
-  <script src="js/Script.js"></script>
+  <!-- Modular Scripts - Clean & DRY -->
+  <script type="module">
+    // Import core modules - no more duplicate code!
+    import './js/components/utils/Toast.js';
+    import { SiswaDashboard } from './js/pages/SiswaDashboard.js';
+    
+    // SiswaDashboard auto-initializes on DOMContentLoaded
+    // Exposes startGame and spinWheel globally for HTML onclick
+  </script>
 
 </body>
 </html>
