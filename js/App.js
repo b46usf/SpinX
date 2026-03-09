@@ -293,7 +293,11 @@ class App {
         
         // Show success toast
         if (Toast) {
-          Toast.success('Telegram Terhubung!', 'Kode OTP dikirim ke Telegram Anda');
+          if (result.debug_otp) {
+            Toast.success('Telegram Terhubung!', 'Kode OTP: ' + result.debug_otp);
+          } else {
+            Toast.success('Telegram Terhubung!', 'Kode OTP dikirim ke Telegram Anda');
+          }
         }
         
         // Redirect to OTP page
@@ -302,9 +306,10 @@ class App {
             userId: this.pendingUserData.userId,
             email: this.pendingUserData.email,
             otpId: result.otpId,
+            debugOtp: result.debug_otp,
             googleUser: this.pendingUserData.googleUser
           });
-        }, 1500);
+        }, 2000);
         
       } else if (result.error === 'TELEGRAM_NOT_LINKED') {
         if (statusEl) {
