@@ -47,7 +47,7 @@ class App {
     this.otpHandler = null;
     this.appContainer = null;
     this.pendingUserData = null;
-    this.telegramCheckInterval = null;
+    this.otpRequested = false; // Prevent duplicate OTP requests
   }
 
   async init() {
@@ -179,29 +179,26 @@ class App {
       googleUser: extra.googleUser
     };
     
-    // Show info toast immediately
-    const Toast = getToast();
-    if (Toast) {
-      Toast.info('Hubungkan Telegram', 'Klik START di bot Telegram untuk verifikasi');
-    }
+    // Reset flag
+    this.otpRequested = false;
     
-    // Render UI
+    // Render UI - SIMPLE VERSION
     this.appContainer.innerHTML = this.getTelegramLinkTemplate(extra);
-    
-    // Setup polling immediately
-    this.startTelegramCheck(extra.userId);
     
     // Event listeners
     document.getElementById('back-to-login')?.addEventListener('click', () => {
       this.showLoginSection();
     });
     
-    // Open telegram button - show toast on click
-    document.getElementById('open-telegram')?.addEventListener('click', () => {
-      if (Toast) {
-        Toast.info('Buka Telegram', '1. Klik START di bot\n2. Tunggu hingga terhubung');
-      }
+    // Refresh/Check button
+    document.getElementById('refresh-telegram-status')?.addEventListener('click', () => {
+      this.checkTelegramStatus();
     });
+    
+    // Auto check once when page loads
+    setTimeout(() => {
+      this.checkTelegramStatus();
+    }, 1000);
   }
 
   getTelegramLinkTemplate(extra) {
@@ -216,19 +213,6 @@ class App {
           <p class="text-gray-400 text-xs mt-1">Verifikasi akun Anda via Telegram</p>
         </div>
         
-        <!-- Steps - Compact -->
-        <div class="bg-gray-700/40 rounded-lg p-3 mb-4">
-          <p class="text-gray-300 text-xs font-medium mb-2">Langkah mudah:</p>
-          <div class="flex items-center gap-2 text-gray-400 text-xs">
-            <span class="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center text-[10px]">1</span>
-            <span>Klik <strong class="text-blue-400">Buka Telegram</strong></span>
-          </div>
-          <div class="flex items-center gap-2 text-gray-400 text-xs mt-1">
-            <span class="w-5 h-5 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center text-[10px]">2</span>
-            <span>Klik <strong class="text-green-400">START</strong> di bot</span>
-          </div>
-        </div>
-        
         <!-- Telegram Button -->
         <a 
           id="open-telegram"
@@ -241,10 +225,10 @@ class App {
         </a>
         
         <!-- Status -->
-        <div id="telegram-status" class="mt-3 p-2 bg-gray-700/30 rounded-lg">
+        <div id="telegram-status" class="mt-3 p-3 bg-gray-700/30 rounded-lg">
           <div class="flex items-center justify-center gap-2 text-xs text-gray-400">
             <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
-            <span>Menunggu koneksi...</span>
+            <span>Klik tombol di atas</span>
           </div>
         </div>
         
@@ -270,35 +254,20 @@ class App {
     `;
   }
 
-  startTelegramCheck(userId) {
-    const refreshBtn = document.getElementById('refresh-telegram-status');
-    
-    // Handle manual refresh click
-    if (refreshBtn) {
-      refreshBtn.addEventListener('click', () => {
-        this.checkTelegramStatus(userId, true);
-      });
-    }
-    
-    // Check immediately
-    this.checkTelegramStatus(userId, false);
-    
-    // Then poll every 3 seconds
-    this.telegramCheckInterval = setInterval(() => {
-      this.checkTelegramStatus(userId, false);
-    }, 3000);
-  }
-
-  async checkTelegramStatus(userId, showToast = false) {
+  async checkTelegramStatus() {
     const statusEl = document.getElementById('telegram-status');
     const Toast = getToast();
     
-    if (!this.pendingUserData) return;
+    if (!this.pendingUserData || this.otpRequested) return;
     
     try {
-      // Call API directly to control toast behavior
       const clientIP = await this.getClientIP();
-      const payload = { action: 'generateOTP', userId, email: this.pendingUserData.email, ip: clientIP };
+      const payload = { 
+        action: 'generateOTP', 
+        userId: this.pendingUserData.userId, 
+        email: this.pendingUserData.email, 
+        ip: clientIP 
+      };
       
       const res = await fetch(window.AUTH_CONFIG?.API_URL || '/api/proxy', {
         method: 'POST',
@@ -309,17 +278,14 @@ class App {
       const result = await res.json();
       
       if (result.success) {
-        // Telegram linked! Stop polling
-        if (this.telegramCheckInterval) {
-          clearInterval(this.telegramCheckInterval);
-          this.telegramCheckInterval = null;
-        }
+        // Mark as requested to prevent duplicate
+        this.otpRequested = true;
         
         // Update status UI
         if (statusEl) {
           statusEl.innerHTML = `
             <div class="flex items-center justify-center gap-2 text-xs text-green-400">
-              <i class="fas fa-check-circle animate-pulse"></i>
+              <i class="fas fa-check-circle"></i>
               <span>Terkoneksi! Mengirim OTP...</span>
             </div>
           `;
@@ -330,7 +296,7 @@ class App {
           Toast.success('Telegram Terhubung!', 'Kode OTP dikirim ke Telegram Anda');
         }
         
-        // Wait a moment then redirect to OTP page with the otpId
+        // Redirect to OTP page
         setTimeout(() => {
           this.showOtpSection({
             userId: this.pendingUserData.userId,
@@ -345,14 +311,9 @@ class App {
           statusEl.innerHTML = `
             <div class="flex items-center justify-center gap-2 text-xs text-yellow-400">
               <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
-              <span>Menunggu koneksi Telegram...</span>
+              <span>Belum terhubung. Klik START di Telegram</span>
             </div>
           `;
-        }
-        
-        // Show warning if user clicked refresh
-        if (showToast && Toast) {
-          Toast.warning('Telegram Belum Terhubung', 'Silakan klik START di bot Telegram');
         }
       } else {
         if (statusEl) {
@@ -417,13 +378,6 @@ class App {
     document.getElementById('back-to-login')?.addEventListener('click', () => {
       this.showLoginSection();
     });
-    
-    // Auto-send OTP when page loads (if otpId not provided)
-    if (!extra.otpId) {
-      setTimeout(() => {
-        document.getElementById('resend-otp-btn')?.click();
-      }, 500);
-    }
   }
 
   getOtpTemplate() {
@@ -435,7 +389,7 @@ class App {
             <i class="fas fa-shield-alt text-2xl text-white"></i>
           </div>
           <h2 class="text-lg font-bold text-white">Verifikasi OTP</h2>
-          <p class="text-gray-400 text-xs mt-1">Kode dikirim ke Telegram Anda</p>
+          <p class="text-gray-400 text-xs mt-1">Masukkan kode dari Telegram</p>
         </div>
         
         <!-- OTP Form -->
@@ -452,7 +406,7 @@ class App {
             />
           </div>
           
-<button 
+          <button 
             type="submit" 
             id="verify-otp-btn"
             class="w-full py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg text-sm"
@@ -487,13 +441,10 @@ class App {
     `;
   }
 
-  // Cleanup interval on section change
+  // Cleanup
   cleanup() {
-    if (this.telegramCheckInterval) {
-      clearInterval(this.telegramCheckInterval);
-      this.telegramCheckInterval = null;
-    }
     this.pendingUserData = null;
+    this.otpRequested = false;
   }
 }
 
