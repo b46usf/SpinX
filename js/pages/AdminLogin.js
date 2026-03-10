@@ -108,33 +108,10 @@ class AdminLogin {
   }
 
   /**
-   * Setup login button click handler
-   */
-  setupLoginButton() {
-    // Wait for Google button to be rendered
-    setTimeout(() => {
-      const loginBtn = document.getElementById('googleLoginBtn');
-      if (loginBtn) {
-        console.log('Google button found, adding click handler');
-        
-        // Use onclick instead of addEventListener for more reliable triggering
-        loginBtn.onclick = (e) => {
-          e.preventDefault();
-          console.log('Google button clicked');
-          
-          if (window.google?.accounts?.id) {
-            window.google.accounts.id.prompt();
-          }
-        };
-      }
-    }, 500);
-  }
-
-  /**
    * Render Google login button - Match user login design
    */
   renderGoogleButton() {
-    // Get existing container from HTML - DON'T clear it, just render into it
+    // Get existing container from HTML
     const container = document.getElementById('google-login-container');
     
     if (!container) {
@@ -142,17 +119,39 @@ class AdminLogin {
       return;
     }
 
-    // Render Google button into the container
+    // Render Google button into the container - use 100% width
     if (window.google?.accounts?.id) {
       window.google.accounts.id.renderButton(container, {
         theme: 'outline',
         size: 'large',
-        width: '300'
+        width: '100%'
       });
       console.log('Native Google button rendered');
     }
     
     console.log('Google login button setup complete');
+  }
+
+  /**
+   * Setup login button click handler
+   */
+  setupLoginButton() {
+    // Google button is self-handling when rendered via renderButton
+    // But we add a fallback in case user clicks and nothing happens
+    setTimeout(() => {
+      const container = document.getElementById('google-login-container');
+      if (container) {
+        const button = container.querySelector('[role="button"]');
+        if (button) {
+          button.onclick = () => {
+            if (window.google?.accounts?.id) {
+              window.google.accounts.id.prompt();
+            }
+          };
+          console.log('Click handler added to Google button');
+        }
+      }
+    }, 1000);
   }
 
   /**
