@@ -17,7 +17,7 @@ export const Navbar = {
           </div>
           
           <!-- Navigation Links -->
-          <div class="hidden lg:flex items-center gap-1">
+          <div class="hidden md:flex items-center gap-1">
             <a href="#features" class="nav-link group">
               <i class="fas fa-star text-xs opacity-0 group-hover:opacity-100 transition-opacity"></i>
               <span>Fitur</span>
