@@ -60,12 +60,12 @@ export const Footer = {
                 ${productsLinks}
               </ul>
             </div>
-            // <div>
-            //   <h4 class="text-white font-semibold mb-4">Perusahaan</h4>
-            //   <ul class="space-y-2">
-            //     ${companyLinks}
-            //   </ul>
-            // </div>
+            <div>
+              <h4 class="text-white font-semibold mb-4">Perusahaan</h4>
+              <ul class="space-y-2">
+                ${companyLinks}
+              </ul>
+            </div>
           </div>
           <div class="border-t border-gray-800 mt-8 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
             <p class="text-gray-500 text-sm">© 2024 spinX. All rights reserved.</p>
