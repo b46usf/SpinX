@@ -11,7 +11,15 @@
   ],
   "rewrites": [
     { "source": "/api/proxy", "destination": "/api/proxy" },
-    { "source": "/api/telegram", "destination": "/api/telegram" }
+    { "source": "/api/telegram", "destination": "/api/telegram" },
+    { "source": "/adsys", "destination": "/adsys.html" },
+    { "source": "/adsys.html", "destination": "/adsys.html" },
+    { "source": "/dashboard-admin", "destination": "/dashboard-admin.html" },
+    { "source": "/dashboard-admin.html", "destination": "/dashboard-admin.html" },
+    { "source": "/dashboard-guru", "destination": "/dashboard-guru.html" },
+    { "source": "/dashboard-mitra", "destination": "/dashboard-mitra.html" },
+    { "source": "/dashboard-siswa", "destination": "/dashboard-siswa.html" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
