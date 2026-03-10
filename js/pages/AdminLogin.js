@@ -108,50 +108,54 @@ class AdminLogin {
   }
 
   /**
-   * Render Google login button - Match user login design
+   * Render Google login button - Match user login exactly
+   * Uses same approach as LoginComponent
    */
   renderGoogleButton() {
-    // Get existing container from HTML
-    const container = document.getElementById('google-login-container');
-    
-    if (!container) {
-      console.error('Google login container not found');
-      return;
-    }
-
-    // Render Google button into the container - use 100% width
+    // Check for Google SDK and button element
     if (window.google?.accounts?.id) {
-      window.google.accounts.id.renderButton(container, {
-        theme: 'outline',
-        size: 'large',
-        width: '100%'
-      });
-      console.log('Native Google button rendered');
+      // Try to render into existing button first (like LoginComponent)
+      const existingBtn = document.getElementById('googleLoginBtn');
+      if (existingBtn) {
+        window.google.accounts.id.renderButton(existingBtn, {
+          theme: 'outline',
+          size: 'large',
+          width: '300'
+        });
+        console.log('Native Google button rendered into existing element');
+      } else {
+        // Fallback: render into container
+        const container = document.getElementById('google-login-container');
+        if (container) {
+          window.google.accounts.id.renderButton(container, {
+            theme: 'outline',
+            size: 'large',
+            width: '100%'
+          });
+          console.log('Native Google button rendered into container');
+        }
+      }
     }
     
     console.log('Google login button setup complete');
   }
 
   /**
-   * Setup login button click handler
+   * Setup login button click handler - Same as LoginComponent
    */
   setupLoginButton() {
-    // Google button is self-handling when rendered via renderButton
-    // But we add a fallback in case user clicks and nothing happens
+    // Google button handles itself when rendered via renderButton
+    // Add backup click handler as fallback
     setTimeout(() => {
-      const container = document.getElementById('google-login-container');
-      if (container) {
-        const button = container.querySelector('[role="button"]');
-        if (button) {
-          button.onclick = () => {
-            if (window.google?.accounts?.id) {
-              window.google.accounts.id.prompt();
-            }
-          };
-          console.log('Click handler added to Google button');
-        }
+      const loginBtn = document.getElementById('googleLoginBtn');
+      if (loginBtn) {
+        loginBtn.onclick = () => {
+          if (window.google?.accounts?.id) {
+            window.google.accounts.id.prompt();
+          }
+        };
       }
-    }, 1000);
+    }, 500);
   }
 
   /**
