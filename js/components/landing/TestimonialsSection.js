@@ -70,11 +70,18 @@ const TestimonialCarousel = {
   autoPlayInterval: null,
   autoPlayDelay: 5000,
   isAnimating: false,
+  
+  // Touch/Mouse drag state
+  isDragging: false,
+  startX: 0,
+  currentX: 0,
+  dragThreshold: 50,
 
   // Initialize carousel
   init() {
     this.updateItemsPerSlide();
     this.bindEvents();
+    this.bindTouchEvents();
     this.startAutoPlay();
     this.updateCarousel();
     
@@ -122,6 +129,86 @@ const TestimonialCarousel = {
       carouselContainer.addEventListener('mouseenter', () => this.stopAutoPlay());
       carouselContainer.addEventListener('mouseleave', () => this.startAutoPlay());
     }
+  },
+
+  // Bind touch and mouse drag events
+  bindTouchEvents() {
+    const carousel = document.getElementById('testimonial-carousel');
+    const track = document.getElementById('testimonial-track');
+    
+    if (!carousel || !track) return;
+
+    // Touch events
+    carousel.addEventListener('touchstart', (e) => this.handleTouchStart(e), { passive: true });
+    carousel.addEventListener('touchmove', (e) => this.handleTouchMove(e), { passive: false });
+    carousel.addEventListener('touchend', (e) => this.handleTouchEnd(e));
+
+    // Mouse drag events
+    carousel.addEventListener('mousedown', (e) => this.handleMouseDown(e));
+    window.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+    window.addEventListener('mouseup', (e) => this.handleMouseUp(e));
+    
+    // Prevent default drag behavior
+    track.addEventListener('dragstart', (e) => e.preventDefault());
+  },
+
+  // Touch handlers
+  handleTouchStart(e) {
+    this.startX = e.touches[0].clientX;
+    this.isDragging = true;
+    this.stopAutoPlay();
+  },
+
+  handleTouchMove(e) {
+    if (!this.isDragging) return;
+    e.preventDefault(); // Prevent scrolling while swiping
+    this.currentX = e.touches[0].clientX;
+  },
+
+  handleTouchEnd(e) {
+    if (!this.isDragging) return;
+    this.isDragging = false;
+    
+    const diff = this.startX - this.currentX;
+    if (Math.abs(diff) > this.dragThreshold) {
+      if (diff > 0) {
+        this.next(); // Swipe left - go next
+      } else {
+        this.prev(); // Swipe right - go prev
+      }
+    }
+    
+    this.startAutoPlay();
+  },
+
+  // Mouse drag handlers
+  handleMouseDown(e) {
+    this.startX = e.clientX;
+    this.isDragging = true;
+    this.stopAutoPlay();
+    document.body.style.cursor = 'grabbing';
+  },
+
+  handleMouseMove(e) {
+    if (!this.isDragging) return;
+    this.currentX = e.clientX;
+  },
+
+  handleMouseUp(e) {
+    if (!this.isDragging) return;
+    this.isDragging = false;
+    document.body.style.cursor = '';
+    
+    const diff = this.startX - this.currentX;
+    if (Math.abs(diff) > this.dragThreshold) {
+      if (diff > 0) {
+        this.next(); // Drag left - go next
+      } else {
+        this.prev(); // Drag right - go prev
+      }
+    }
+    
+    this.startAutoPlay();
   },
 
   // Go to previous slide
