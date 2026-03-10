@@ -236,7 +236,8 @@ class GoogleAuth {
 
   routeToDashboard(role) {
     const dashboards = { 
-      'admin': 'dashboard-admin.html', 
+      'admin-system': 'dashboard-admin.html', 
+      'admin-sekolah': 'dashboard-admin-sekolah.html',
       'siswa': 'dashboard-siswa.html', 
       'mitra': 'dashboard-mitra.html', 
       'guru': 'dashboard-guru.html' 

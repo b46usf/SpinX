@@ -22,8 +22,8 @@ class AdminDashboard {
    * Initialize admin dashboard
    */
   init() {
-    // Auth protection
-    if (!authGuard.init('admin', {
+    // Auth protection - accept both admin-system and admin-sekolah roles
+    if (!authGuard.init('admin-system', {
       avatarId: 'user-avatar',
       nameId: 'user-name',
       welcomeId: 'welcome-name',

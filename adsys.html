@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpinX - Admin Login</title>
+  <meta name="description" content="SpinX Admin System - Login khusus administrator">
+  <link rel="icon" href="data:,">
+  
+  <!-- Disable FedCM for better compatibility with COOP policies -->
+  <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="css/style.css">
+  
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- SweetAlert2 for toast notifications -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.all.min.js"></script>
+  
+  <!-- Google Sign-In -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body class="min-h-screen flex items-center justify-center p-4">
+
+  <!-- Main Card -->
+  <div class="relative w-full max-w-md">
+    <!-- Animated Background -->
+    <div class="absolute inset-0 bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 opacity-50"></div>
+    <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-pink-500/20 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
+    
+    <!-- Login Card -->
+    <div class="relative bg-gray-900/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-700/50 p-8 animate-scale-in">
+      
+      <!-- Logo & Title -->
+      <div class="text-center mb-6">
+        <div class="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/30 transform hover:scale-110 transition-transform duration-300">
+          <i class="fas fa-shield-alt text-3xl text-white"></i>
+        </div>
+        <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+          SpinX Admin
+        </h1>
+        <p class="text-gray-400 text-sm mt-2">Sistem Manajemen</p>
+      </div>
+
+      <!-- Tagline -->
+      <p class="text-gray-400 text-center text-sm mb-6">
+        🔐 Login khusus administrator
+      </p>
+
+      <!-- Google Button Container -->
+      <div class="login-card mb-4">
+        <div id="google-login-container">
+          <button id="googleLoginBtn" class="google-login w-full">
+            <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google">
+            <span>Masuk dengan Google</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Error Display -->
+      <div id="auth-error" class="hidden mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs text-center"></div>
+
+      <!-- Footer -->
+      <div class="pt-4 border-t border-gray-700/50">
+        <p class="text-xs text-gray-500 text-center">
+          <i class="fas fa-shield-alt mr-1"></i>Akses terbatas administrator
+        </p>
+      </div>
+
+      <!-- Back to Home -->
+      <div class="mt-4 text-center">
+        <a href="index.html" class="text-sm text-gray-500 hover:text-indigo-400 transition-colors">
+          <i class="fas fa-arrow-left mr-1"></i>Kembali ke beranda
+        </a>
+      </div>
+    </div>
+
+    <!-- Version -->
+    <p class="text-center text-gray-600 text-[10px] mt-4">v1.0.0 - Admin System</p>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed top-20 right-4 z-50"></div>
+
+  <!-- Modular Scripts - DRY: Reuse existing modules -->
+  <script type="module">
+    // Import Toast FIRST
+    import './js/components/utils/Toast.js';
+    
+    // Import Admin Login Handler
+    import { AdminLogin } from './js/pages/AdminLogin.js';
+    
+    // Initialize Admin Login
+    const adminLogin = new AdminLogin();
+    adminLogin.init();
+  </script>
+
+</body>
+</html>
+

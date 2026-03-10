@@ -12,10 +12,18 @@ const getToast = () => window.Toast || null;
 const AuthRouter = {
   // Dashboard mapping by role
   dashboards: {
-    'admin': 'dashboard-admin.html',
+    'admin-system': 'dashboard-admin.html',
+    'admin-sekolah': 'dashboard-admin-sekolah.html',
     'siswa': 'dashboard-siswa.html',
     'mitra': 'dashboard-mitra.html',
     'guru': 'dashboard-guru.html'
+  },
+
+  /**
+   * Get dashboard URL for a role
+   */
+  getDashboardUrl(role) {
+    return this.dashboards[role] || 'index.html';
   },
 
   /**
@@ -37,6 +45,13 @@ const AuthRouter = {
    */
   routeToLogin() {
     window.location.href = 'index.html';
+  },
+
+  /**
+   * Route to admin login page
+   */
+  routeToAdminLogin() {
+    window.location.href = 'adsys.html';
   },
 
   /**

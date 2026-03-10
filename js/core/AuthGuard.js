@@ -84,7 +84,8 @@ class AuthGuard {
   redirectToDashboard() {
     const role = this.getRole();
     const dashboards = {
-      'admin': 'dashboard-admin.html',
+      'admin-system': 'dashboard-admin.html',
+      'admin-sekolah': 'dashboard-admin-sekolah.html',
       'siswa': 'dashboard-siswa.html',
       'mitra': 'dashboard-mitra.html',
       'guru': 'dashboard-guru.html'
@@ -95,6 +96,15 @@ class AuthGuard {
     } else {
       this.redirectToLogin();
     }
+  }
+
+  /**
+   * Check if user has admin role (admin-system or admin-sekolah)
+   * @returns {boolean}
+   */
+  isAdmin() {
+    const role = this.getRole();
+    return role === 'admin-system' || role === 'admin-sekolah';
   }
 
   /**

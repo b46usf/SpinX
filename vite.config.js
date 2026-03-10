@@ -11,7 +11,8 @@ export default defineConfig({
     // Exclude API routes from build - serve them separately
     rollupOptions: {
       input: {
-        main: './index.html'
+        main: './index.html',
+        adsys: './adsys.html'
       }
     }
   },
