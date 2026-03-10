@@ -52,7 +52,7 @@ const testimonialsData = [
     role: 'Kantin MTSN 1',
     initials: 'M',
     gradient: 'from-cyan-500 to-blue-500',
-    text: '"Dashboard-nya intuitif dan mudah dipahami. Tidak perlu培训 khusus untuk seringk menggunakan."'
+    text: '"Dashboard-nya intuitif dan mudah dipahami. Tidak perlu培训 khusus untuk党组书记 menggunakan."'
   },
   {
     name: 'Ibu Lina',
@@ -62,6 +62,23 @@ const testimonialsData = [
     text: '"SpinX membuat kantin sekolah kami berbeda dari yang lain. Siswa jadi lebih suka makan di sekolah!"'
   }
 ];
+
+// Generate testimonial card HTML
+const generateTestimonialCard = (t) => `
+  <div class="testimonial-card rounded-2xl p-4 sm:p-6">
+    <div class="flex items-center gap-1 mb-3 sm:mb-4">
+      ${Array(5).fill('<i class="fas fa-star text-yellow-400 text-xs"></i>').join('')}
+    </div>
+    <p class="text-gray-300 mb-4 sm:mb-6 text-sm">${t.text}</p>
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-full bg-gradient-to-br ${t.gradient} flex items-center justify-center text-white font-bold text-sm">${t.initials}</div>
+      <div>
+        <div class="text-white font-medium text-sm">${t.name}</div>
+        <div class="text-gray-500 text-xs">${t.role}</div>
+      </div>
+    </div>
+  </div>
+`;
 
 // Carousel state management
 const TestimonialCarousel = {
@@ -94,11 +111,13 @@ const TestimonialCarousel = {
       if (oldItemsPerSlide !== this.itemsPerSlide) {
         this.regenerateSlides();
       }
-      this.updateCarousel();
     });
   },
 
   // Update items per slide based on screen width
+  // Mobile (<768px): 1 item
+  // Tablet (768px - 1024px): 2 items
+  // Desktop (>1024px): 3 items
   updateItemsPerSlide() {
     const width = window.innerWidth;
     if (width < 768) {
@@ -159,6 +178,7 @@ const TestimonialCarousel = {
     
     // Reset current index to 0 after regeneration
     this.currentIndex = 0;
+    this.updateCarousel();
   },
 
   // Bind click events
@@ -328,29 +348,20 @@ const TestimonialCarousel = {
   }
 };
 
-// Generate testimonial card HTML
-const generateTestimonialCard = (t) => `
-  <div class="testimonial-card rounded-2xl p-4 sm:p-6">
-    <div class="flex items-center gap-1 mb-3 sm:mb-4">
-      ${Array(5).fill('<i class="fas fa-star text-yellow-400 text-xs"></i>').join('')}
-    </div>
-    <p class="text-gray-300 mb-4 sm:mb-6 text-sm">${t.text}</p>
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-full bg-gradient-to-br ${t.gradient} flex items-center justify-center text-white font-bold text-sm">${t.initials}</div>
-      <div>
-        <div class="text-white font-medium text-sm">${t.name}</div>
-        <div class="text-gray-500 text-xs">${t.role}</div>
-      </div>
-    </div>
-  </div>
-`;
-
-// Generate initial slides (mobile-first: 1 item per slide)
+// Generate initial slides based on current screen size
 const generateInitialSlides = () => {
+  // Determine initial items per slide
+  let initialItemsPerSlide = 1;
+  const width = window.innerWidth;
+  if (width >= 1024) {
+    initialItemsPerSlide = 3;
+  } else if (width >= 768) {
+    initialItemsPerSlide = 2;
+  }
+  
   const slides = [];
-  const itemsPerSlide = 1;
-  for (let i = 0; i < testimonialsData.length; i += itemsPerSlide) {
-    const slideItems = testimonialsData.slice(i, i + itemsPerSlide);
+  for (let i = 0; i < testimonialsData.length; i += initialItemsPerSlide) {
+    const slideItems = testimonialsData.slice(i, i + initialItemsPerSlide);
     const cardsHTML = slideItems.map(t => generateTestimonialCard(t)).join('');
     
     slides.push(`
@@ -364,9 +375,18 @@ const generateInitialSlides = () => {
   return slides.join('');
 };
 
-// Generate initial dots
+// Generate initial dots based on current screen size
 const generateInitialDots = () => {
-  const totalSlides = testimonialsData.length;
+  // Determine initial items per slide
+  let initialItemsPerSlide = 1;
+  const width = window.innerWidth;
+  if (width >= 1024) {
+    initialItemsPerSlide = 3;
+  } else if (width >= 768) {
+    initialItemsPerSlide = 2;
+  }
+  
+  const totalSlides = Math.ceil(testimonialsData.length / initialItemsPerSlide);
   let dotsHTML = '';
   for (let i = 0; i < totalSlides; i++) {
     dotsHTML += `<button class="testimonial-dot w-3 h-3 rounded-full bg-white/30 hover:bg-white/50 transition-all ${i === 0 ? 'active bg-white' : ''}" data-index="${i}" aria-label="Go to slide ${i + 1}"></button>`;
@@ -392,7 +412,7 @@ export const TestimonialsSection = {
               ${generateInitialSlides()}
             </div>
             
-            <!-- Navigation Arrows - hidden on mobile, shown on tablet+ -->
+            <!-- Navigation Arrows - hidden on mobile (<768px), shown on tablet+ (≥768px) -->
             <button id="testimonial-prev" class="testimonial-nav testimonial-prev absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm flex items-center justify-center text-white transition-all z-10 hidden md:flex" aria-label="Previous">
               <i class="fas fa-chevron-left"></i>
             </button>

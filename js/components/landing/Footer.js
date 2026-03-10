@@ -41,7 +41,8 @@ export const Footer = {
     return `
       <footer class="bg-gray-900/80 border-t border-gray-800">
         <div class="container mx-auto px-4 py-12">
-          <div class="grid md:grid-cols-4 gap-8">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <!-- Logo & Description - Full width on mobile, 2 cols on desktop -->
             <div class="md:col-span-2">
               <div class="flex items-center gap-3 mb-4">
                 <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center">
@@ -54,17 +55,21 @@ export const Footer = {
                 ${socialLinks}
               </div>
             </div>
-            <div>
-              <h4 class="text-white font-semibold mb-4">Produk</h4>
-              <ul class="space-y-2">
-                ${productsLinks}
-              </ul>
-            </div>
-            <div>
-              <h4 class="text-white font-semibold mb-4">Perusahaan</h4>
-              <ul class="space-y-2">
-                ${companyLinks}
-              </ul>
+            
+            <!-- Products & Company - 2 column inline grid on all screens -->
+            <div class="col-span-2 grid grid-cols-2 gap-8">
+              <div>
+                <h4 class="text-white font-semibold mb-4">Produk</h4>
+                <ul class="space-y-2">
+                  ${productsLinks}
+                </ul>
+              </div>
+              <div>
+                <h4 class="text-white font-semibold mb-4">Perusahaan</h4>
+                <ul class="space-y-2">
+                  ${companyLinks}
+                </ul>
+              </div>
             </div>
           </div>
           <div class="border-t border-gray-800 mt-8 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">

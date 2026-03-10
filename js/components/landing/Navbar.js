@@ -18,8 +18,8 @@ export const Navbar = {
             <span class="font-bold text-xl sm:text-2xl text-white tracking-tight">spin<span class="gradient-text">X</span></span>
           </div>
           
-          <!-- Desktop Navigation Links -->
-          <div class="hidden md:flex items-center gap-1">
+          <!-- Desktop Navigation Links - Show on lg (1024px) and above -->
+          <div class="hidden lg:flex items-center gap-1">
             <a href="#features" class="nav-link group">
               <i class="fas fa-star text-xs opacity-0 group-hover:opacity-100 transition-opacity"></i>
               <span>Fitur</span>
@@ -38,8 +38,8 @@ export const Navbar = {
             </a>
           </div>
           
-          <!-- Desktop Action Buttons -->
-          <div class="hidden md:flex items-center gap-3">
+          <!-- Desktop Action Buttons - Show on lg (1024px) and above -->
+          <div class="hidden lg:flex items-center gap-3">
             <a href="#pricing" class="inline-flex items-center px-5 py-2.5 bg-white/5 hover:bg-white/15 border border-white/10 text-white text-sm font-semibold rounded-xl transition-all duration-300 hover:scale-105 backdrop-blur-sm">
               <i class="fas fa-gift mr-2 text-indigo-400"></i>
               Coba Gratis
@@ -50,8 +50,8 @@ export const Navbar = {
             </button>
           </div>
           
-          <!-- Mobile Menu Button -->
-          <button id="mobile-menu-btn" class="md:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-white transition-all duration-300" aria-label="Toggle menu">
+          <!-- Mobile Menu Button - Show below lg (1024px) -->
+          <button id="mobile-menu-btn" class="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 text-white transition-all duration-300" aria-label="Toggle menu">
             <i class="fas fa-bars text-lg menu-icon"></i>
             <i class="fas fa-times text-lg close-icon hidden"></i>
           </button>
