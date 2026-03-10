@@ -87,41 +87,22 @@ class AdminLogin {
       this.handleCredentialResponse(response);
     };
 
-    // Also set up a fallback callback on window for Google to find
-    window.googleLoginCallback = (response) => {
-      console.log('Google callback triggered via window.googleLoginCallback');
-      if (response && response.credential) {
-        this.handleCredentialResponse(response);
-      } else {
-        console.error('Invalid response in callback:', response);
-      }
-    };
-
-    // Check for Google SDK - handle both older (identity) and newer (id) versions
+    // Check for Google SDK
     if (window.google?.accounts?.id) {
       console.log('Initializing Google Sign-In with client_id:', AUTH_CONFIG.CLIENT_ID);
       
+      // Disable FedCM and use popup mode
       window.google.accounts.id.initialize({
         client_id: AUTH_CONFIG.CLIENT_ID,
         callback: window.handleGoogleCredentialResponse,
         auto_select: false,
         cancel_on_tap_outside: false,
         ux_mode: 'popup',
-        use_fedcm_for_prompt: false
+        use_fedcm_for_prompt: false,
+        itp_support: false
       });
       
-      console.log('Google Sign-In initialized (newer SDK)');
-    } 
-    // Use attachClickHandler for older Google SDK
-    else if (window.google?.accounts?.identity) {
-      console.log('Initializing Google Sign-In with older SDK');
-      
-      window.google.accounts.identity.initialize({
-        client_id: AUTH_CONFIG.CLIENT_ID,
-        callback: window.handleGoogleCredentialResponse
-      });
-      
-      console.log('Google Sign-In initialized (older SDK)');
+      console.log('Google Sign-In initialized');
     } else {
       console.error('Google accounts not available during init');
     }
@@ -218,12 +199,12 @@ class AdminLogin {
     hiddenDiv.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none;';
     buttonWrapper.appendChild(hiddenDiv);
 
-    // Try to render the native Google button
+    // Try to render the native Google button - use '200' instead of '100%'
     if (window.google?.accounts?.id) {
       window.google.accounts.id.renderButton(hiddenDiv, {
         theme: 'outline',
         size: 'large',
-        width: '100%',
+        width: '200',
         text: 'signin_with'
       });
       console.log('Native Google button rendered in hidden div');
