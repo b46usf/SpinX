@@ -7,7 +7,6 @@
  */
 
 import { AUTH_CONFIG } from '../auth/Config.js';
-import { authApi } from '../auth/AuthApi.js';
 
 // Get Toast from global
 const getToast = () => window.Toast || null;
@@ -39,7 +38,7 @@ class AdminLogin {
     // Initialize Google Auth
     await this.initGoogleAuth();
 
-    // Render Google button
+    // Render Google button with retry logic
     this.renderGoogleButton();
 
     this.initialized = true;
@@ -50,11 +49,16 @@ class AdminLogin {
    */
   waitForGoogleSDK() {
     return new Promise((resolve) => {
+      let attempts = 0;
       const check = () => {
+        attempts++;
         if (window.google?.accounts?.id) {
           resolve();
-        } else {
+        } else if (attempts < 50) {
           setTimeout(check, 100);
+        } else {
+          console.warn('Google SDK not loaded');
+          resolve();
         }
       };
       check();
@@ -91,22 +95,43 @@ class AdminLogin {
    */
   renderGoogleButton() {
     const container = document.getElementById('google-login-container');
-    const button = document.getElementById('googleLoginBtn');
     
-    if (container && button && window.google?.accounts?.id) {
-      // Clear container and re-render button
-      container.innerHTML = '';
-      window.google.accounts.id.renderButton(button, {
+    if (!container) {
+      console.error('Google login container not found');
+      return;
+    }
+
+    // Clear container first
+    container.innerHTML = '';
+
+    if (window.google?.accounts?.id) {
+      // Create a div for the button
+      const buttonDiv = document.createElement('div');
+      buttonDiv.id = 'googleBtnWrapper';
+      container.appendChild(buttonDiv);
+
+      // Render Google button
+      window.google.accounts.id.renderButton(buttonDiv, {
         theme: 'outline',
         size: 'large',
         width: '100%',
         text: 'signin_with'
       });
-
-      // Also add click handler as backup
-      button.addEventListener('click', () => {
-        window.google.accounts.id.prompt();
-      });
+    } else {
+      // Fallback: render manual button if Google SDK not available
+      container.innerHTML = `
+        <button id="googleLoginBtn" class="google-login w-full" onclick="triggerGoogleLogin()">
+          <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google">
+          <span>Masuk dengan Google</span>
+        </button>
+      `;
+      
+      // Set up global function for manual click
+      window.triggerGoogleLogin = () => {
+        if (window.google?.accounts?.id) {
+          window.google.accounts.id.prompt();
+        }
+      };
     }
   }
 
