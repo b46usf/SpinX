@@ -25,7 +25,6 @@ class AdminLogin {
   async init() {
     // Expose AUTH_CONFIG globally for Google Sign-In
     window.AUTH_CONFIG = AUTH_CONFIG;
-    console.log('AUTH_CONFIG:', AUTH_CONFIG);
 
     // Check if already logged in as admin - redirect to dashboard
     if (this.isLoggedIn() && this.hasRole('admin-system')) {
@@ -45,11 +44,7 @@ class AdminLogin {
     // Setup click handler
     this.setupLoginButton();
 
-    // Expose for debugging
-    window.adminLogin = this;
-    
     this.initialized = true;
-    console.log('AdminLogin initialized');
   }
 
   /**
@@ -60,16 +55,11 @@ class AdminLogin {
       let attempts = 0;
       const check = () => {
         attempts++;
-        console.log(`Checking Google SDK... attempt ${attempts}`);
-        
-        // Check for either identity or id (older/newer Google SDK)
         if (window.google?.accounts?.id || window.google?.accounts?.identity) {
-          console.log('Google SDK loaded');
           resolve();
         } else if (attempts < 50) {
           setTimeout(check, 100);
         } else {
-          console.warn('Google SDK not loaded after 5 seconds');
           resolve();
         }
       };
@@ -78,20 +68,15 @@ class AdminLogin {
   }
 
   /**
-   * Initialize Google Auth - Using g_id_onload method (older, more reliable)
+   * Initialize Google Auth
    */
   initGoogleAuth() {
-    // Set up global callback FIRST
+    // Set up global callback
     window.handleGoogleCredentialResponse = (response) => {
-      console.log('Google credential response received:', response);
       this.handleCredentialResponse(response);
     };
 
-    // Check for Google SDK
     if (window.google?.accounts?.id) {
-      console.log('Initializing Google Sign-In');
-      
-      // Use g_id_onload style initialization
       window.google.accounts.id.initialize({
         client_id: AUTH_CONFIG.CLIENT_ID,
         callback: window.handleGoogleCredentialResponse,
@@ -100,21 +85,14 @@ class AdminLogin {
         ux_mode: 'popup',
         use_fedcm_for_prompt: false
       });
-      
-      console.log('Google Sign-In initialized');
-    } else {
-      console.error('Google accounts not available during init');
     }
   }
 
   /**
    * Render Google login button - Match user login exactly
-   * Uses same approach as LoginComponent
    */
   renderGoogleButton() {
-    // Check for Google SDK and button element
     if (window.google?.accounts?.id) {
-      // Try to render into existing button first (like LoginComponent)
       const existingBtn = document.getElementById('googleLoginBtn');
       if (existingBtn) {
         window.google.accounts.id.renderButton(existingBtn, {
@@ -122,9 +100,7 @@ class AdminLogin {
           size: 'large',
           width: '300'
         });
-        console.log('Native Google button rendered into existing element');
       } else {
-        // Fallback: render into container
         const container = document.getElementById('google-login-container');
         if (container) {
           window.google.accounts.id.renderButton(container, {
@@ -132,20 +108,15 @@ class AdminLogin {
             size: 'large',
             width: '100%'
           });
-          console.log('Native Google button rendered into container');
         }
       }
     }
-    
-    console.log('Google login button setup complete');
   }
 
   /**
-   * Setup login button click handler - Same as LoginComponent
+   * Setup login button click handler
    */
   setupLoginButton() {
-    // Google button handles itself when rendered via renderButton
-    // Add backup click handler as fallback
     setTimeout(() => {
       const loginBtn = document.getElementById('googleLoginBtn');
       if (loginBtn) {
@@ -185,12 +156,17 @@ class AdminLogin {
       if (loading) loading.close();
 
       if (!isAdminSystem) {
-        // Not admin system - show error
+        // Not admin system - show error and redirect to landing
         this.showError('Akses ditolak. Email ini tidak terdaftar sebagai administrator sistem.');
         
         if (Toast) {
-          Toast.error('Akses Ditolak', 'Anda tidak memiliki akses ke sistem admin.');
+          Toast.error('Akses Ditolak', 'Anda tidak memiliki akses ke sistem admin. Mengalihkan ke halaman utama...');
         }
+        
+        // Redirect to landing page after 2 seconds
+        setTimeout(() => {
+          window.location.href = 'index.html';
+        }, 2000);
         
         return;
       }
