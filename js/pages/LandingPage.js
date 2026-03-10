@@ -69,6 +69,9 @@ class LandingPage {
       onSuccess: (title, message) => ToastContainer.show('success', title, message),
       onError: (title, message) => ToastContainer.show('error', title, message)
     });
+
+    // Initialize carousel after render
+    TestimonialsSection.afterRender();
   }
 
   /**

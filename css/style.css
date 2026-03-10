@@ -521,6 +521,109 @@ body::before {
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.testimonial-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 15px 30px rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+/* ============================================
+   TESTIMONIAL CAROUSEL STYLES
+   ============================================ */
+.testimonial-carousel {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.testimonial-track {
+  display: flex;
+  width: 100%;
+  will-change: transform;
+}
+
+.testimonial-slide {
+  flex: 0 0 100%;
+  width: 100%;
+}
+
+.testimonial-nav {
+  border: none;
+  cursor: pointer;
+}
+
+.testimonial-nav:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.testimonial-nav:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.testimonial-dot {
+  border: none;
+  cursor: pointer;
+}
+
+.testimonial-dot.active {
+  background: #6366f1 !important;
+  width: 24px;
+  border-radius: 6px;
+}
+
+.testimonial-dot:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Hide nav buttons on mobile */
+@media (max-width: 640px) {
+  .testimonial-nav {
+    display: none;
+  }
+  
+  .testimonial-carousel {
+    padding: 0 8px;
+  }
+}
+
+/* Carousel animations */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.testimonial-slide .testimonial-card {
+  animation: slideInLeft 0.5s ease-out forwards;
+}
+
+.testimonial-slide .testimonial-card:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.testimonial-slide .testimonial-card:nth-child(3) {
+  animation-delay: 0.2s;
 }
 
 .cta-gradient {
@@ -876,4 +979,14 @@ body::before {
   body { padding: 12px; }
   .max-w-sm { width: 100%; }
 }
+
+/* ============================================
+   CAROUSEL UTILITIES
+   ============================================ */
+.min-w-full { min-width: 100%; }
+.transition-transform { transition-property: transform; }
+.duration-500 { transition-duration: 500ms; }
+.ease-out { transition-timing-function: ease-out; }
+.-translate-x-2 { transform: translateX(-8px); }
+.translate-x-2 { transform: translateX(8px); }
 
