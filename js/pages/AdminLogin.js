@@ -91,7 +91,7 @@ class AdminLogin {
   }
 
   /**
-   * Render Google login button
+   * Render Google login button - Match user login design
    */
   renderGoogleButton() {
     const container = document.getElementById('google-login-container');
@@ -105,13 +105,35 @@ class AdminLogin {
     container.innerHTML = '';
 
     if (window.google?.accounts?.id) {
-      // Create a div for the button
-      const buttonDiv = document.createElement('div');
-      buttonDiv.id = 'googleBtnWrapper';
-      container.appendChild(buttonDiv);
+      // Create a wrapper div for the custom button styling
+      const buttonWrapper = document.createElement('div');
+      buttonWrapper.className = 'google-btn-wrapper';
+      
+      // Create a custom styled button that triggers Google flow
+      const customButton = document.createElement('button');
+      customButton.className = 'google-login-btn';
+      customButton.id = 'googleLoginBtn';
+      customButton.innerHTML = `
+        <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google">
+        <span>Masuk dengan Google</span>
+      `;
+      
+      // Click handler to trigger Google Sign-In
+      customButton.addEventListener('click', () => {
+        window.google.accounts.id.prompt();
+      });
+      
+      buttonWrapper.appendChild(customButton);
+      container.appendChild(buttonWrapper);
 
-      // Render Google button
-      window.google.accounts.id.renderButton(buttonDiv, {
+      // Also render Google button but hide it, for proper functionality
+      const googleButtonDiv = document.createElement('div');
+      googleButtonDiv.id = 'googleBtnWrapper';
+      googleButtonDiv.style.cssText = 'position: absolute; opacity: 0; pointer-events: none;';
+      container.appendChild(googleButtonDiv);
+
+      // Render Google button in hidden div for token handling
+      window.google.accounts.id.renderButton(googleButtonDiv, {
         theme: 'outline',
         size: 'large',
         width: '100%',
@@ -120,7 +142,7 @@ class AdminLogin {
     } else {
       // Fallback: render manual button if Google SDK not available
       container.innerHTML = `
-        <button id="googleLoginBtn" class="google-login w-full" onclick="triggerGoogleLogin()">
+        <button id="googleLoginBtn" class="google-login-btn" onclick="triggerGoogleLogin()">
           <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google">
           <span>Masuk dengan Google</span>
         </button>
