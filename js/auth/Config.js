@@ -8,6 +8,7 @@
  * - VITE_TELEGRAM_BOT_TOKEN
  * - VITE_TELEGRAM_BOT_USERNAME
  * - VITE_VERCEL_URL
+ * - VITE_ADMIN_SYS - Admin system email (comma separated for multiple)
  */
 
 // Access environment variables directly (Vite exposes VITE_ prefix to client)
@@ -27,6 +28,14 @@ export const TELEGRAM_BOT_USERNAME = ENV.VITE_TELEGRAM_BOT_USERNAME || '';
 
 // Vercel URL for webhook
 export const VERCEL_URL = ENV.VITE_VERCEL_URL || '';
+
+// Admin System Email(s) - can be comma separated
+export const ADMIN_SYS_EMAIL = ENV.VITE_ADMIN_SYS || '';
+
+// Admin system emails array
+export const ADMIN_SYS_EMAILS = ADMIN_SYS_EMAIL 
+  ? ADMIN_SYS_EMAIL.split(',').map(email => email.trim().toLowerCase())
+  : [];
 
 // Full Telegram webhook URL
 export const TELEGRAM_WEBHOOK_URL = VERCEL_URL ? `https://${VERCEL_URL}/api/telegram` : '';
@@ -51,6 +60,8 @@ export const AUTH_CONFIG = {
   TELEGRAM_WEBHOOK_URL,
   VERCEL_URL,
   API_URL,
+  ADMIN_SYS_EMAIL,
+  ADMIN_SYS_EMAILS,
   isConfigured
 };
 

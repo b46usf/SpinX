@@ -1,7 +1,8 @@
 /**
  * Admin Login Module
  * Handles admin-specific login with Google
- * Reuses existing GoogleAuth, AuthApi modules (DRY principle)
+ * Validates admin email from VITE_ADMIN_SYS env variable
+ * Reuses existing modules (DRY principle)
  * Clean, modular, best practice
  */
 
@@ -27,7 +28,7 @@ class AdminLogin {
     window.AUTH_CONFIG = AUTH_CONFIG;
 
     // Check if already logged in as admin - redirect to dashboard
-    if (this.isLoggedIn() && (this.hasRole('admin-system') || this.hasRole('admin-sekolah'))) {
+    if (this.isLoggedIn() && this.hasRole('admin-system')) {
       this.redirectToDashboard();
       return;
     }
@@ -120,6 +121,8 @@ class AdminLogin {
     try {
       // Parse JWT token
       const userInfo = this.parseJwt(response.credential);
+      const userEmail = userInfo.email.toLowerCase().trim();
+      
       this.googleUser = {
         email: userInfo.email,
         name: userInfo.name,
@@ -127,50 +130,42 @@ class AdminLogin {
         sub: userInfo.sub
       };
 
-      // Call backend login API
-      const authResult = await authApi.login(userInfo);
+      // Check if email is in admin list from VITE_ADMIN_SYS
+      const adminEmails = AUTH_CONFIG.ADMIN_SYS_EMAILS || [];
+      const isAdminSystem = adminEmails.includes(userEmail);
 
       if (loading) loading.close();
 
-      // Check if login was successful
-      if (!authResult.success) {
-        // Error toast already shown by AuthApi
-        return;
-      }
-
-      // Check if user has admin role (admin-system or admin-sekolah)
-      const isAdminSystem = authResult.role === 'admin-system';
-      const isAdminSekolah = authResult.role === 'admin-sekolah';
-      
-      if (!isAdminSystem && !isAdminSekolah) {
-        // Not admin - show error and redirect to regular login
-        this.showError('Akses ditolak. Halaman ini hanya untuk administrator.');
+      if (!isAdminSystem) {
+        // Not admin system - show error
+        this.showError('Akses ditolak. Email ini tidak terdaftar sebagai administrator sistem.');
         
         if (Toast) {
           Toast.error('Akses Ditolak', 'Anda tidak memiliki akses ke sistem admin.');
         }
         
-        // Redirect to regular landing after delay
-        setTimeout(() => {
-          window.location.href = 'index.html';
-        }, 3000);
-        
         return;
       }
 
-      // Admin verified - save user data and redirect
-      this.currentUser = { ...authResult.user, picture: userInfo.picture };
-      this.role = authResult.role;
+      // Admin verified - create user session with admin-system role
+      this.currentUser = {
+        userId: userInfo.sub,
+        email: userInfo.email,
+        name: userInfo.name,
+        role: 'admin-system',
+        picture: userInfo.picture,
+        status: 'active'
+      };
+      this.role = 'admin-system';
       
       // Save to localStorage
       localStorage.setItem('user', JSON.stringify(this.currentUser));
 
       if (Toast) {
-        const adminType = isAdminSystem ? 'Admin Sistem' : 'Admin Sekolah';
-        Toast.success('Login Berhasil', `Selamat datang ${adminType}! Mengalihkan ke dashboard...`);
+        Toast.success('Login Berhasil', 'Selamat datang Admin Sistem! Mengalihkan ke dashboard...');
       }
 
-      // Redirect to appropriate admin dashboard
+      // Redirect to admin dashboard
       setTimeout(() => {
         this.redirectToDashboard();
       }, 1000);
@@ -186,17 +181,10 @@ class AdminLogin {
   }
 
   /**
-   * Redirect to admin dashboard based on role
+   * Redirect to admin dashboard
    */
   redirectToDashboard() {
-    if (this.role === 'admin-system') {
-      window.location.href = 'dashboard-admin.html';
-    } else if (this.role === 'admin-sekolah') {
-      window.location.href = 'dashboard-admin-sekolah.html';
-    } else {
-      // Fallback
-      window.location.href = 'index.html';
-    }
+    window.location.href = 'dashboard-admin.html';
   }
 
   /**

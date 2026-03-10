@@ -29,35 +29,34 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 </head>
 
-<body class="min-h-screen flex items-center justify-center p-4">
+<body class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
 
-  <!-- Main Card -->
-  <div class="relative w-full max-w-md">
-    <!-- Animated Background -->
-    <div class="absolute inset-0 bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 opacity-50"></div>
-    <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
-    <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-pink-500/20 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
-    
-    <!-- Login Card -->
-    <div class="relative bg-gray-900/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-700/50 p-8 animate-scale-in">
+  <!-- Animated Background -->
+  <div class="absolute inset-0 bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 opacity-50"></div>
+  <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
+  <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-pink-500/20 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
+
+  <!-- Main Card - COMPACT design matching user login -->
+  <div class="relative w-full max-w-sm">
+    <div class="bg-gray-900/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-700/50 p-6 animate-scale-in">
       
       <!-- Logo & Title -->
-      <div class="text-center mb-6">
-        <div class="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/30 transform hover:scale-110 transition-transform duration-300">
-          <i class="fas fa-shield-alt text-3xl text-white"></i>
+      <div class="text-center mb-5">
+        <div class="w-16 h-16 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/30 transform hover:scale-110 transition-transform duration-300">
+          <i class="fas fa-ticket text-2xl text-white"></i>
         </div>
-        <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-          SpinX Admin
+        <h1 class="text-2xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+          SpinX
         </h1>
-        <p class="text-gray-400 text-sm mt-2">Sistem Manajemen</p>
+        <p class="text-gray-400 text-xs mt-1">Lucky Wheel Festival</p>
       </div>
 
       <!-- Tagline -->
-      <p class="text-gray-400 text-center text-sm mb-6">
-        🔐 Login khusus administrator
+      <p class="text-gray-400 text-center text-sm mb-5">
+        🚀 Masuk & coba keberuntunganmu!
       </p>
 
-      <!-- Google Button Container -->
+      <!-- Google Button -->
       <div class="login-card mb-4">
         <div id="google-login-container">
           <button id="googleLoginBtn" class="google-login w-full">
@@ -73,20 +72,13 @@
       <!-- Footer -->
       <div class="pt-4 border-t border-gray-700/50">
         <p class="text-xs text-gray-500 text-center">
-          <i class="fas fa-shield-alt mr-1"></i>Akses terbatas administrator
+          <i class="fas fa-shield-alt mr-1"></i>Login aman & terjamin
         </p>
-      </div>
-
-      <!-- Back to Home -->
-      <div class="mt-4 text-center">
-        <a href="index.html" class="text-sm text-gray-500 hover:text-indigo-400 transition-colors">
-          <i class="fas fa-arrow-left mr-1"></i>Kembali ke beranda
-        </a>
       </div>
     </div>
 
     <!-- Version -->
-    <p class="text-center text-gray-600 text-[10px] mt-4">v1.0.0 - Admin System</p>
+    <p class="text-center text-gray-600 text-[10px] mt-4">v1.0.0</p>
   </div>
 
   <!-- Toast Container -->
