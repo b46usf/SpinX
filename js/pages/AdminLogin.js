@@ -81,38 +81,47 @@ class AdminLogin {
    * Initialize Google Auth
    */
   initGoogleAuth() {
-    // Set up global callback FIRST
+    // Set up global callback with error handling
     window.handleGoogleCredentialResponse = (response) => {
-      console.log('Google credential response received');
+      console.log('Google credential response received:', response);
       this.handleCredentialResponse(response);
     };
 
+    // Also set up a fallback callback on window for Google to find
+    window.googleLoginCallback = (response) => {
+      console.log('Google callback triggered via window.googleLoginCallback');
+      if (response && response.credential) {
+        this.handleCredentialResponse(response);
+      } else {
+        console.error('Invalid response in callback:', response);
+      }
+    };
+
     // Check for Google SDK - handle both older (identity) and newer (id) versions
-    const googleAccounts = window.google?.accounts?.id || window.google?.accounts?.identity;
-    
-    if (googleAccounts) {
+    if (window.google?.accounts?.id) {
       console.log('Initializing Google Sign-In with client_id:', AUTH_CONFIG.CLIENT_ID);
       
-      // Use initialize for newer Google SDK
-      if (window.google?.accounts?.id) {
-        window.google.accounts.id.initialize({
-          client_id: AUTH_CONFIG.CLIENT_ID,
-          callback: window.handleGoogleCredentialResponse,
-          auto_select: false,
-          cancel_on_tap_outside: false,
-          ux_mode: 'popup',
-          use_fedcm_for_prompt: false
-        });
-      } 
-      // Use attachClickHandler for older Google SDK
-      else if (window.google?.accounts?.identity) {
-        window.google.accounts.identity.initialize({
-          client_id: AUTH_CONFIG.CLIENT_ID,
-          callback: window.handleGoogleCredentialResponse
-        });
-      }
+      window.google.accounts.id.initialize({
+        client_id: AUTH_CONFIG.CLIENT_ID,
+        callback: window.handleGoogleCredentialResponse,
+        auto_select: false,
+        cancel_on_tap_outside: false,
+        ux_mode: 'popup',
+        use_fedcm_for_prompt: false
+      });
       
-      console.log('Google Sign-In initialized');
+      console.log('Google Sign-In initialized (newer SDK)');
+    } 
+    // Use attachClickHandler for older Google SDK
+    else if (window.google?.accounts?.identity) {
+      console.log('Initializing Google Sign-In with older SDK');
+      
+      window.google.accounts.identity.initialize({
+        client_id: AUTH_CONFIG.CLIENT_ID,
+        callback: window.handleGoogleCredentialResponse
+      });
+      
+      console.log('Google Sign-In initialized (older SDK)');
     } else {
       console.error('Google accounts not available during init');
     }
@@ -132,16 +141,24 @@ class AdminLogin {
         e.preventDefault();
         console.log('Google login button clicked');
         
-        // Try newer SDK first, then older
+        // Try newer SDK first
         if (window.google?.accounts?.id) {
+          console.log('Calling google.accounts.id.prompt()');
           window.google.accounts.id.prompt();
-        } else if (window.google?.accounts?.identity) {
-          // For older SDK, use attachClickHandler
+          
+          // Also try requestPassthrough for immediate callback
+          // This can help in some popup scenarios
+        } 
+        // Try older SDK
+        else if (window.google?.accounts?.identity) {
+          console.log('Using older SDK attachClickHandler');
           window.google.accounts.identity.attachClickHandler(newBtn, {},
             (googleUser) => {
-              console.log('Google login success');
-              const response = { credential: googleUser.credential };
-              this.handleCredentialResponse(response);
+              console.log('Google login success via older SDK');
+              if (googleUser && googleUser.credential) {
+                const response = { credential: googleUser.credential };
+                this.handleCredentialResponse(response);
+              }
             },
             (error) => {
               console.error('Google login error:', error);
@@ -178,7 +195,12 @@ class AdminLogin {
     // Clear container first
     container.innerHTML = '';
 
-    // Create custom styled button that triggers Google Sign-In
+    // Create a wrapper for positioning
+    const buttonWrapper = document.createElement('div');
+    buttonWrapper.className = 'google-btn-wrapper';
+    buttonWrapper.style.cssText = 'position: relative; width: 100%;';
+    
+    // Create custom styled button that will trigger Google Sign-In
     const customButton = document.createElement('button');
     customButton.className = 'google-login-btn';
     customButton.id = 'googleLoginBtn';
@@ -187,8 +209,57 @@ class AdminLogin {
       <span>Masuk dengan Google</span>
     `;
     
-    container.appendChild(customButton);
+    buttonWrapper.appendChild(customButton);
+    container.appendChild(buttonWrapper);
+
+    // Render the native Google button in a hidden container for callback handling
+    const hiddenDiv = document.createElement('div');
+    hiddenDiv.id = 'google-hidden-btn';
+    hiddenDiv.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; pointer-events: none;';
+    buttonWrapper.appendChild(hiddenDiv);
+
+    // Try to render the native Google button
+    if (window.google?.accounts?.id) {
+      window.google.accounts.id.renderButton(hiddenDiv, {
+        theme: 'outline',
+        size: 'large',
+        width: '100%',
+        text: 'signin_with'
+      });
+      console.log('Native Google button rendered in hidden div');
+    }
+    
     console.log('Google login button rendered');
+  }
+
+  /**
+   * Setup login button click handler
+   */
+  setupLoginButton() {
+    const loginBtn = document.getElementById('googleLoginBtn');
+    const hiddenBtn = document.getElementById('google-hidden-btn');
+    
+    if (loginBtn) {
+      // Click on custom button triggers hidden Google button
+      loginBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        console.log('Google login button clicked');
+        
+        // Try to click the hidden Google button first
+        if (hiddenBtn && hiddenBtn.querySelector('[role="button"]')) {
+          console.log('Clicking hidden Google button');
+          hiddenBtn.querySelector('[role="button"]').click();
+        }
+        // Fallback to prompt
+        else if (window.google?.accounts?.id) {
+          console.log('Using prompt() as fallback');
+          window.google.accounts.id.prompt();
+        }
+      });
+      console.log('Login button click handler set up');
+    } else {
+      console.error('Login button not found');
+    }
   }
 
   /**
