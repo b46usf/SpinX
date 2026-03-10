@@ -1037,3 +1037,45 @@ body::before {
 .-translate-x-2 { transform: translateX(-8px); }
 .translate-x-2 { transform: translateX(8px); }
 
+/* ============================================
+   RESPONSIVE BREAKPOINTS (Tailwind-compatible)
+   ============================================ */
+
+/* Small (sm) - 640px */
+@media (min-width: 640px) {
+  .sm\:flex { display: flex; }
+  .sm\:hidden { display: none !important; }
+  .sm\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sm\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .sm\:p-6 { padding: 24px; }
+  .sm\:mb-16 { margin-bottom: 64px; }
+  .sm\:mt-8 { margin-top: 32px; }
+  .sm\:gap-6 { gap: 24px; }
+  .sm\:text-4xl { font-size: 36px; }
+  .sm\:w-12 { width: 48px; }
+  .sm\:h-12 { height: 48px; }
+  .sm\:text-xl { font-size: 20px; }
+  .sm\:mb-4 { margin-bottom: 16px; }
+  .sm\:mb-6 { margin-bottom: 24px; }
+}
+
+/* Medium (md) - 768px */
+@media (min-width: 768px) {
+  .md\:flex { display: flex; }
+  .md\:hidden { display: none !important; }
+  .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .md\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .md\:flex-row { flex-direction: row; }
+}
+
+/* Large (lg) - 1024px */
+@media (min-width: 1024px) {
+  .lg\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .lg\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* Extra Large (xl) - 1280px */
+@media (min-width: 1280px) {
+  .xl\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+

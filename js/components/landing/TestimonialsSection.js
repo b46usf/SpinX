@@ -66,7 +66,7 @@ const testimonialsData = [
 // Carousel state management
 const TestimonialCarousel = {
   currentIndex: 0,
-  itemsPerSlide: 3,
+  itemsPerSlide: 1,
   autoPlayInterval: null,
   autoPlayDelay: 5000,
   isAnimating: false,
@@ -87,7 +87,13 @@ const TestimonialCarousel = {
     
     // Update on resize
     window.addEventListener('resize', () => {
+      const oldItemsPerSlide = this.itemsPerSlide;
       this.updateItemsPerSlide();
+      
+      // Regenerate slides only if itemsPerSlide changed
+      if (oldItemsPerSlide !== this.itemsPerSlide) {
+        this.regenerateSlides();
+      }
       this.updateCarousel();
     });
   },
@@ -95,7 +101,7 @@ const TestimonialCarousel = {
   // Update items per slide based on screen width
   updateItemsPerSlide() {
     const width = window.innerWidth;
-    if (width < 640) {
+    if (width < 768) {
       this.itemsPerSlide = 1;
     } else if (width < 1024) {
       this.itemsPerSlide = 2;
@@ -107,6 +113,52 @@ const TestimonialCarousel = {
   // Get total number of slides
   getTotalSlides() {
     return Math.ceil(testimonialsData.length / this.itemsPerSlide);
+  },
+
+  // Regenerate slides based on current itemsPerSlide
+  regenerateSlides() {
+    const track = document.getElementById('testimonial-track');
+    const dotsContainer = document.querySelector('#testimonials .flex.justify-center');
+    
+    if (!track) return;
+
+    // Create slides based on current itemsPerSlide
+    const slides = [];
+    for (let i = 0; i < testimonialsData.length; i += this.itemsPerSlide) {
+      const slideItems = testimonialsData.slice(i, i + this.itemsPerSlide);
+      const cardsHTML = slideItems.map(t => generateTestimonialCard(t)).join('');
+      
+      slides.push(`
+        <div class="testimonial-slide min-w-full">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 px-2">
+            ${cardsHTML}
+          </div>
+        </div>
+      `);
+    }
+
+    track.innerHTML = slides.join('');
+
+    // Regenerate dots
+    if (dotsContainer) {
+      const totalSlides = this.getTotalSlides();
+      let dotsHTML = '';
+      for (let i = 0; i < totalSlides; i++) {
+        dotsHTML += `<button class="testimonial-dot w-3 h-3 rounded-full bg-white/30 hover:bg-white/50 transition-all ${i === 0 ? 'active bg-white' : ''}" data-index="${i}" aria-label="Go to slide ${i + 1}"></button>`;
+      }
+      dotsContainer.innerHTML = dotsHTML;
+      
+      // Rebind dot events
+      dotsContainer.querySelectorAll('.testimonial-dot').forEach(dot => {
+        dot.addEventListener('click', (e) => {
+          const index = parseInt(e.target.dataset.index);
+          TestimonialCarousel.goToSlide(index);
+        });
+      });
+    }
+    
+    // Reset current index to 0 after regeneration
+    this.currentIndex = 0;
   },
 
   // Bind click events
@@ -161,7 +213,7 @@ const TestimonialCarousel = {
 
   handleTouchMove(e) {
     if (!this.isDragging) return;
-    e.preventDefault(); // Prevent scrolling while swiping
+    e.preventDefault();
     this.currentX = e.touches[0].clientX;
   },
 
@@ -172,9 +224,9 @@ const TestimonialCarousel = {
     const diff = this.startX - this.currentX;
     if (Math.abs(diff) > this.dragThreshold) {
       if (diff > 0) {
-        this.next(); // Swipe left - go next
+        this.next();
       } else {
-        this.prev(); // Swipe right - go prev
+        this.prev();
       }
     }
     
@@ -202,9 +254,9 @@ const TestimonialCarousel = {
     const diff = this.startX - this.currentX;
     if (Math.abs(diff) > this.dragThreshold) {
       if (diff > 0) {
-        this.next(); // Drag left - go next
+        this.next();
       } else {
-        this.prev(); // Drag right - go prev
+        this.prev();
       }
     }
     
@@ -256,7 +308,6 @@ const TestimonialCarousel = {
       dot.classList.toggle('active', index === this.currentIndex);
     });
 
-    // Reset animation flag after transition
     setTimeout(() => {
       this.isAnimating = false;
     }, 500);
@@ -279,13 +330,13 @@ const TestimonialCarousel = {
 
 // Generate testimonial card HTML
 const generateTestimonialCard = (t) => `
-  <div class="testimonial-card rounded-2xl p-6">
-    <div class="flex items-center gap-1 mb-4">
-      ${Array(5).fill('<i class="fas fa-star text-yellow-400"></i>').join('')}
+  <div class="testimonial-card rounded-2xl p-4 sm:p-6">
+    <div class="flex items-center gap-1 mb-3 sm:mb-4">
+      ${Array(5).fill('<i class="fas fa-star text-yellow-400 text-xs"></i>').join('')}
     </div>
-    <p class="text-gray-300 mb-6 text-sm">${t.text}</p>
+    <p class="text-gray-300 mb-4 sm:mb-6 text-sm">${t.text}</p>
     <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-full bg-gradient-to-br ${t.gradient} flex items-center justify-center text-white font-bold">${t.initials}</div>
+      <div class="w-10 h-10 rounded-full bg-gradient-to-br ${t.gradient} flex items-center justify-center text-white font-bold text-sm">${t.initials}</div>
       <div>
         <div class="text-white font-medium text-sm">${t.name}</div>
         <div class="text-gray-500 text-xs">${t.role}</div>
@@ -294,9 +345,28 @@ const generateTestimonialCard = (t) => `
   </div>
 `;
 
-// Generate pagination dots
-const generateDots = () => {
-  const totalSlides = Math.ceil(testimonialsData.length / 3);
+// Generate initial slides (mobile-first: 1 item per slide)
+const generateInitialSlides = () => {
+  const slides = [];
+  const itemsPerSlide = 1;
+  for (let i = 0; i < testimonialsData.length; i += itemsPerSlide) {
+    const slideItems = testimonialsData.slice(i, i + itemsPerSlide);
+    const cardsHTML = slideItems.map(t => generateTestimonialCard(t)).join('');
+    
+    slides.push(`
+      <div class="testimonial-slide min-w-full">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 px-2">
+          ${cardsHTML}
+        </div>
+      </div>
+    `);
+  }
+  return slides.join('');
+};
+
+// Generate initial dots
+const generateInitialDots = () => {
+  const totalSlides = testimonialsData.length;
   let dotsHTML = '';
   for (let i = 0; i < totalSlides; i++) {
     dotsHTML += `<button class="testimonial-dot w-3 h-3 rounded-full bg-white/30 hover:bg-white/50 transition-all ${i === 0 ? 'active bg-white' : ''}" data-index="${i}" aria-label="Go to slide ${i + 1}"></button>`;
@@ -306,24 +376,10 @@ const generateDots = () => {
 
 export const TestimonialsSection = {
   render: () => {
-    // Group testimonials by slides (3 per slide)
-    const slides = [];
-    for (let i = 0; i < testimonialsData.length; i += 3) {
-      slides.push(testimonialsData.slice(i, i + 3).map(generateTestimonialCard).join(''));
-    }
-
-    const allCardsHTML = slides.map(slide => `
-      <div class="testimonial-slide min-w-full">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-2">
-          ${slide}
-        </div>
-      </div>
-    `).join('');
-
     return `
       <section id="testimonials" class="section-padding bg-gray-900/50">
         <div class="container mx-auto px-4">
-          <div class="text-center mb-16">
+          <div class="text-center mb-12 sm:mb-16">
             <span class="inline-block px-4 py-1 bg-indigo-500/20 text-indigo-400 rounded-full text-sm font-medium mb-4">TESTIMONI</span>
             <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">Apa Kata Mereka?</h2>
             <p class="text-gray-400 max-w-2xl mx-auto">Kepuasan pelanggan adalah prioritas utama kami</p>
@@ -333,21 +389,21 @@ export const TestimonialsSection = {
           <div id="testimonial-carousel" class="testimonial-carousel relative overflow-hidden">
             <!-- Track -->
             <div id="testimonial-track" class="testimonial-track flex transition-transform duration-500 ease-out">
-              ${allCardsHTML}
+              ${generateInitialSlides()}
             </div>
             
-            <!-- Navigation Arrows -->
-            <button id="testimonial-prev" class="testimonial-nav testimonial-prev absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm flex items-center justify-center text-white transition-all z-10" aria-label="Previous">
+            <!-- Navigation Arrows - hidden on mobile, shown on tablet+ -->
+            <button id="testimonial-prev" class="testimonial-nav testimonial-prev absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm flex items-center justify-center text-white transition-all z-10 hidden md:flex" aria-label="Previous">
               <i class="fas fa-chevron-left"></i>
             </button>
-            <button id="testimonial-next" class="testimonial-nav testimonial-next absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm flex items-center justify-center text-white transition-all z-10" aria-label="Next">
+            <button id="testimonial-next" class="testimonial-nav testimonial-next absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm flex items-center justify-center text-white transition-all z-10 hidden md:flex" aria-label="Next">
               <i class="fas fa-chevron-right"></i>
             </button>
           </div>
           
           <!-- Pagination Dots -->
-          <div class="flex justify-center gap-2 mt-8">
-            ${generateDots()}
+          <div class="flex justify-center gap-2 mt-6 sm:mt-8 flex-wrap">
+            ${generateInitialDots()}
           </div>
         </div>
       </section>
@@ -356,14 +412,6 @@ export const TestimonialsSection = {
 
   // Initialize after render
   afterRender() {
-    // Bind dot clicks
-    document.querySelectorAll('.testimonial-dot').forEach(dot => {
-      dot.addEventListener('click', (e) => {
-        const index = parseInt(e.target.dataset.index);
-        TestimonialCarousel.goToSlide(index);
-      });
-    });
-
     // Initialize carousel
     TestimonialCarousel.init();
   }
