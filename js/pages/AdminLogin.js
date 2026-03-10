@@ -166,6 +166,7 @@ class AdminLogin {
    * Render Google login button - Match user login design
    */
   renderGoogleButton() {
+    // Get existing container from HTML
     const container = document.getElementById('google-login-container');
     
     if (!container) {
@@ -173,44 +174,30 @@ class AdminLogin {
       return;
     }
 
-    // Clear container first
-    container.innerHTML = '';
-
-    // Use native Google button - it's more reliable
-    if (window.google?.accounts?.id) {
+    // Check if there's already a button in the container
+    const existingBtn = container.querySelector('button');
+    
+    // Use native Google button - render into existing button element
+    if (window.google?.accounts?.id && existingBtn) {
+      window.google.accounts.id.renderButton(existingBtn, {
+        theme: 'outline',
+        size: 'large',
+        width: '300'
+      });
+      console.log('Native Google button rendered into existing element');
+    } else if (window.google?.accounts?.id) {
+      // No existing button, create one
       window.google.accounts.id.renderButton(container, {
         theme: 'outline',
         size: 'large',
-        width: '100%',
-        text: 'signin_with',
-        type: 'standard'
+        width: '100%'
       });
       console.log('Native Google button rendered');
     } else {
-      // Fallback if Google SDK not available
-      const button = document.createElement('button');
-      button.className = 'google-login-btn';
-      button.innerHTML = `
-        <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google">
-        <span>Masuk dengan Google</span>
-      `;
-      button.addEventListener('click', () => {
-        if (window.google?.accounts?.id) {
-          window.google.accounts.id.prompt();
-        }
-      });
-      container.appendChild(button);
+      console.warn('Google SDK not available');
     }
     
-    console.log('Google login button rendered');
-  }
-
-  /**
-   * Setup login button click handler (for fallback)
-   */
-  setupLoginButton() {
-    // No need for custom handler when using native Google button
-    console.log('Using native Google button - no custom handler needed');
+    console.log('Google login button setup complete');
   }
 
   /**
