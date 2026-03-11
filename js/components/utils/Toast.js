@@ -101,6 +101,8 @@ export function showLoading(message = 'Memproses...') {
     ...ToastDefaults,
     title: message,
     allowOutsideClick: false,
+    timer: 15000, // Auto close after 15 seconds
+    timerProgressBar: true,
     didOpen: () => {
       Swal.showLoading();
     }
