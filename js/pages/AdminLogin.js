@@ -193,7 +193,7 @@ class AdminLogin {
       });
 
       if (Toast) {
-        Toast.close();
+        Toast.closeLoading();
       }
 
       if (loginResult.success) {
