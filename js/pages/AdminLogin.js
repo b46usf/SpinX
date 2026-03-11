@@ -28,10 +28,13 @@ class AdminLogin {
     // Expose AUTH_CONFIG globally for Google Sign-In
     window.AUTH_CONFIG = AUTH_CONFIG;
 
-    // Check if already logged in as admin - redirect to dashboard
+    // Note: Removed auto-redirect check so admin can stay on login page even if already logged in
+    // Admin can manually go to dashboard or logout from here
+    
+    // Check if already logged in - just store the info, don't redirect
     if (this.isLoggedIn() && this.hasRole('admin-system')) {
-      this.redirectToDashboard();
-      return;
+      console.log('User already logged in as admin');
+      // Don't redirect - allow admin to stay on login page
     }
 
     // Wait for Google SDK to load
