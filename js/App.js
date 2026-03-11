@@ -55,6 +55,7 @@ class App {
     this.appContainer = null;
     this.pendingUserData = null;
     this.otpRequested = false;
+    this.isAdminSystem = false; // Flag for admin system registration
   }
 
   async init() {
@@ -190,13 +191,32 @@ class App {
 
   /**
    * Show register section
+   * @param {Object} googleUser - Google user info
+   * @param {boolean} isAdminSystem - Flag for admin system registration
    */
-  showRegisterSection(googleUser) {
+  showRegisterSection(googleUser, isAdminSystem = false) {
     if (!this.appContainer) return;
     this.cleanup();
-    this.appContainer.innerHTML = this.registerComponent.render();
-    this.registerComponent.initEvents();
-    this.registerComponent.show(googleUser);
+    this.isAdminSystem = isAdminSystem;
+    
+    if (isAdminSystem) {
+      // Admin system registration - simplified form
+      this.appContainer.innerHTML = this.registerComponent.renderAdmin();
+      this.registerComponent.initEvents();
+      this.registerComponent.show(googleUser, true);
+    } else {
+      // Standard registration
+      this.appContainer.innerHTML = this.registerComponent.render();
+      this.registerComponent.initEvents();
+      this.registerComponent.show(googleUser);
+    }
+  }
+
+  /**
+   * Show admin system register section (shorthand)
+   */
+  showAdminRegisterSection(googleUser) {
+    this.showRegisterSection(googleUser, true);
   }
 
   /**

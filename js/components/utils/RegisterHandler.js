@@ -178,14 +178,17 @@ export class RegisterHandler {
     const kelasGuru = role === 'guru' ? get('kelas-guru') : '';
     const sekolahGuru = role === 'guru' ? get('sekolah-guru') : '';
     
+    // For admin-system, kelas and sekolah are always "-"
+    const isAdminSystem = role === 'admin-system';
+    
     return {
       role: role,
       noWa: get('noWa'),
       nis: get('nis'),
       kodeGuru: get('kode-guru'),
       name: get('nama'),
-      kelas: role === 'guru' ? kelasGuru : get('kelas'),
-      sekolah: role === 'guru' ? sekolahGuru : (get('sekolah-siswa') || get('sekolah')),
+      kelas: isAdminSystem ? '-' : (role === 'guru' ? kelasGuru : get('kelas')),
+      sekolah: isAdminSystem ? '-' : (role === 'guru' ? sekolahGuru : (get('sekolah-siswa') || get('sekolah'))),
       namaMitra: get('namaMitra'),
       kategori: get('kategori'),
       alamat: get('alamat')

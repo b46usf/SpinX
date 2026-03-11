@@ -2,11 +2,13 @@
  * Admin Login Module
  * Handles admin-specific login with Google
  * Validates admin email from VITE_ADMIN_SYS env variable
+ * Flow: Login → Check user exists → Register if needed → OTP verification → Dashboard
+ * Uses same components as user flow (App.js pattern)
  * Reuses existing modules (DRY principle)
- * Clean, modular, best practice
  */
 
 import { AUTH_CONFIG } from '../auth/Config.js';
+import { authApi } from '../auth/AuthApi.js';
 
 // Get Toast from global
 const getToast = () => window.Toast || null;
@@ -171,28 +173,55 @@ class AdminLogin {
         return;
       }
 
-      // Admin verified - create user session with admin-system role
-      this.currentUser = {
-        userId: userInfo.sub,
-        email: userInfo.email,
-        name: userInfo.name,
-        role: 'admin-system',
-        picture: userInfo.picture,
-        status: 'active'
-      };
-      this.role = 'admin-system';
-      
-      // Save to localStorage
-      localStorage.setItem('user', JSON.stringify(this.currentUser));
-
+      // Admin verified via VITE_ADMIN_SYS
+      // Now check if user exists in database via backend
       if (Toast) {
-        Toast.success('Login Berhasil', 'Selamat datang Admin Sistem! Mengalihkan ke dashboard...');
+        Toast.loading('Memeriksa data admin...');
       }
 
-      // Redirect to admin dashboard
-      setTimeout(() => {
-        this.redirectToDashboard();
-      }, 1000);
+      const loginResult = await authApi.login({
+        email: userInfo.email,
+        name: userInfo.name,
+        sub: userInfo.sub
+      });
+
+      if (Toast) {
+        Toast.close();
+      }
+
+      if (loginResult.success) {
+        if (loginResult.registered) {
+          // User exists and is registered
+          if (loginResult.user.status === 'active') {
+            // User is active - go to dashboard
+            this.currentUser = loginResult.user;
+            this.role = loginResult.user.role;
+            localStorage.setItem('user', JSON.stringify(this.currentUser));
+
+            if (Toast) {
+              Toast.success('Login Berhasil', 'Selamat datang Admin Sistem! Mengalihkan ke dashboard...');
+            }
+
+            setTimeout(() => {
+              this.redirectToDashboard();
+            }, 1000);
+          } else {
+            // User exists but not active - go to OTP verification (like user flow)
+            this.handlePendingUser(loginResult);
+          }
+        } else {
+          // User not registered - show register section (like user flow)
+          this.showRegisterSection(this.googleUser);
+        }
+      } else if (loginResult.registered === false) {
+        // User not found in database - show register section (like user flow)
+        this.showRegisterSection(this.googleUser);
+      } else {
+        // Error occurred
+        if (Toast) {
+          Toast.error('Error', loginResult.message || 'Terjadi kesalahan saat login.');
+        }
+      }
 
     } catch (error) {
       if (loading) loading.close();
@@ -200,6 +229,94 @@ class AdminLogin {
       
       if (Toast) {
         Toast.error('Error', 'Terjadi kesalahan saat login. Silakan coba lagi.');
+      }
+    }
+  }
+
+  /**
+   * Show register section - using App.js pattern (like user flow)
+   * @param {Object} googleUser - Google user info
+   */
+  showRegisterSection(googleUser) {
+    const Toast = getToast();
+    
+    // Store Google user data for registration with admin role
+    const registerData = {
+      email: googleUser.email,
+      name: googleUser.name,
+      picture: googleUser.picture,
+      sub: googleUser.sub,
+      role: 'admin-system',
+      isAdminSystem: true // Flag for special handling
+    };
+    
+    localStorage.setItem('admin_google_user', JSON.stringify(registerData));
+
+    if (Toast) {
+      Toast.info('Registrasi Diperlukan', 'Silakan lengkapi data admin Anda.');
+    }
+
+    // Trigger App to show admin register section
+    if (window.App) {
+      window.App.showAdminRegisterSection(googleUser);
+    } else {
+      // Fallback: redirect to index with admin flag
+      window.location.href = 'index.html?admin=register';
+    }
+  }
+
+  /**
+   * Handle pending user (exists but not verified)
+   * Using App.js pattern like user flow
+   * @param {Object} loginResult - Login result from backend
+   */
+  handlePendingUser(loginResult) {
+    const Toast = getToast();
+    const user = loginResult.user;
+    
+    // Store user data for OTP verification
+    localStorage.setItem('pending_admin_user', JSON.stringify({
+      userId: user.userId,
+      email: user.email,
+      name: user.name,
+      noWa: user.noWa,
+      role: user.role
+    }));
+
+    if (loginResult.needVerification) {
+      if (loginResult.telegramLinked) {
+        // Go to OTP verification (like user flow)
+        if (Toast) {
+          Toast.warning('Verifikasi Diperlukan', 'Akun Anda belum diverifikasi. Silakan masukkan kode OTP.');
+        }
+        
+        // Trigger App to show OTP section if available
+        if (window.App) {
+          window.App.showOtpSection({
+            userId: user.userId,
+            email: user.email
+          });
+        } else {
+          // Fallback: redirect to index with admin OTP flag
+          window.location.href = 'index.html?admin=otp';
+        }
+      } else {
+        // Go to Telegram linking first (like user flow)
+        if (Toast) {
+          Toast.warning('Hubungkan Telegram', 'Silakan hubungkan Telegram untuk verifikasi OTP.');
+        }
+        
+        // Trigger App to show telegram link section if available
+        if (window.App) {
+          window.App.showTelegramLinkSection({
+            userId: user.userId,
+            email: user.email,
+            telegramLink: loginResult.telegramLink
+          });
+        } else {
+          // Fallback: redirect to index with telegram link
+          window.location.href = `index.html?admin=telegram&link=${encodeURIComponent(loginResult.telegramLink)}`;
+        }
       }
     }
   }

@@ -20,6 +20,19 @@ export const RegisterTemplates = {
       </div>`;
   },
 
+  /**
+   * Admin system role field (hidden - auto-set)
+   */
+  adminRoleField() {
+    return `
+      <input type="hidden" id="role" name="role" value="admin-system">
+      <div class="p-3 bg-indigo-500/10 border border-indigo-500/30 rounded-xl mb-3">
+        <p class="text-xs text-indigo-400 text-center">
+          <i class="fas fa-user-shield mr-1"></i>Admin Sistem
+        </p>
+      </div>`;
+  },
+
   whatsappField() {
     return `
       <div class="input-group">
@@ -49,6 +62,20 @@ export const RegisterTemplates = {
           <i class="fas fa-search mr-1"></i> Cek NIS
         </button>
         <div id="nis-status" class="hidden mt-2 p-2 rounded-lg text-xs"></div>
+      </div>`;
+  },
+
+  /**
+   * Admin system nama field (editable - not readonly)
+   */
+  namaAdminField() {
+    return `
+      <div class="input-group">
+        <label class="block text-xs font-medium mb-2 text-left text-gray-400">
+          <i class="fas fa-user mr-1 text-purple-400"></i>Nama *
+        </label>
+        <input type="text" id="nama" name="nama" required placeholder="Masukkan nama lengkap" 
+          class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600 rounded-xl text-white text-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20">
       </div>`;
   },
 
@@ -161,6 +188,21 @@ export const RegisterTemplates = {
       </div>`;
   },
 
+  /**
+   * Admin system info (kelas & sekolah = "-")
+   */
+  adminInfoField() {
+    return `
+      <div class="p-3 bg-indigo-500/10 border border-indigo-500/30 rounded-xl mb-3">
+        <p class="text-xs text-indigo-400 text-center">
+          <i class="fas fa-info-circle mr-1"></i>Kelas: - | Sekolah: -
+        </p>
+      </div>`;
+  },
+
+  /**
+   * Standard register section (for siswa, guru, mitra)
+   */
   registerSection() {
     return `
       <div class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
@@ -207,6 +249,60 @@ export const RegisterTemplates = {
               <div id="register-error" class="hidden p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs text-center"></div>
               
               <button type="submit" class="w-full py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg text-sm">
+                <i class="fas fa-rocket mr-2"></i>Daftar Sekarang
+              </button>
+              
+              <button type="button" id="cancel-register" class="w-full py-2.5 bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 rounded-xl transition-colors text-sm">
+                <i class="fas fa-arrow-left mr-2"></i>Batal
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>`;
+  },
+
+  /**
+   * Admin system register section (simplified - no role dropdown, only nama & noWa)
+   */
+  registerSectionAdmin() {
+    return `
+      <div class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+        <!-- Animated Background -->
+        <div class="absolute inset-0 bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 opacity-50"></div>
+        <div class="absolute top-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
+        <div class="absolute bottom-1/4 left-1/4 w-96 h-96 bg-pink-500/20 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
+        
+        <!-- Main Card - COMPACT -->
+        <div class="relative w-full max-w-sm">
+          <div class="bg-gray-900/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-700/50 p-5 animate-scale-in">
+            <!-- Header -->
+            <div class="text-center mb-4">
+              <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                <i class="fas fa-user-shield text-xl text-white"></i>
+              </div>
+              <h2 class="text-lg font-bold text-white">Daftar Admin Sistem</h2>
+              <p class="text-gray-400 text-xs mt-1">Lengkapi data diri Anda</p>
+            </div>
+
+            <!-- User Info Card -->
+            <div class="flex items-center gap-3 p-3 bg-gray-800/50 rounded-xl mb-4">
+              <img id="register-avatar" src="" alt="Avatar" class="w-10 h-10 rounded-full object-cover">
+              <div class="text-left min-w-0">
+                <div id="register-name" class="font-semibold text-white text-sm truncate"></div>
+                <div id="register-email" class="text-gray-400 text-xs truncate"></div>
+              </div>
+            </div>
+
+            <!-- Form (Admin - Simplified) -->
+            <form id="register-form" class="space-y-3">
+              ${this.adminRoleField()}
+              ${this.namaAdminField()}
+              ${this.whatsappField()}
+              ${this.adminInfoField()}
+              
+              <div id="register-error" class="hidden p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs text-center"></div>
+              
+              <button type="submit" class="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg text-sm">
                 <i class="fas fa-rocket mr-2"></i>Daftar Sekarang
               </button>
               
