@@ -197,6 +197,8 @@ export class RegisterHandler {
 
   validateForm(data) {
     if (!data.role || !data.noWa) return { valid: false, message: 'Mohon lengkapi semua data wajib' };
+    // Admin system requires name
+    if (data.role === 'admin-system' && !data.name) return { valid: false, message: 'Masukkan nama lengkap' };
     if (data.role === 'siswa' && !data.nis) return { valid: false, message: 'Masukkan NIS untuk verifikasi' };
     if (data.role === 'guru' && !data.kodeGuru) return { valid: false, message: 'Masukkan Kode Guru untuk verifikasi' };
     if (data.role === 'guru' && !data.kelas) return { valid: false, message: 'Pilih kelas (Wali Kelas) atau "Bukan Walas"' };

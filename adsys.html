@@ -81,6 +81,9 @@
     <p class="text-center text-gray-600 text-[10px] mt-4">v1.0.0</p>
   </div>
 
+  <!-- App Container for dynamic content (register, OTP, etc) -->
+  <div id="app"></div>
+
   <!-- Toast Container -->
   <div id="toast-container" class="fixed top-20 right-4 z-50"></div>
 
@@ -89,14 +92,67 @@
     // Import Toast FIRST
     import './js/components/utils/Toast.js';
     
+    // Import App components for registration flow
+    import { googleAuthInstance } from './js/auth/GoogleAuth.js';
+    import { authApi } from './js/auth/AuthApi.js';
+    import { RegisterComponent } from './js/components/RegisterComponent.js';
+    import { TelegramLinkSection, OtpSection } from './js/components/auth/index.js';
+    import { OtpHandler } from './js/components/utils/OtpHandler.js';
+    import { LoginComponent } from './js/components/LoginComponent.js';
+    
     // Import Admin Login Handler
     import { AdminLogin } from './js/pages/AdminLogin.js';
     
+    // Get admin Google user from localStorage
+    let adminGoogleUser = null;
+    try {
+      const stored = localStorage.getItem('admin_google_user');
+      if (stored) {
+        adminGoogleUser = JSON.parse(stored);
+      }
+    } catch (e) {
+      console.error('Failed to parse admin Google user:', e);
+    }
+    
+    // Make components available globally for AdminLogin to use
+    window.googleAuth = googleAuthInstance;
+    window.registerComponent = new RegisterComponent({
+      googleAuth: googleAuthInstance,
+      onSubmit: async (data) => {
+        // Handle admin registration using authApi
+        if (!adminGoogleUser) {
+          window.Toast?.error('Error', 'Data Google tidak ditemukan. Silakan login ulang.');
+          return;
+        }
+        
+        const result = await authApi.register(adminGoogleUser, data);
+        if (result.success) {
+          // Show Telegram link section
+          window.adminLogin.showTelegramLink(result);
+        }
+      },
+      onCancel: () => {
+        // Go back to login
+        localStorage.removeItem('admin_google_user');
+        window.location.reload();
+      }
+    });
+    window.otpHandler = new OtpHandler({
+      onSuccess: () => {
+        // Redirect to admin dashboard after successful OTP verification
+        window.location.href = 'dashboard-admin.html';
+      },
+      onResend: () => {
+        const input = document.getElementById('otp-code');
+        if (input) input.value = '';
+      }
+    });
+    
     // Initialize Admin Login
     const adminLogin = new AdminLogin();
+    window.adminLogin = adminLogin;
     adminLogin.init();
   </script>
 
 </body>
-</html>
 

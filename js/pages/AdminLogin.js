@@ -256,12 +256,326 @@ class AdminLogin {
       Toast.info('Registrasi Diperlukan', 'Silakan lengkapi data admin Anda.');
     }
 
-    // Trigger App to show admin register section
-    if (window.App) {
-      window.App.showAdminRegisterSection(googleUser);
+    // Hide login card and show register section
+    const loginCard = document.querySelector('.relative.max-w-sm');
+    if (loginCard) {
+      loginCard.classList.add('hidden');
+    }
+    
+    // Show register section using RegisterComponent
+    if (window.registerComponent) {
+      const appContainer = document.getElementById('app');
+      if (appContainer) {
+        appContainer.innerHTML = window.registerComponent.renderAdmin();
+        window.registerComponent.initEvents();
+        window.registerComponent.show(googleUser, true);
+      }
     } else {
       // Fallback: redirect to index with admin flag
       window.location.href = 'index.html?admin=register';
+    }
+  }
+
+  /**
+   * Show Telegram link section after successful registration
+   * @param {Object} result - Registration result from backend
+   */
+  showTelegramLink(result) {
+    const Toast = getToast();
+    
+    // Store pending user data
+    this.pendingUserData = {
+      userId: result.user.userId,
+      email: result.user.email,
+      googleUser: this.googleUser
+    };
+    
+    // Clear app container and show Telegram link section
+    const appContainer = document.getElementById('app');
+    if (appContainer) {
+      appContainer.innerHTML = `
+        <div class="max-w-sm mx-auto p-5 bg-gray-800/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-700/50 animate-scale-in">
+          <div class="text-center mb-4">
+            <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg">
+              <i class="fab fa-telegram text-2xl text-white"></i>
+            </div>
+            <h2 class="text-lg font-bold text-white">Hubungkan Telegram</h2>
+            <p class="text-gray-400 text-xs mt-1">Verifikasi akun Anda via Telegram</p>
+          </div>
+          <a 
+            id="open-telegram"
+            href="${result.user.telegramLink}" 
+            target="_blank"
+            class="flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg text-sm"
+          >
+            <i class="fab fa-telegram"></i>
+            <span>Buka Telegram</span>
+          </a>
+          <div id="telegram-status" class="mt-3 p-3 bg-gray-700/30 rounded-lg">
+            <div class="flex items-center justify-center gap-2 text-xs text-gray-400">
+              <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
+              <span>Klik tombol di atas</span>
+            </div>
+          </div>
+          <button 
+            id="refresh-telegram-status"
+            class="w-full mt-2 py-2 bg-gray-700/50 hover:bg-gray-600/50 text-gray-400 rounded-lg transition-colors text-xs font-medium"
+          >
+            <i class="fas fa-sync-alt mr-1"></i>Periksa Status
+          </button>
+        </div>
+      `;
+      
+      // Add event listeners
+      document.getElementById('refresh-telegram-status')?.addEventListener('click', () => this.checkTelegramStatus());
+      setTimeout(() => this.checkTelegramStatus(), 1000);
+    }
+    
+    if (Toast) {
+      Toast.success('Registrasi Berhasil', 'Silakan hubungkan Telegram untuk verifikasi.');
+    }
+  }
+
+  /**
+   * Check Telegram verification status
+   */
+  async checkTelegramStatus() {
+    const Toast = getToast();
+    
+    if (!this.pendingUserData) return;
+    
+    try {
+      const payload = { 
+        action: 'generateOTP', 
+        userId: this.pendingUserData.userId, 
+        email: this.pendingUserData.email
+      };
+      
+      const res = await fetch(AUTH_CONFIG.API_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      const result = await res.json();
+      
+      const statusEl = document.getElementById('telegram-status');
+      
+      if (result.success) {
+        if (statusEl) {
+          statusEl.innerHTML = `
+            <div class="flex items-center justify-center gap-2 text-xs text-green-400">
+              <i class="fas fa-check-circle"></i>
+              <span>Terkoneksi! Mengirim OTP...</span>
+            </div>
+          `;
+        }
+        
+        if (Toast) {
+          Toast.success('Telegram Terhubung!', 'Kode OTP dikirim ke Telegram Anda');
+        }
+        
+        // Show OTP section after 2 seconds
+        setTimeout(() => {
+          this.showOtpSection({
+            userId: this.pendingUserData.userId,
+            email: this.pendingUserData.email,
+            otpId: result.otpId
+          });
+        }, 2000);
+        
+      } else if (result.error === 'TELEGRAM_NOT_LINKED') {
+        if (statusEl) {
+          statusEl.innerHTML = `
+            <div class="flex items-center justify-center gap-2 text-xs text-yellow-400">
+              <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
+              <span>Belum terhubung. Klik START di Telegram</span>
+            </div>
+          `;
+        }
+      } else {
+        if (statusEl) {
+          statusEl.innerHTML = `
+            <div class="flex items-center justify-center gap-2 text-xs text-red-400">
+              <i class="fas fa-exclamation-circle"></i>
+              <span>${result.message || 'Gagal'}</span>
+            </div>
+          `;
+        }
+      }
+    } catch (error) {
+      console.error('Check Telegram status error:', error);
+    }
+  }
+
+  /**
+   * Show OTP verification section
+   * @param {Object} extra - OTP data (userId, email, otpId)
+   */
+  showOtpSection(extra) {
+    const appContainer = document.getElementById('app');
+    const Toast = getToast();
+    
+    // Store OTP data
+    this.otpData = {
+      userId: extra.userId,
+      email: extra.email,
+      otpId: extra.otpId
+    };
+    
+    if (appContainer) {
+      appContainer.innerHTML = `
+        <div class="max-w-sm mx-auto p-5 bg-gray-800/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-700/50 animate-scale-in">
+          <div class="text-center mb-4">
+            <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg">
+              <i class="fas fa-shield-alt text-2xl text-white"></i>
+            </div>
+            <h2 class="text-lg font-bold text-white">Verifikasi OTP</h2>
+            <p class="text-gray-400 text-xs mt-1">Masukkan kode dari Telegram</p>
+          </div>
+          <form id="otp-form" class="space-y-3">
+            <div>
+              <input 
+                type="text" 
+                id="otp-code" 
+                maxlength="6"
+                class="w-full px-4 py-3 bg-gray-700/50 border border-gray-600 rounded-xl text-white text-center text-2xl tracking-[0.5em] focus:border-green-500 focus:ring-2 focus:ring-green-500/20 font-mono"
+                placeholder="------"
+                required
+                autocomplete="one-time-code"
+              />
+            </div>
+            <button 
+              type="submit" 
+              id="verify-otp-btn"
+              class="w-full py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg text-sm"
+            >
+              <i class="fas fa-check-circle mr-2"></i>Verifikasi
+            </button>
+          </form>
+          <div class="text-center mt-4">
+            <p class="text-gray-500 text-xs">Tidak menerima kode?</p>
+            <button type="button" id="resend-otp-btn" class="text-green-400 hover:text-green-300 font-medium text-sm transition-colors mt-1">
+              <i class="fas fa-redo mr-1"></i>Kirim Ulang
+            </button>
+          </div>
+        </div>
+      `;
+      
+      // Add event listeners
+      document.getElementById('otp-form')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.handleOtpVerify();
+      });
+      
+      document.getElementById('resend-otp-btn')?.addEventListener('click', () => this.handleOtpResend());
+    }
+  }
+
+  /**
+   * Handle OTP verification
+   */
+  async handleOtpVerify() {
+    const Toast = getToast();
+    const otpCode = document.getElementById('otp-code')?.value.trim();
+    
+    if (!otpCode) {
+      if (Toast) Toast.error('Input Required', 'Masukkan kode OTP');
+      return;
+    }
+    
+    const loading = Toast ? Toast.loading('Memverifikasi OTP...') : null;
+    
+    try {
+      const payload = {
+        action: 'verifyOTP',
+        otpId: this.otpData.otpId,
+        otpCode: otpCode,
+        userId: this.otpData.userId
+      };
+      
+      const res = await fetch(AUTH_CONFIG.API_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      const result = await res.json();
+      
+      if (loading) loading.close();
+      
+      if (result.success && result.verified) {
+        if (Toast) {
+          Toast.success('Verifikasi Berhasil', 'Akun Anda sekarang aktif!');
+        }
+        
+        // Save user session
+        this.currentUser = {
+          userId: this.otpData.userId,
+          email: this.otpData.email,
+          role: 'admin-system',
+          status: 'active'
+        };
+        localStorage.setItem('user', JSON.stringify(this.currentUser));
+        
+        // Redirect to dashboard after 1.5 seconds
+        setTimeout(() => {
+          this.redirectToDashboard();
+        }, 1500);
+      } else {
+        if (Toast) {
+          Toast.error('Verifikasi Gagal', result.message || 'Kode OTP tidak valid');
+        }
+      }
+    } catch (error) {
+      if (loading) loading.close();
+      console.error('OTP verification error:', error);
+      if (Toast) {
+        Toast.error('Error', 'Gagal memverifikasi OTP');
+      }
+    }
+  }
+
+  /**
+   * Handle OTP resend
+   */
+  async handleOtpResend() {
+    const Toast = getToast();
+    const loading = Toast ? Toast.loading('Mengirim ulang OTP...') : null;
+    
+    try {
+      const payload = {
+        action: 'generateOTP',
+        userId: this.otpData.userId,
+        email: this.otpData.email
+      };
+      
+      const res = await fetch(AUTH_CONFIG.API_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      const result = await res.json();
+      
+      if (loading) loading.close();
+      
+      if (result.success) {
+        this.otpData.otpId = result.otpId;
+        if (Toast) {
+          Toast.success('OTP Dikirim', 'Kode OTP baru dikirim ke Telegram Anda');
+        }
+        // Clear OTP input
+        const input = document.getElementById('otp-code');
+        if (input) input.value = '';
+      } else {
+        if (Toast) {
+          Toast.error('Gagal', result.message || 'Gagal mengirim OTP');
+        }
+      }
+    } catch (error) {
+      if (loading) loading.close();
+      console.error('Resend OTP error:', error);
     }
   }
 
