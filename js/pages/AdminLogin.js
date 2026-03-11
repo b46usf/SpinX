@@ -268,13 +268,7 @@ class AdminLogin {
     
     localStorage.setItem('admin_google_user', JSON.stringify(registerData));
 
-    // Close loading and show info
-    if (Toast) {
-      Toast.closeLoading();
-      Toast.info('Registrasi Diperlukan', 'Silakan lengkapi data admin Anda.');
-    }
-
-    // Hide login card and show register section
+    // Hide login card and show register section FIRST
     const loginCard = document.querySelector('.relative.max-w-sm');
     if (loginCard) {
       loginCard.classList.add('hidden');
@@ -291,6 +285,16 @@ class AdminLogin {
     } else {
       // Fallback: redirect to index with admin flag
       window.location.href = 'index.html?admin=register';
+      return;
+    }
+
+    // Close loading toast and show info toast with auto-close timer (4 seconds)
+    if (Toast) {
+      Toast.closeLoading();
+      // Use setTimeout to ensure loading is fully closed before showing info
+      setTimeout(() => {
+        Toast.info('Registrasi Diperlukan', 'Silakan lengkapi data admin Anda.', 4000);
+      }, 100);
     }
   }
 

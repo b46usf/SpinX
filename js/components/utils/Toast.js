@@ -81,13 +81,18 @@ export async function showWarning(title, message = '') {
  * Show info toast
  * @param {string} title - Title message
  * @param {string} message - Optional description message
+ * @param {number} duration - Duration in milliseconds (default: 0 = no auto-close)
  */
-export async function showInfo(title, message = '') {
+export async function showInfo(title, message = '', duration = 0) {
   return Swal.fire({
     ...ToastDefaults,
     icon: 'info',
     title: title,
-    text: message
+    text: message,
+    timer: duration,
+    timerProgressBar: duration > 0,
+    showConfirmButton: duration === 0,
+    toast: message === '' && duration > 0
   });
 }
 
