@@ -251,6 +251,11 @@ class AdminLogin {
   showRegisterSection(googleUser) {
     const Toast = getToast();
     
+    // Show loading first
+    if (Toast) {
+      Toast.loading('Memuat formulir registrasi...');
+    }
+    
     // Store Google user data for registration with admin role
     const registerData = {
       email: googleUser.email,
@@ -263,7 +268,9 @@ class AdminLogin {
     
     localStorage.setItem('admin_google_user', JSON.stringify(registerData));
 
+    // Close loading and show info
     if (Toast) {
+      Toast.closeLoading();
       Toast.info('Registrasi Diperlukan', 'Silakan lengkapi data admin Anda.');
     }
 
@@ -355,6 +362,11 @@ class AdminLogin {
     
     if (!this.pendingUserData) return;
     
+    // Show loading
+    if (Toast) {
+      Toast.loading('Memeriksa status Telegram...');
+    }
+    
     try {
       const payload = { 
         action: 'generateOTP', 
@@ -369,6 +381,11 @@ class AdminLogin {
       });
       
       const result = await res.json();
+      
+      // Close loading toast
+      if (Toast) {
+        Toast.closeLoading();
+      }
       
       const statusEl = document.getElementById('telegram-status');
       
@@ -415,6 +432,10 @@ class AdminLogin {
         }
       }
     } catch (error) {
+      // Close loading toast
+      if (Toast) {
+        Toast.closeLoading();
+      }
       console.error('Check Telegram status error:', error);
     }
   }
@@ -523,7 +544,7 @@ class AdminLogin {
       
       if (result.success && result.verified) {
         if (Toast) {
-          Toast.success('Verifikasi Berhasil', 'Akun Anda sekarang aktif!');
+          Toast.success('Verifikasi Berhasil', 'Akun Anda sekarang aktif! Silakan login ulang.');
         }
         
         // Save user session
@@ -535,10 +556,13 @@ class AdminLogin {
         };
         localStorage.setItem('user', JSON.stringify(this.currentUser));
         
-        // Redirect to dashboard after 1.5 seconds
+        // Clear admin_google_user since registration is complete
+        localStorage.removeItem('admin_google_user');
+        
+        // Redirect back to login page after 2 seconds (like user flow)
         setTimeout(() => {
-          this.redirectToDashboard();
-        }, 1500);
+          window.location.href = 'adsys.html';
+        }, 2000);
       } else {
         if (Toast) {
           Toast.error('Verifikasi Gagal', result.message || 'Kode OTP tidak valid');
