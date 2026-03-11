@@ -279,6 +279,60 @@ class AdminLogin {
       const appContainer = document.getElementById('app');
       if (appContainer) {
         appContainer.innerHTML = window.registerComponent.renderAdmin();
+        
+        // Setup onSubmit with loading toast BEFORE initEvents
+        window.registerComponent.onSubmit = async (formData) => {
+          const toast = getToast();
+          
+          // Show loading toast for registration
+          if (toast) {
+            toast.loading('Mendaftarkan admin sistem...');
+          }
+          
+          try {
+            // Use authApi directly for registration
+            const result = await authApi.register(googleUser, formData);
+            
+            // Close loading
+            if (toast) {
+              toast.closeLoading();
+            }
+            
+            if (result.success) {
+              // Show Telegram link section
+              if (toast) {
+                toast.success('Registrasi Berhasil', 'Silakan hubungkan Telegram untuk verifikasi.');
+              }
+              
+              // Show telegram link section
+              this.showTelegramLink(result);
+            } else {
+              if (toast) {
+                toast.error('Registrasi Gagal', result.message || 'Terjadi kesalahan saat registrasi.');
+              }
+            }
+          } catch (error) {
+            if (toast) {
+              toast.closeLoading();
+              toast.error('Error', 'Terjadi kesalahan saat registrasi.');
+            }
+            console.error('Registration error:', error);
+          }
+        };
+        
+        window.registerComponent.onCancel = () => {
+          // Go back to login
+          const loginCard = document.querySelector('.relative.max-w-sm');
+          if (loginCard) {
+            loginCard.classList.remove('hidden');
+          }
+          // Remove register section
+          const appContainer = document.getElementById('app');
+          if (appContainer) {
+            appContainer.innerHTML = '';
+          }
+        };
+        
         window.registerComponent.initEvents();
         window.registerComponent.show(googleUser, true);
       }
@@ -547,10 +601,6 @@ class AdminLogin {
       }
       
       if (result.success && result.verified) {
-        if (Toast) {
-          Toast.success('Verifikasi Berhasil', 'Akun Anda sekarang aktif! Silakan login ulang.');
-        }
-        
         // Save user session
         this.currentUser = {
           userId: this.otpData.userId,
@@ -563,10 +613,37 @@ class AdminLogin {
         // Clear admin_google_user since registration is complete
         localStorage.removeItem('admin_google_user');
         
-        // Redirect back to login page after 2 seconds (like user flow)
-        setTimeout(() => {
-          window.location.href = 'adsys.html';
-        }, 2000);
+        // Show success UI with button to go back to login (NO auto-redirect)
+        const appContainer = document.getElementById('app');
+        if (appContainer) {
+          appContainer.innerHTML = `
+            <div class="max-w-sm mx-auto p-5 bg-gray-800/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-700/50 animate-scale-in">
+              <div class="text-center mb-4">
+                <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg">
+                  <i class="fas fa-check-circle text-2xl text-white"></i>
+                </div>
+                <h2 class="text-lg font-bold text-white">Verifikasi Berhasil!</h2>
+                <p class="text-gray-400 text-xs mt-1">Akun admin sistem Anda sekarang aktif</p>
+              </div>
+              <div class="p-3 bg-green-500/10 border border-green-500/30 rounded-lg mb-4">
+                <p class="text-green-400 text-xs text-center">
+                  <i class="fas fa-user-shield mr-1"></i>Akun: ${this.otpData.email}
+                </p>
+              </div>
+              <a 
+                href="adsys.html"
+                class="flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg text-sm"
+              >
+                <i class="fas fa-sign-in-alt"></i>
+                <span>Kembali ke Login</span>
+              </a>
+            </div>
+          `;
+        }
+        
+        if (Toast) {
+          Toast.success('Verifikasi Berhasil', 'Akun Anda sekarang aktif! Silakan klik tombol di bawah untuk login.');
+        }
       } else {
         if (Toast) {
           Toast.error('Verifikasi Gagal', result.message || 'Kode OTP tidak valid');

@@ -1,4 +1,3 @@
-
 /**
  * Register Component
  * Handles registration UI rendering and events
@@ -10,10 +9,38 @@ import { RegisterHandler } from './utils/RegisterHandler.js';
 export class RegisterComponent {
   constructor(options = {}) {
     this.googleAuth = options.googleAuth || window.GoogleAuth;
-    this.onSubmit = options.onSubmit || (() => {});
-    this.onCancel = options.onCancel || (() => {});
+    this._onSubmit = options.onSubmit || (() => {});
+    this._onCancel = options.onCancel || (() => {});
     this.registerHandler = new RegisterHandler({ googleAuth: this.googleAuth });
     this.isAdminSystem = false;
+  }
+
+  /**
+   * Getter for onSubmit - allows dynamic assignment
+   */
+  get onSubmit() {
+    return this._onSubmit;
+  }
+
+  /**
+   * Setter for onSubmit - allows dynamic assignment
+   */
+  set onSubmit(value) {
+    this._onSubmit = value;
+  }
+
+  /**
+   * Getter for onCancel - allows dynamic assignment
+   */
+  get onCancel() {
+    return this._onCancel;
+  }
+
+  /**
+   * Setter for onCancel - allows dynamic assignment
+   */
+  set onCancel(value) {
+    this._onCancel = value;
   }
 
   /**
@@ -39,9 +66,10 @@ export class RegisterComponent {
   }
 
   initEvents() {
+    // Use arrow functions that call getters - this allows dynamic assignment of onSubmit/onCancel
     this.registerHandler.initEvents({
-      onSubmit: this.onSubmit,
-      onCancel: this.onCancel
+      onSubmit: (data) => this._onSubmit(data),
+      onCancel: () => this._onCancel()
     });
   }
 
@@ -89,5 +117,4 @@ export class RegisterComponent {
     this.registerHandler.hideError();
   }
 }
-
 
