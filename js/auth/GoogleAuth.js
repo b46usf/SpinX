@@ -81,7 +81,11 @@ class GoogleAuth {
 
   async handleCredentialResponse(response) {
     const Toast = getToast();
-    const loading = Toast ? Toast.loading('Sedang memproses login...') : null;
+    
+    // Show loading - use Toast.closeLoading() to close later
+    if (Toast) {
+      Toast.loading('Sedang memproses login...');
+    }
     
     try {
       const userInfo = this.parseJwt(response.credential);
@@ -95,7 +99,10 @@ class GoogleAuth {
       // Use AuthApi for backend validation (AuthApi will show toast)
       const authResult = await authApi.login(userInfo);
       
-      if (loading) loading.close();
+      // Close loading toast
+      if (Toast) {
+        Toast.closeLoading();
+      }
       
       // AuthApi already shows toast, check result for flow control
       if (!authResult.success) {
@@ -145,7 +152,11 @@ class GoogleAuth {
         this.triggerCallbacks(null, { needRegister: true, googleUser: this.googleUser });
       }
     } catch (error) {
-      if (loading) loading.close();
+      // Close loading toast
+      if (Toast) {
+        Toast.closeLoading();
+      }
+      
       console.error('Auth error:', error);
       // Toast already shown by AuthApi catch block
     }
@@ -153,12 +164,19 @@ class GoogleAuth {
 
   async register(userData) {
     const Toast = getToast();
-    const loading = Toast ? Toast.loading('Sedang mendaftar...') : null;
+    
+    // Show loading
+    if (Toast) {
+      Toast.loading('Sedang mendaftar...');
+    }
     
     // Use AuthApi for registration (AuthApi will show toast)
     const result = await authApi.register(this.googleUser, userData);
     
-    if (loading) loading.close();
+    // Close loading toast
+    if (Toast) {
+      Toast.closeLoading();
+    }
     
     // Check result - toast already shown by AuthApi
     if (result.success) {

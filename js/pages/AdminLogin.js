@@ -137,7 +137,11 @@ class AdminLogin {
    */
   async handleCredentialResponse(response) {
     const Toast = getToast();
-    const loading = Toast ? Toast.loading('Memproses login admin...') : null;
+    
+    // Show loading - use Toast.closeLoading() to close later
+    if (Toast) {
+      Toast.loading('Memproses login admin...');
+    }
 
     try {
       // Parse JWT token
@@ -155,7 +159,10 @@ class AdminLogin {
       const adminEmails = AUTH_CONFIG.ADMIN_SYS_EMAILS || [];
       const isAdminSystem = adminEmails.includes(userEmail);
 
-      if (loading) loading.close();
+      // Close loading toast
+      if (Toast) {
+        Toast.closeLoading();
+      }
 
       if (!isAdminSystem) {
         // Not admin system - show error and redirect to landing
@@ -224,7 +231,11 @@ class AdminLogin {
       }
 
     } catch (error) {
-      if (loading) loading.close();
+      // Close loading toast
+      if (Toast) {
+        Toast.closeLoading();
+      }
+      
       console.error('Admin login error:', error);
       
       if (Toast) {
@@ -484,7 +495,10 @@ class AdminLogin {
       return;
     }
     
-    const loading = Toast ? Toast.loading('Memverifikasi OTP...') : null;
+    // Show loading
+    if (Toast) {
+      Toast.loading('Memverifikasi OTP...');
+    }
     
     try {
       const payload = {
@@ -502,7 +516,10 @@ class AdminLogin {
       
       const result = await res.json();
       
-      if (loading) loading.close();
+      // Close loading toast
+      if (Toast) {
+        Toast.closeLoading();
+      }
       
       if (result.success && result.verified) {
         if (Toast) {
@@ -528,7 +545,11 @@ class AdminLogin {
         }
       }
     } catch (error) {
-      if (loading) loading.close();
+      // Close loading toast
+      if (Toast) {
+        Toast.closeLoading();
+      }
+      
       console.error('OTP verification error:', error);
       if (Toast) {
         Toast.error('Error', 'Gagal memverifikasi OTP');
@@ -541,7 +562,11 @@ class AdminLogin {
    */
   async handleOtpResend() {
     const Toast = getToast();
-    const loading = Toast ? Toast.loading('Mengirim ulang OTP...') : null;
+    
+    // Show loading
+    if (Toast) {
+      Toast.loading('Mengirim ulang OTP...');
+    }
     
     try {
       const payload = {
@@ -558,7 +583,10 @@ class AdminLogin {
       
       const result = await res.json();
       
-      if (loading) loading.close();
+      // Close loading toast
+      if (Toast) {
+        Toast.closeLoading();
+      }
       
       if (result.success) {
         this.otpData.otpId = result.otpId;
@@ -574,7 +602,11 @@ class AdminLogin {
         }
       }
     } catch (error) {
-      if (loading) loading.close();
+      // Close loading toast
+      if (Toast) {
+        Toast.closeLoading();
+      }
+      
       console.error('Resend OTP error:', error);
     }
   }

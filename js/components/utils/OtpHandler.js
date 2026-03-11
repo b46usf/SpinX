@@ -29,13 +29,19 @@ export class OtpHandler {
       return;
     }
 
-    const loading = Toast ? Toast.loading('Memverifikasi OTP...') : null;
+    // Show loading
+    if (Toast) {
+      Toast.loading('Memverifikasi OTP...');
+    }
 
     try {
       // AuthApi will show toast for the response
       const result = await authApi.verifyOTP(this.otpId, otpCode, this.userId);
       
-      if (loading) loading.close();
+      // Close loading toast
+      if (Toast) {
+        Toast.closeLoading();
+      }
       
       if (result.success && result.verified) {
         if (Toast) Toast.success('Verifikasi Berhasil', 'Akun Anda sekarang aktif!');
@@ -45,7 +51,11 @@ export class OtpHandler {
       } 
       // Failure toast already shown by AuthApi
     } catch (error) {
-      if (loading) loading.close();
+      // Close loading toast
+      if (Toast) {
+        Toast.closeLoading();
+      }
+      
       console.error('OTP verification error:', error);
       if (Toast) Toast.error('Error', 'Gagal memverifikasi OTP. Silakan coba lagi.');
     }
@@ -53,13 +63,20 @@ export class OtpHandler {
 
   async handleResend() {
     const Toast = getToast();
-    const loading = Toast ? Toast.loading('Mengirim ulang OTP...') : null;
+    
+    // Show loading
+    if (Toast) {
+      Toast.loading('Mengirim ulang OTP...');
+    }
     
     try {
       // AuthApi will show toast for the response
       const result = await authApi.generateOTP(this.userId, this.email);
       
-      if (loading) loading.close();
+      // Close loading toast
+      if (Toast) {
+        Toast.closeLoading();
+      }
       
       if (result.success) {
         this.otpId = result.otpId;
@@ -68,7 +85,11 @@ export class OtpHandler {
       } 
       // Failure toast already shown by AuthApi
     } catch (error) {
-      if (loading) loading.close();
+      // Close loading toast
+      if (Toast) {
+        Toast.closeLoading();
+      }
+      
       console.error('Resend OTP error:', error);
       if (Toast) Toast.error('Error', 'Gagal mengirim OTP. Silakan coba lagi.');
     }
