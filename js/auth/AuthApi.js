@@ -5,9 +5,11 @@
  * SINGLE SOURCE - Import this for all API calls
  * Uses AUTH_CONFIG from Config.js - single source of truth
  * Shows Toast notifications for all responses
+ * Uses JWT Bearer token for authentication
  */
 
 import { AUTH_CONFIG } from './Config.js';
+import { jwtManager } from './JwtManager.js';
 
 // Get Toast functions from global
 const getToast = () => window.Toast || null;
@@ -43,6 +45,13 @@ class AuthApi {
       console.error('Failed to get IP:', error);
       return '';
     }
+  }
+
+  /**
+   * Get Authorization header with Bearer token
+   */
+  getAuthHeader() {
+    return jwtManager.getAuthHeader();
   }
 
   /**
@@ -86,6 +95,14 @@ class AuthApi {
         Toast.warning('OTP Salah', message);
       } else if (result.error === 'USER_BLOCKED') {
         Toast.error('Akun Diblokir', message);
+      } else if (result.error === 'TOKEN_EXPIRED' || result.error === 'INVALID_TOKEN') {
+        // Handle token-related errors
+        Toast.warning('Sesi Habis', 'Silakan login kembali');
+        // Trigger logout after a delay
+        setTimeout(() => {
+          jwtManager.clearAuthData();
+          window.location.href = 'index.html';
+        }, 2000);
       } else {
         Toast.error('Gagal', message);
       }
@@ -94,7 +111,7 @@ class AuthApi {
   }
 
   /**
-   * Generic API call
+   * Generic API call with JWT authentication
    * @param {string} action - Action name
    * @param {Object} data - Additional data
    * @param {boolean} showToast - Whether to show toast notification (default: true)
@@ -106,16 +123,27 @@ class AuthApi {
       // Get client IP
       const clientIP = await this.getClientIP();
       
+      // Get auth header (Bearer token)
+      const authHeader = this.getAuthHeader();
+      
       const payload = { action, ...data, ip: clientIP };
+      
+      // Build headers
+      const headers = {
+        'Content-Type': 'application/json'
+      };
+      
+      // Add Authorization header if available
+      if (authHeader) {
+        headers['Authorization'] = authHeader;
+      }
       
       const res = await fetch(this.getApiUrl(), {
         method: 'POST',
         body: JSON.stringify(payload),
         redirect: 'follow',
         mode: 'cors',
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        headers: headers
       });
 
       const text = await res.text();
@@ -134,6 +162,30 @@ class AuthApi {
           message: 'Respons server tidak valid',
           raw: text 
         };
+      }
+
+      // Handle token in response (for login action)
+      if (result.token && action === 'login') {
+        jwtManager.setAuthData({
+          token: result.token,
+          tokenExpiresAt: result.tokenExpiresAt,
+          tokenExpiresIn: result.tokenExpiresIn,
+          user: result.user
+        });
+      }
+
+      // Handle token refresh response
+      if (result.success && result.token && action === 'refreshToken') {
+        jwtManager.setAuthData({
+          token: result.token,
+          tokenExpiresAt: result.tokenExpiresAt,
+          tokenExpiresIn: result.tokenExpiresIn
+        });
+      }
+
+      // Handle requireLogin - token invalid/expired
+      if (result.requireLogin) {
+        jwtManager.clearAuthData();
       }
 
       // Show Toast notification for the response
@@ -189,6 +241,13 @@ class AuthApi {
       sekolah: userData.sekolah || '',
       foto: googleUser.picture || ''
     });
+  }
+
+  /**
+   * Refresh JWT token
+   */
+  async refreshToken() {
+    return this.call('refreshToken', {}, false);
   }
 
   /**

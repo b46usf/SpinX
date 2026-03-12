@@ -2,18 +2,41 @@
  * Auth Guard - Unified Authentication Protection
  * Replaces duplicate inline auth checking in all dashboard HTMLs
  * Clean, modular, DRY - best practice
+ * Now uses JWT for authentication validation
  */
+
+// Lazy load JwtManager to avoid circular dependencies
+let jwtManager = null;
+const getJwtManager = () => {
+  if (!jwtManager && typeof window !== 'undefined') {
+    // Try to get from window (set by module)
+    jwtManager = window.jwtManager;
+  }
+  return jwtManager;
+};
 
 class AuthGuard {
   constructor() {
     this.loginPage = 'index.html';
+    this.currentUser = null;
   }
 
   /**
-   * Check if user is logged in
+   * Check if user is logged in (using JWT)
    * @returns {boolean}
    */
   isLoggedIn() {
+    // Try JWT Manager first
+    const jwt = getJwtManager();
+    if (jwt && jwt.isTokenValid()) {
+      const user = jwt.getUser();
+      if (user) {
+        this.currentUser = user;
+        return true;
+      }
+    }
+    
+    // Fallback to localStorage check
     const user = localStorage.getItem('user');
     if (!user) return false;
     
@@ -51,6 +74,32 @@ class AuthGuard {
   hasRole(requiredRole) {
     const role = this.getRole();
     return role === requiredRole;
+  }
+
+  /**
+   * Check if token is valid (not expired)
+   * @returns {boolean}
+   */
+  isTokenValid() {
+    const jwt = getJwtManager();
+    if (jwt) {
+      return jwt.isTokenValid();
+    }
+    
+    // Fallback: check if localStorage has user
+    return this.isLoggedIn();
+  }
+
+  /**
+   * Check if token is expiring soon
+   * @returns {boolean}
+   */
+  isTokenExpiringSoon() {
+    const jwt = getJwtManager();
+    if (jwt) {
+      return jwt.isTokenExpiringSoon();
+    }
+    return false;
   }
 
   /**
@@ -122,16 +171,26 @@ class AuthGuard {
    */
   getAvatar() {
     if (!this.currentUser) return '';
-    return this.currentUser.picture || '';
+    return this.currentUser.picture || this.currentUser.foto || '';
   }
 
   /**
-   * Logout user
+   * Logout user (clear JWT and localStorage)
    */
   logout() {
+    // Clear localStorage
     localStorage.removeItem('user');
     localStorage.removeItem('cid');
     localStorage.removeItem('wa');
+    localStorage.removeItem('admin_google_user');
+    localStorage.removeItem('pending_admin_user');
+    
+    // Clear JWT Manager if available
+    const jwt = getJwtManager();
+    if (jwt) {
+      jwt.clearAuthData();
+    }
+    
     this.currentUser = null;
     
     // Disable Google auto-select
@@ -156,8 +215,13 @@ class AuthGuard {
 
     // Set avatar
     const avatarEl = document.getElementById(avatarId);
-    if (avatarEl && this.getAvatar()) {
-      avatarEl.src = this.getAvatar();
+    if (avatarEl) {
+      const avatar = this.getAvatar();
+      if (avatar) {
+        avatarEl.src = avatar;
+      } else {
+        avatarEl.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(this.getDisplayName()) + '&background=random';
+      }
     }
 
     // Set name

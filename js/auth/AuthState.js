@@ -1,7 +1,10 @@
 /**
  * Auth State Management
  * Handles user session state
+ * Now integrates with JwtManager for JWT-based authentication
  */
+
+import { jwtManager } from './JwtManager.js';
 
 class AuthState {
   constructor() {
@@ -9,14 +12,30 @@ class AuthState {
     this.role = null;
     this.googleUser = null;
     this.callbacks = [];
+    
+    // Initialize from JWT Manager (for page reload)
+    this._initFromJwt();
   }
 
   /**
-   * Set current user
+   * Initialize from JWT storage
+   */
+  _initFromJwt() {
+    const user = jwtManager.getUser();
+    if (user) {
+      this.currentUser = user;
+      this.role = user.role || null;
+    }
+  }
+
+  /**
+   * Set current user (also updates JWT storage)
    */
   setUser(user) {
     this.currentUser = user;
     this.role = user?.role || null;
+    
+    // Also store in localStorage for backward compatibility
     localStorage.setItem('user', JSON.stringify(user));
   }
 
@@ -49,14 +68,29 @@ class AuthState {
   }
 
   /**
-   * Check if user is logged in
+   * Check if user is logged in (using JWT)
    */
   isLoggedIn() {
+    // Check JWT Manager first
+    if (jwtManager.isTokenValid()) {
+      const user = jwtManager.getUser();
+      if (user) {
+        this.currentUser = user;
+        this.role = user.role;
+        return true;
+      }
+    }
+    
+    // Fallback to legacy localStorage check
     const user = localStorage.getItem('user');
     if (user) {
-      this.currentUser = JSON.parse(user);
-      this.role = this.currentUser.role;
-      return true;
+      try {
+        this.currentUser = JSON.parse(user);
+        this.role = this.currentUser.role;
+        return true;
+      } catch (e) {
+        return false;
+      }
     }
     return false;
   }
@@ -69,10 +103,17 @@ class AuthState {
   }
 
   /**
-   * Clear user session
+   * Clear user session (logout)
    */
   clearSession() {
+    // Clear localStorage (legacy)
     localStorage.removeItem('user');
+    localStorage.removeItem('admin_google_user');
+    localStorage.removeItem('pending_admin_user');
+    
+    // Clear JWT Manager
+    jwtManager.clearAuthData();
+    
     this.currentUser = null;
     this.role = null;
     this.googleUser = null;
@@ -87,6 +128,9 @@ class AuthState {
     if (this.isLoggedIn()) {
       callback(this.currentUser);
     }
+    
+    // Also register with JWT Manager
+    jwtManager.addAuthListener(callback);
   }
 
   /**
@@ -95,8 +139,27 @@ class AuthState {
   triggerCallbacks(user, extra = null) {
     this.callbacks.forEach(cb => cb(user, extra));
   }
+
+  /**
+   * Get token info
+   */
+  getTokenInfo() {
+    return {
+      token: jwtManager.getToken(),
+      expiry: jwtManager.getTokenExpiry(),
+      isValid: jwtManager.isTokenValid(),
+      isExpiringSoon: jwtManager.isTokenExpiringSoon()
+    };
+  }
+
+  /**
+   * Refresh token
+   */
+  async refreshToken() {
+    return jwtManager.refreshToken();
+  }
 }
 
-// Export singleton
+// Export singleton (initialized)
 window.AuthState = new AuthState();
 

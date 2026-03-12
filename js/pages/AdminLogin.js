@@ -199,13 +199,29 @@ class AdminLogin {
         Toast.closeLoading();
       }
 
-      if (loginResult.success) {
+          if (loginResult.success) {
         if (loginResult.registered) {
           // User exists and is registered
           if (loginResult.user.status === 'active') {
             // User is active - go to dashboard
             this.currentUser = loginResult.user;
             this.role = loginResult.user.role;
+            
+            // Store JWT token using JwtManager
+            if (loginResult.token) {
+              // Use AuthApi's method which integrates with JwtManager
+              // But since we already have the token, set it directly
+              if (window.jwtManager) {
+                window.jwtManager.setAuthData({
+                  token: loginResult.token,
+                  tokenExpiresAt: loginResult.tokenExpiresAt,
+                  tokenExpiresIn: loginResult.tokenExpiresIn,
+                  user: loginResult.user
+                });
+              }
+            }
+            
+            // Also store in localStorage for backward compatibility
             localStorage.setItem('user', JSON.stringify(this.currentUser));
 
             if (Toast) {
