@@ -1,11 +1,11 @@
 /**
- * Pricing Section Component - PRODUCTION MASTERPIECE
- * Stunning responsive design + BE data safe
+ * Pricing Section Component
+ * Cleaner visual hierarchy + safer BE data parsing
  */
 
-import { 
-  loadPricingData, 
-  generateFeaturesHTML, 
+import {
+  loadPricingData,
+  generateFeaturesHTML,
   mapPlanToDisplay
 } from './utils/planUtils.js';
 
@@ -32,163 +32,103 @@ export const PricingSection = {
   },
 
   async render() {
-    if (this.state.loading && !this.state.data.length) await this.preload();
+    if (this.state.loading && !this.state.data.length) {
+      await this.preload();
+    }
 
-    const { data, loading, error } = this.state;
-    const plans = data.length ? data.map(this.cleanPlanData) : [];
+    const { data, loading } = this.state;
+    const plans = data.length ? data.map(plan => this.cleanPlanData(plan)) : [];
 
     if (loading) return this.renderLoading();
-    // Always render if we have plans (fallback available)
-    if (!plans.length) {
-      console.warn('No pricing plans available - critical error');
-      return this.renderError();
-    }
-    
-    const plansHTML = plans.map(plan => this.generatePlanCard(plan)).join('');
+    if (!plans.length) return this.renderError();
+
+    const normalizedPlans = this.sortPlans(plans);
+    const plansHTML = normalizedPlans.map(plan => this.generatePlanCard(plan)).join('');
+    const comparisonRows = this.getComparisonRows(normalizedPlans);
+    const comparisonHTML = comparisonRows.map(row => this.renderComparisonRow(row, normalizedPlans)).join('');
 
     return `
-      <section id="pricing" class="relative py-24 md:py-32 bg-gradient-to-b from-slate-950 via-slate-900/80 to-black/90 overflow-hidden">
-        <div class="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(120,119,198,0.3),transparent_50%),radial-gradient(circle_at_80%_20%,rgba(255,255,255,0.1),transparent_50%),radial-gradient(circle,rgba(120,119,198,0.2),transparent_70%)]"></div>
-        <div class="relative z-10 container mx-auto px-6 lg:px-8 max-w-7xl">
-          <div class="text-center mb-24 lg:mb-32">
-            <span class="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-emerald-500/10 border border-indigo-400/30 text-indigo-300 text-lg font-bold shadow-2xl ring-1 ring-indigo-400/20">
-              <i class="fas fa-sparkles text-xl text-indigo-400 animate-pulse"></i>
-              PAKET PREMIUM TERJANGKAU
+      <section id="pricing" class="relative overflow-hidden bg-slate-950 py-20 md:py-24">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.08),transparent_35%),radial-gradient(circle_at_80%_20%,rgba(99,102,241,0.10),transparent_28%),linear-gradient(to_bottom,rgba(15,23,42,0.98),rgba(2,6,23,1))]"></div>
+
+        <div class="relative z-10 container mx-auto max-w-7xl px-6 lg:px-8">
+          <div class="mx-auto mb-14 max-w-3xl text-center">
+            <span class="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-emerald-300">
+              <i class="fas fa-layer-group text-[11px]"></i>
+              Paket Harga Fleksibel
             </span>
-            <h2 class="text-5xl md:text-7xl lg:text-8xl font-black bg-gradient-to-r from-white via-emerald-50 to-indigo-100 bg-clip-text text-transparent mb-8 leading-none drop-shadow-2xl">
-              Pilih <span class="block md:inline text-emerald-400 drop-shadow-lg">Yang Tepat</span>
+            <h2 class="mt-6 text-4xl font-black leading-tight text-white md:text-5xl">
+              Pilih paket yang
+              <span class="bg-gradient-to-r from-emerald-300 to-cyan-300 bg-clip-text text-transparent">
+                sesuai kebutuhan sekolah
+              </span>
             </h2>
-            <p class="text-2xl md:text-3xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
-              Mulai gratis. <strong class="text-white font-bold">Upgrade anytime.</strong> Tanpa biaya tersembunyi - <span class="text-emerald-400">data real-time</span>.
+            <p class="mt-5 text-base leading-7 text-slate-300 md:text-lg">
+              Tampilan dibuat lebih ringkas, mudah dibaca, dan aman untuk data pricing dari backend
+              yang formatnya bisa berubah-ubah.
             </p>
           </div>
-          
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+
+          <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
             ${plansHTML}
           </div>
-          
-          <!-- Price Comparison Table -->
-          <div class="mt-20 lg:mt-28">
-            <div class="max-w-6xl mx-auto">
-              <div class="text-center mb-12">
-                <h3 class="text-3xl lg:text-4xl font-black bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent mb-4">
-                  <i class="fas fa-chart-bar mr-3"></i>Perbandingan Lengkap
-                </h3>
-                <p class="text-xl text-gray-300 max-w-2xl mx-auto">Pilih plan yang sesuai kebutuhan sekolah Anda</p>
-              </div>
-              <div class="overflow-x-auto">
-                <table class="w-full bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10">
-                  <thead>
-                    <tr class="divide-x divide-white/10">
-                      <th class="px-6 py-6 text-left">
-                        <span class="text-2xl font-bold text-white">Fitur</span>
-                      </th>
-                      <th class="px-6 py-6 text-center bg-gradient-to-r from-emerald-500/10 border-r border-white/20">
-                        <div class="text-center">
-                          <div class="text-4xl font-black text-emerald-400 mb-2 animate-pulse">GRATIS</div>
-                          <div class="text-sm uppercase tracking-wider text-emerald-300">Starter</div>
+
+          <div class="mt-16 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] shadow-[0_20px_80px_rgba(0,0,0,0.25)] backdrop-blur">
+            <div class="border-b border-white/10 px-6 py-5 md:px-8">
+              <h3 class="text-xl font-bold text-white md:text-2xl">Perbandingan fitur utama</h3>
+              <p class="mt-2 text-sm leading-6 text-slate-400 md:text-base">
+                Bandingkan batas siswa, fitur utama, dan dukungan untuk tiap paket secara cepat.
+              </p>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="min-w-full text-sm text-slate-200">
+                <thead class="bg-white/[0.03]">
+                  <tr class="border-b border-white/10">
+                    <th class="min-w-[220px] px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 md:px-8">
+                      Fitur
+                    </th>
+                    ${normalizedPlans.map(plan => `
+                      <th class="min-w-[180px] px-5 py-4 text-center md:px-6">
+                        <div class="inline-flex flex-col items-center gap-2">
+                          <span class="rounded-full ${plan.popular ? 'bg-emerald-400/15 text-emerald-300 border-emerald-400/20' : 'bg-white/5 text-slate-300 border-white/10'} border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
+                            ${plan.popular ? 'Rekomendasi' : 'Paket'}
+                          </span>
+                          <div class="text-base font-bold text-white md:text-lg">${plan.name}</div>
+                          <div class="text-sm text-slate-400">${plan.priceDisplay}${plan.price > 0 ? `<span class="text-slate-500"> ${plan.period}</span>` : ''}</div>
                         </div>
                       </th>
-                      <th class="px-6 py-6 text-center bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-r border-white/20 relative">
-                        <div class="absolute inset-0 bg-gradient-to-br from-amber-400 via-orange-400 to-amber-500 -skew-x-3 -rotate-1 transform"></div>
-                        <div class="relative z-10">
-                          <div class="text-3xl font-black text-yellow-900 mb-2 animate-bounce">Rp 150k</div>
-                          <div class="text-xs uppercase tracking-widest text-yellow-800 font-bold bg-yellow-400 px-3 py-1 rounded-full inline-block">⭐ POPULAR</div>
-                          <div class="text-xs uppercase tracking-wider text-yellow-700 mt-1">Pro</div>
-                        </div>
-                      </th>
-                      <th class="px-6 py-6 text-center">
-                        <div class="text-center">
-                          <div class="text-3xl font-black text-indigo-400 mb-2">Rp 500k</div>
-                          <div class="text-sm uppercase tracking-wider text-indigo-300">Enterprise</div>
-                        </div>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody class="divide-y divide-white/5">
-                    <tr class="hover:bg-white/5">
-                      <td class="px-6 py-6 font-semibold text-white">Jumlah Siswa</td>
-                      <td class="px-6 py-6 text-center text-emerald-400 font-bold">50</td>
-                      <td class="px-6 py-6 text-center text-yellow-400 font-bold">200</td>
-                      <td class="px-6 py-6 text-center text-indigo-400 font-bold">Unlimited</td>
-                    </tr>
-                    <tr class="hover:bg-white/5">
-                      <td class="px-6 py-6 font-semibold text-white">Game Wheel</td>
-                      <td class="px-6 py-6 text-center">
-                        <i class="fas fa-check-circle text-emerald-400 text-lg"></i>
-                      </td>
-                      <td class="px-6 py-6 text-center">
-                        <i class="fas fa-check-circle text-emerald-400 text-lg"></i>
-                      </td>
-                      <td class="px-6 py-6 text-center">
-                        <i class="fas fa-check-circle text-emerald-400 text-lg"></i>
-                      </td>
-                    </tr>
-                    <tr class="hover:bg-white/5">
-                      <td class="px-6 py-6 font-semibold text-white">Voucher Unlimited</td>
-                      <td class="px-6 py-6 text-center">
-                        <i class="fas fa-times-circle text-red-400 text-lg"></i>
-                      </td>
-                      <td class="px-6 py-6 text-center">
-                        <i class="fas fa-check-circle text-emerald-400 text-lg"></i>
-                      </td>
-                      <td class="px-6 py-6 text-center">
-                        <i class="fas fa-check-circle text-emerald-400 text-lg"></i>
-                      </td>
-                    </tr>
-                    <tr class="hover:bg-white/5">
-                      <td class="px-6 py-6 font-semibold text-white">Support Prioritas</td>
-                      <td class="px-6 py-6 text-center">
-                        <i class="fas fa-envelope text-gray-400 text-lg"></i>
-                      </td>
-                      <td class="px-6 py-6 text-center">
-                        <i class="fas fa-headset text-emerald-400 text-lg"></i>
-                      </td>
-                      <td class="px-6 py-6 text-center">
-                        <i class="fas fa-headset text-emerald-400 text-lg animate-spin"></i>
-                      </td>
-                    </tr>
-                    <tr class="hover:bg-white/5">
-                      <td class="px-6 py-6 font-semibold text-white">Custom Branding</td>
-                      <td class="px-6 py-6 text-center">
-                        <i class="fas fa-times-circle text-red-400 text-lg"></i>
-                      </td>
-                      <td class="px-6 py-6 text-center">
-                        <i class="fas fa-times-circle text-red-400 text-lg"></i>
-                      </td>
-                      <td class="px-6 py-6 text-center">
-                        <i class="fas fa-check-circle text-emerald-400 text-lg"></i>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+                    `).join('')}
+                  </tr>
+                </thead>
+                <tbody>
+                  ${comparisonHTML}
+                </tbody>
+              </table>
             </div>
           </div>
-          
-          <div class="text-center mt-28 lg:mt-36">
-            <div class="max-w-4xl mx-auto bg-gradient-to-r from-emerald-500/5 via-green-500/5 to-teal-500/5 backdrop-blur-xl p-12 lg:p-16 rounded-3xl border border-emerald-400/20 shadow-2xl ring-2 ring-emerald-500/20">
-              <i class="fas fa-shield-alt text-6xl md:text-7xl text-emerald-400 mb-8 mx-auto block drop-shadow-2xl animate-pulse"></i>
-              <h3 class="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-6 text-center leading-tight">
-                <span class="text-emerald-400">100%</span> Aman & Terjamin
-              </h3>
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="text-center p-6">
-                  <i class="fas fa-bolt text-4xl text-emerald-400 mb-4 block"></i>
-                  <h4 class="text-xl md:text-2xl font-bold text-white mb-2">Aktivasi Instan</h4>
-                  <p class="text-emerald-200 text-lg">Mulai pakai dalam 60 detik</p>
-                </div>
-                <div class="text-center p-6">
-                  <i class="fas fa-headset text-4xl text-emerald-400 mb-4 block"></i>
-                  <h4 class="text-xl md:text-2xl font-bold text-white mb-2">Support 24/7</h4>
-                  <p class="text-emerald-200 text-lg">Tim ready bantu kapan saja</p>
-                </div>
-                <div class="text-center p-6">
-                  <i class="fas fa-undo-alt text-4xl text-emerald-400 mb-4 block"></i>
-                  <h4 class="text-xl md:text-2xl font-bold text-white mb-2">Garansi Uang Kembali</h4>
-                  <p class="text-emerald-200 text-lg">7 hari - no questions asked</p>
-                </div>
+
+          <div class="mt-12 grid gap-4 rounded-3xl border border-emerald-400/15 bg-gradient-to-r from-emerald-500/8 via-cyan-500/5 to-indigo-500/8 p-6 md:grid-cols-3 md:p-8">
+            <div class="rounded-2xl border border-white/8 bg-white/[0.03] p-5">
+              <div class="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-400/10 text-emerald-300">
+                <i class="fas fa-bolt"></i>
               </div>
+              <h4 class="text-base font-semibold text-white">Aktivasi cepat</h4>
+              <p class="mt-2 text-sm leading-6 text-slate-400">Paket dapat langsung dipilih tanpa alur yang membingungkan.</p>
+            </div>
+            <div class="rounded-2xl border border-white/8 bg-white/[0.03] p-5">
+              <div class="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-400/10 text-cyan-300">
+                <i class="fas fa-headset"></i>
+              </div>
+              <h4 class="text-base font-semibold text-white">Support jelas</h4>
+              <p class="mt-2 text-sm leading-6 text-slate-400">Informasi bantuan dan benefit ditampilkan lebih rapi dan konsisten.</p>
+            </div>
+            <div class="rounded-2xl border border-white/8 bg-white/[0.03] p-5">
+              <div class="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-400/10 text-indigo-300">
+                <i class="fas fa-shield-alt"></i>
+              </div>
+              <h4 class="text-base font-semibold text-white">Data lebih aman</h4>
+              <p class="mt-2 text-sm leading-6 text-slate-400">Parsing plan kini lebih tahan terhadap data backend yang tidak seragam.</p>
             </div>
           </div>
         </div>
@@ -198,23 +138,29 @@ export const PricingSection = {
 
   renderLoading() {
     return `
-      <section id="pricing" class="min-h-screen flex items-center justify-center py-24 bg-gradient-to-b from-slate-950 to-black">
-        <div class="text-center space-y-8 max-w-md mx-auto">
-          <div class="relative">
-            <div class="w-28 h-28 border-4 border-indigo-500/20 rounded-full mx-auto shadow-2xl animate-spin-slow"></div>
-            <div class="absolute inset-0 w-28 h-28 border-4 border-emerald-500/30 rounded-full mx-auto animate-spin" style="animation-direction: reverse; animation-duration: 2s"></div>
-            <div class="absolute inset-0 w-20 h-20 border-4 border-purple-500 rounded-full mx-auto animate-ping"></div>
+      <section id="pricing" class="bg-slate-950 py-20 md:py-24">
+        <div class="container mx-auto max-w-6xl px-6 lg:px-8">
+          <div class="mx-auto mb-12 max-w-2xl text-center">
+            <div class="mx-auto h-12 w-44 animate-pulse rounded-full bg-white/5"></div>
+            <div class="mx-auto mt-6 h-10 w-3/4 animate-pulse rounded-2xl bg-white/5"></div>
+            <div class="mx-auto mt-4 h-6 w-2/3 animate-pulse rounded-xl bg-white/5"></div>
           </div>
-          <div class="space-y-4">
-            <h3 class="text-3xl md:text-4xl font-black bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
-              Loading Premium Plans
-            </h3>
-            <p class="text-xl text-gray-400">Syncing real-time SaaS data...</p>
-            <div class="flex justify-center gap-3">
-              <div class="w-4 h-4 bg-indigo-400 rounded-full animate-bounce"></div>
-              <div class="w-4 h-4 bg-purple-400 rounded-full animate-bounce" style="animation-delay:0.1s"></div>
-              <div class="w-4 h-4 bg-emerald-400 rounded-full animate-bounce" style="animation-delay:0.2s"></div>
-            </div>
+
+          <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+            ${[1, 2, 3].map(() => `
+              <div class="rounded-3xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur">
+                <div class="h-6 w-24 animate-pulse rounded-lg bg-white/5"></div>
+                <div class="mt-5 h-10 w-32 animate-pulse rounded-xl bg-white/5"></div>
+                <div class="mt-3 h-5 w-24 animate-pulse rounded-lg bg-white/5"></div>
+                <div class="mt-6 space-y-3">
+                  <div class="h-14 animate-pulse rounded-2xl bg-white/5"></div>
+                  <div class="h-14 animate-pulse rounded-2xl bg-white/5"></div>
+                  <div class="h-14 animate-pulse rounded-2xl bg-white/5"></div>
+                  <div class="h-14 animate-pulse rounded-2xl bg-white/5"></div>
+                </div>
+                <div class="mt-6 h-12 animate-pulse rounded-2xl bg-white/5"></div>
+              </div>
+            `).join('')}
           </div>
         </div>
       </section>
@@ -223,27 +169,32 @@ export const PricingSection = {
 
   renderError() {
     return `
-      <section id="pricing" class="min-h-screen flex items-center justify-center py-20 bg-gradient-to-br from-orange-500/10 via-amber-500/5 to-red-500/10">
-        <div class="max-w-2xl mx-auto px-6 text-center">
-          <div class="bg-gradient-to-r from-amber-400/20 to-red-400/20 border-4 border-amber-400/40 p-12 rounded-3xl shadow-2xl animate-pulse">
-            <i class="fas fa-tools text-7xl text-amber-400 mb-8 mx-auto block drop-shadow-2xl"></i>
-            <h2 class="text-4xl md:text-5xl font-black bg-gradient-to-r from-amber-600 via-orange-500 to-red-500 bg-clip-text text-transparent mb-6">
-              Sistem Maintenance
-            </h2>
-            <p class="text-2xl md:text-3xl text-gray-200 mb-12 leading-relaxed">
-              Update pricing real-time sedang berlangsung. <br><strong class="text-white">Hubungi support langsung!</strong>
+      <section id="pricing" class="bg-slate-950 py-20 md:py-24">
+        <div class="container mx-auto max-w-3xl px-6 lg:px-8">
+          <div class="rounded-3xl border border-amber-400/20 bg-amber-500/10 p-8 text-center shadow-[0_20px_60px_rgba(0,0,0,0.25)] backdrop-blur md:p-10">
+            <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-400/15 text-amber-300">
+              <i class="fas fa-exclamation-triangle text-2xl"></i>
+            </div>
+            <h2 class="mt-5 text-2xl font-black text-white md:text-3xl">Pricing belum tersedia</h2>
+            <p class="mx-auto mt-3 max-w-2xl text-sm leading-7 text-slate-300 md:text-base">
+              Data paket belum berhasil dimuat. Silakan hubungi tim support untuk mendapatkan informasi harga terbaru.
             </p>
-            <div class="flex flex-col lg:flex-row gap-6 justify-center items-center">
-              <a href="mailto:support@gameumkm.com" class="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-5 px-12 rounded-2xl shadow-2xl hover:shadow-3xl text-xl transition-all duration-300 transform hover:-translate-y-1">
-                📧 Email Support
+            <div class="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+              <a
+                href="mailto:support@gameumkm.com"
+                class="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
+              >
+                <i class="fas fa-envelope mr-2"></i>
+                Email Support
               </a>
-              <a href="https://wa.me/6281234567890?text=Halo%2C%20saya%20mau%20tanya%20paket%20pricing" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold py-5 px-12 rounded-2xl shadow-2xl hover:shadow-3xl text-xl transition-all duration-300 transform hover:-translate-y-1">
-                💬 WhatsApp Sekarang
+              <a
+                href="https://wa.me/6281234567890?text=Halo%2C%20saya%20ingin%20bertanya%20tentang%20paket%20pricing"
+                class="inline-flex items-center justify-center rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-5 py-3 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-400/15"
+              >
+                <i class="fab fa-whatsapp mr-2"></i>
+                WhatsApp
               </a>
             </div>
-            <p class="text-lg text-amber-200 mt-12 font-semibold">
-              Estimasi selesai: <span class="text-white text-2xl">20 menit</span>
-            </p>
           </div>
         </div>
       </section>
@@ -251,137 +202,186 @@ export const PricingSection = {
   },
 
   cleanPlanData(plan) {
-    // Use robust mapping from utils (handles BE malformed data)
-    console.log('🧹 Cleaning plan data:', plan);
-    const cleanPlan = mapPlanToDisplay(plan);
-    console.log('✅ Cleaned plan:', cleanPlan);
-    return cleanPlan;
+    return mapPlanToDisplay(plan);
   },
 
+  sortPlans(plans = []) {
+    const order = { starter: 1, pro: 2, enterprise: 3 };
+    return [...plans].sort((a, b) => (order[a.id] || 99) - (order[b.id] || 99));
+  },
 
+  getPlanTone(plan) {
+    if (plan.popular) {
+      return {
+        badge: 'border-emerald-400/20 bg-emerald-400/10 text-emerald-300',
+        price: 'from-emerald-300 to-cyan-300',
+        button: 'bg-emerald-400 text-slate-950 hover:bg-emerald-300',
+        ring: 'ring-1 ring-emerald-400/20',
+        card: 'border-emerald-400/20 bg-gradient-to-b from-emerald-500/10 to-white/[0.04]'
+      };
+    }
+
+    if (plan.price <= 0) {
+      return {
+        badge: 'border-cyan-400/20 bg-cyan-400/10 text-cyan-300',
+        price: 'from-cyan-300 to-sky-300',
+        button: 'bg-white/8 text-white hover:bg-white/12',
+        ring: 'ring-1 ring-white/10',
+        card: 'border-white/10 bg-white/[0.04]'
+      };
+    }
+
+    return {
+      badge: 'border-indigo-400/20 bg-indigo-400/10 text-indigo-300',
+      price: 'from-indigo-300 to-violet-300',
+      button: 'bg-white/8 text-white hover:bg-white/12',
+      ring: 'ring-1 ring-white/10',
+      card: 'border-white/10 bg-white/[0.04]'
+    };
+  },
 
   generatePlanCard(plan) {
-    const cleanPlan = this.cleanPlanData(plan);
-    const isPopular = cleanPlan.popular || cleanPlan.id === 'pro';
-    const isFree = cleanPlan.priceDisplay.toLowerCase().includes('gratis');
-    
-    // Modern glassmorphism card system
-    const glassEffect = 'backdrop-blur-xl bg-white/5 border-white/10 hover:border-indigo-400/50 shadow-2xl';
-    const cardHeight = 'h-[600px] md:h-[640px] lg:h-[680px]';
-    const liftEffect = 'group-hover:-translate-y-3 group-hover:shadow-[0_35px_70px_rgba(0,0,0,0.5)]';
-
-    const popularBadge = isPopular ? `
-      <div class="absolute top-6 left-6 z-30">
-        <div class="group/badge bg-gradient-to-br from-amber-400 via-orange-400 to-amber-500 shadow-2xl ring-2 ring-amber-400/50 px-6 py-3 rounded-full text-xs font-black uppercase tracking-wider text-gray-900 transform rotate-[-3deg] hover:rotate-0 transition-all duration-300 hover:scale-105">
-          <i class="fas fa-crown mr-1 text-amber-600"></i>
-          MOST POPULAR
-        </div>
-      </div>
-    ` : '';
-
-    const priceHero = isFree ? `
-      <div class="flex flex-col items-center space-y-4 mb-10 p-6 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-3xl border border-emerald-400/30 shadow-xl">
-        <div class="w-28 h-28 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-3xl flex items-center justify-center shadow-2xl ring-8 ring-emerald-200/40">
-          <i class="fas fa-infinity text-3xl font-bold text-white drop-shadow-lg"></i>
-        </div>
-        <div>
-          <div class="text-6xl md:text-7xl lg:text-8xl font-black bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500 bg-clip-text text-transparent mb-2 drop-shadow-2xl">
-            GRATIS
-          </div>
-          <p class="text-2xl font-bold text-emerald-300 uppercase tracking-wider drop-shadow-lg">SELAYANYA</p>
-        </div>
-      </div>
-    ` : `
-      <div class="text-center space-y-4 mb-12">
-        <div class="text-6xl md:text-7xl lg:text-8xl font-black bg-gradient-to-r from-emerald-400 via-teal-400 to-indigo-400 bg-clip-text text-transparent drop-shadow-2xl tracking-tight">
-          ${cleanPlan.priceDisplay}
-        </div>
-        <p class="text-2xl font-bold text-white/80 uppercase tracking-widest drop-shadow-lg">${cleanPlan.period}</p>
-      </div>
-    `;
+    const tone = this.getPlanTone(plan);
+    const periodText = plan.price > 0 ? plan.period : 'Sekali aktif';
+    const badgeText = plan.popular ? 'Paling dipilih' : plan.price <= 0 ? 'Mulai gratis' : 'Siap scaling';
 
     return `
-      <article class="pricing-card group relative ${glassEffect} ${cardHeight} ${liftEffect} border hover:border-indigo-400/70 flex flex-col overflow-hidden transition-all duration-700 ease-out cursor-pointer hover:shadow-indigo-500/50">
-        ${popularBadge}
-        
-        <!-- Header: Name + Price Hero -->
-        <div class="flex-1 flex flex-col justify-center items-center p-8 lg:p-12 text-center space-y-8 pt-20 lg:pt-24">
-          <h3 class="text-3xl md:text-4xl lg:text-5xl font-black bg-gradient-to-r from-white via-indigo-50 to-purple-50 bg-clip-text text-transparent drop-shadow-2xl tracking-tight uppercase">
-            ${cleanPlan.name.replace(/\w\S*/g, txt => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase())}
-          </h3>
-          ${priceHero}
+      <article class="group relative flex h-full flex-col rounded-[28px] border ${tone.card} p-6 shadow-[0_18px_60px_rgba(0,0,0,0.22)] backdrop-blur transition duration-300 hover:-translate-y-1">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <span class="inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${tone.badge}">
+              ${badgeText}
+            </span>
+            <h3 class="mt-4 text-2xl font-black text-white">${plan.name}</h3>
+            <p class="mt-2 text-sm leading-6 text-slate-400">${plan.description}</p>
+          </div>
+          ${plan.popular ? `
+            <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-400/15 text-emerald-300">
+              <i class="fas fa-crown"></i>
+            </div>
+          ` : ''}
         </div>
-        
-        <!-- Features Section -->
-        <div class="px-6 md:px-8 lg:px-12 py-8 border-t border-white/10 flex-1">
-          <ul class="space-y-4 text-lg">
-            ${generateFeaturesHTML(cleanPlan.features)}
+
+        <div class="mt-8 rounded-3xl border border-white/8 bg-slate-950/40 p-5 ${tone.ring}">
+          <div class="bg-gradient-to-r ${tone.price} bg-clip-text text-4xl font-black text-transparent md:text-5xl">
+            ${plan.priceDisplay}
+          </div>
+          <div class="mt-2 text-sm font-medium uppercase tracking-[0.16em] text-slate-400">
+            ${periodText}
+          </div>
+          <div class="mt-4 inline-flex items-center gap-2 rounded-full bg-white/[0.04] px-3 py-2 text-xs font-medium text-slate-300">
+            <i class="fas fa-users text-emerald-300"></i>
+            ${plan.maxStudentsDisplay}
+          </div>
+        </div>
+
+        <div class="mt-6">
+          <div class="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            Fitur utama
+          </div>
+          <ul class="space-y-3">
+            ${generateFeaturesHTML(plan.features)}
           </ul>
         </div>
-        
-        <!-- CTA + Student Count -->
-        <div class="p-8 lg:p-12 mt-auto">
-          <button data-plan="${cleanPlan.id}" class="${isPopular ? 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-emerald-500/50 hover:shadow-emerald-500/60 ring-emerald-400/50' : 'bg-gradient-to-r from-indigo-500/20 to-purple-500/20 hover:from-indigo-500/30 hover:to-purple-500/30 text-white shadow-indigo-500/30 hover:shadow-indigo-500/40 ring-indigo-400/30'} w-full font-black text-xl py-5 px-8 rounded-2xl uppercase tracking-wider shadow-2xl hover:shadow-3xl hover:scale-[1.02] transition-all duration-500 ring-2 hover:ring-4 focus:outline-none focus:ring-4 focus:ring-offset-2 focus:ring-offset-slate-900 select-plan-btn">
-            <span>${cleanPlan.cta || 'Pilih Plan'}</span>
-            <i class="fas fa-rocket ml-3 group-hover:translate-x-2 transition-all duration-300"></i>
+
+        <div class="mt-8 pt-2">
+          <button
+            data-plan="${plan.id}"
+            class="select-plan-btn inline-flex w-full items-center justify-center rounded-2xl px-5 py-4 text-sm font-bold transition ${tone.button}"
+          >
+            <span>${plan.cta || 'Pilih Paket'}</span>
+            <i class="fas fa-arrow-right ml-2 text-xs transition group-hover:translate-x-1"></i>
           </button>
-          <p class="text-center mt-6 text-emerald-400 text-lg font-bold uppercase tracking-wider">
-            ${cleanPlan.maxStudents >= 500 ? '✅ UNLIMITED STUDENTS' : `${cleanPlan.maxStudents}+ Siswa`}
-          </p>
         </div>
       </article>
     `;
   },
 
-  renderLoading() {
+  getComparisonRows(plans) {
+    return [
+      {
+        label: 'Harga',
+        getValue: plan => ({
+          type: 'text',
+          value: `${plan.priceDisplay}${plan.price > 0 ? ` ${plan.period}` : ''}`
+        })
+      },
+      {
+        label: 'Kapasitas siswa',
+        getValue: plan => ({
+          type: 'text',
+          value: plan.maxStudentsDisplay
+        })
+      },
+      {
+        label: 'Status paket',
+        getValue: plan => ({
+          type: 'badge',
+          value: plan.popular ? 'Rekomendasi' : plan.price <= 0 ? 'Gratis' : 'Premium'
+        })
+      },
+      ...this.buildFeatureRows(plans)
+    ];
+  },
+
+  buildFeatureRows(plans) {
+    const featureMap = new Map();
+
+    plans.forEach(plan => {
+      plan.features.forEach(feature => {
+        const key = feature.text.toLowerCase();
+        if (!featureMap.has(key)) {
+          featureMap.set(key, { label: feature.text });
+        }
+      });
+    });
+
+    return Array.from(featureMap.values()).map(item => ({
+      label: item.label,
+      getValue: plan => {
+        const matched = plan.features.find(feature => feature.text.toLowerCase() === item.label.toLowerCase());
+        return {
+          type: 'boolean',
+          value: matched ? matched.included : false
+        };
+      }
+    }));
+  },
+
+  renderComparisonRow(row, plans) {
     return `
-      <section id="pricing" class="min-h-screen flex items-center justify-center py-24">
-        <div class="text-center max-w-lg mx-auto p-12">
-          <div class="relative w-32 h-32 mx-auto mb-12">
-            <div class="absolute inset-0 w-32 h-32 border-4 border-indigo-400/20 rounded-full animate-spin-slow"></div>
-            <div class="absolute inset-2 w-28 h-28 border-4 border-emerald-400/40 rounded-full animate-spin" style="animation-direction: reverse"></div>
-            <div class="absolute inset-6 w-20 h-20 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full shadow-2xl animate-ping"></div>
-          </div>
-          <h3 class="text-4xl font-black text-white mb-4 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text">
-            Loading Premium Pricing
-          </h3>
-          <p class="text-xl text-gray-400 mb-12">Fetching real-time SaaS subscription data...</p>
-          <div class="flex justify-center gap-4">
-            <div class="w-6 h-6 bg-indigo-400 rounded-full animate-bounce [animation-duration:1s]"></div>
-            <div class="w-6 h-6 bg-emerald-400 rounded-full animate-bounce" style="animation-delay:0.2s"></div>
-            <div class="w-6 h-6 bg-purple-400 rounded-full animate-bounce" style="animation-delay:0.4s"></div>
-          </div>
-        </div>
-      </section>
+      <tr class="border-b border-white/6 last:border-b-0">
+        <td class="px-6 py-4 text-sm font-medium text-white md:px-8">${row.label}</td>
+        ${plans.map(plan => this.renderComparisonCell(row.getValue(plan))).join('')}
+      </tr>
     `;
   },
 
-  renderError() {
+  renderComparisonCell(cell) {
+    if (cell.type === 'boolean') {
+      return `
+        <td class="px-5 py-4 text-center md:px-6">
+          <span class="inline-flex h-8 w-8 items-center justify-center rounded-full ${cell.value ? 'bg-emerald-400/15 text-emerald-300' : 'bg-white/5 text-slate-500'}">
+            <i class="fas fa-${cell.value ? 'check' : 'minus'} text-xs"></i>
+          </span>
+        </td>
+      `;
+    }
+
+    if (cell.type === 'badge') {
+      return `
+        <td class="px-5 py-4 text-center md:px-6">
+          <span class="inline-flex rounded-full border ${cell.value === 'Rekomendasi' ? 'border-emerald-400/20 bg-emerald-400/10 text-emerald-300' : 'border-white/10 bg-white/5 text-slate-300'} px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em]">
+            ${cell.value}
+          </span>
+        </td>
+      `;
+    }
+
     return `
-      <section id="pricing" class="min-h-screen flex items-center justify-center py-24 bg-gradient-to-br from-amber-500/5 via-orange-400/5 to-red-500/5">
-        <div class="max-w-4xl mx-auto px-8 text-center">
-          <div class="bg-white/5 backdrop-blur-xl border-4 border-amber-400/30 p-16 lg:p-24 rounded-3xl shadow-2xl max-w-3xl">
-            <i class="fas fa-hammer text-8xl text-amber-400 mb-12 drop-shadow-2xl animate-pulse"></i>
-            <h2 class="text-5xl lg:text-6xl font-black bg-gradient-to-r from-amber-500 via-orange-500 to-red-500 bg-clip-text text-transparent mb-8">
-              Pricing Update in Progress
-            </h2>
-            <p class="text-2xl lg:text-3xl text-gray-200 mb-16 leading-relaxed max-w-2xl mx-auto">
-              Sistem pricing sedang diupgrade dengan data terbaru. <strong>Kontak support untuk penawaran spesial!</strong>
-            </p>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-2xl mx-auto">
-              <a href="mailto:support@gameumkm.com" class="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-black py-6 px-12 rounded-3xl text-xl shadow-2xl hover:shadow-3xl hover:scale-[1.02] transition-all duration-300 block text-center">
-                📧 Email Tim
-              </a>
-              <a href="https://wa.me/6281234567890?text=Saya%20tertarik%20dengan%20paket%20pricing%2C%20bisa%20jelaskan%3F" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black py-6 px-12 rounded-3xl text-xl shadow-2xl hover:shadow-3xl hover:scale-[1.02] transition-all duration-300 block text-center">
-                💬 WhatsApp
-              </a>
-            </div>
-            <p class="text-xl text-amber-300 mt-16 font-semibold">
-              <i class="fas fa-clock mr-2"></i>Estimasi selesai: 15 menit
-            </p>
-          </div>
-        </div>
-      </section>
+      <td class="px-5 py-4 text-center text-sm text-slate-300 md:px-6">
+        ${cell.value}
+      </td>
     `;
   },
 
@@ -397,4 +397,3 @@ export const PricingSection = {
 };
 
 export default PricingSection;
-
