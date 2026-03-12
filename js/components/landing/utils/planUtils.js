@@ -5,8 +5,6 @@
 
 import { authApi } from '../../../auth/AuthApi.js';
 
-
-
 /**
  * Load pricing data from BE (with retry + cache)
  */
@@ -37,64 +35,9 @@ export async function loadPricingData(retries = 3) {
     }
   }
 
-  // All retries failed → use fallback data
-  console.warn('Pricing API failed → using fallback data');
-  return getFallbackPlans();
-  
-/**
- * Fallback pricing plans (hardcoded for resilience)
- */
-function getFallbackPlans() {
-  return [
-    {
-      id: 'starter',
-      name: 'Starter',
-      priceDisplay: 'GRATIS',
-      cta: 'Mulai Gratis',
-      period: 'SELAYANYA',
-      maxStudents: 50,
-      popular: false,
-      features: [
-        { text: '50 Siswa Maksimal', included: true },
-        { text: 'Game Wheel Dasar', included: true },
-        { text: 'Voucher Terbatas', included: true },
-        { text: 'Support Email', included: true }
-      ]
-    },
-    {
-      id: 'pro',
-      name: 'Pro',
-      priceDisplay: 'Rp 150.000',
-      cta: 'Pilih Pro',
-      period: '/bulan',
-      maxStudents: 200,
-      popular: true,
-      features: [
-        { text: '200 Siswa Maksimal', included: true },
-        { text: 'Game Wheel Full', included: true },
-        { text: 'Voucher Unlimited', included: true },
-        { text: 'Support Prioritas', included: true },
-        { text: 'Analitik Lengkap', included: true }
-      ]
-    },
-    {
-      id: 'enterprise',
-      name: 'Enterprise',
-      priceDisplay: 'Rp 500.000',
-      cta: 'Hubungi Kami',
-      period: '/bulan',
-      maxStudents: 9999,
-      popular: false,
-      features: [
-        { text: 'Unlimited Students', included: true },
-        { text: 'All Pro Features', included: true },
-        { text: 'White Label', included: true },
-        { text: '24/7 Support', included: true },
-        { text: 'Custom API', included: true }
-      ]
-    }
-  ];
-}
+  // All retries failed → empty (pure API)
+  console.warn('Pricing API failed after retries - using empty');
+  return [];
 }
 
 /**
@@ -146,7 +89,6 @@ export function mapPlanToDisplay(plan) {
     };
   } catch (e) {
     console.error('❌ Plan parsing failed:', e, plan);
-    return getFallbackPlans()[0]; // Return starter fallback
   }
 }
 

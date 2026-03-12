@@ -9,8 +9,6 @@ import {
   mapPlanToDisplay
 } from './utils/planUtils.js';
 
-import { getFallbackPlans } from './utils/planUtils.js';
-
 export const PricingSection = {
   state: {
     loading: true,
@@ -37,7 +35,7 @@ export const PricingSection = {
     if (this.state.loading && !this.state.data.length) await this.preload();
 
     const { data, loading, error } = this.state;
-    const plans = data.length ? data.map(this.cleanPlanData) : getFallbackPlans().map(mapPlanToDisplay);
+    const plans = data.length ? data.map(this.cleanPlanData) : [];
 
     if (loading) return this.renderLoading();
     // Always render if we have plans (fallback available)
@@ -260,7 +258,7 @@ export const PricingSection = {
     return cleanPlan;
   },
 
-  // Remove defaultFeatures - now handled by fallback data
+
 
   generatePlanCard(plan) {
     const cleanPlan = this.cleanPlanData(plan);
@@ -333,36 +331,6 @@ export const PricingSection = {
         </div>
       </article>
     `;
-  },
-
-  defaultFeatures(planId) {
-    const defaults = {
-      starter: [
-        { text: '50 Siswa Maksimal', included: true },
-        { text: 'Game Wheel Dasar', included: true },
-        { text: 'Voucher Terbatas', included: true },
-        { text: 'Support Email', included: true },
-        { text: 'Analitik Dasar', included: false },
-        { text: 'Custom Branding', included: false }
-      ],
-      pro: [
-        { text: '200 Siswa Maksimal', included: true },
-        { text: 'Game Wheel Full', included: true },
-        { text: 'Voucher Unlimited', included: true },
-        { text: 'Support Prioritas', included: true },
-        { text: 'Analitik Lengkap', included: true },
-        { text: 'Custom Branding', included: false }
-      ],
-      enterprise: [
-        { text: 'Unlimited Students', included: true },
-        { text: 'All Pro Features', included: true },
-        { text: 'White Label', included: true },
-        { text: '24/7 Priority Support', included: true },
-        { text: 'Custom API', included: true },
-        { text: 'On-premise Option', included: true }
-      ]
-    };
-    return defaults[planId] || [];
   },
 
   renderLoading() {
