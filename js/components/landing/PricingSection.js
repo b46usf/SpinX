@@ -388,9 +388,21 @@ export const PricingSection = {
   initEvents(callbacks = {}) {
     document.addEventListener('click', (e) => {
       if (e.target.matches('.select-plan-btn, .select-plan-btn *')) {
-        const planId = e.target.closest('.select-plan-btn').dataset.plan;
-        callbacks.onSelectPlan?.(planId);
+        const btn = e.target.closest('.select-plan-btn');
+        const planId = btn.dataset.plan;
         console.log('Plan selected:', planId);
+        
+        // Direct modal integration - set plan + open
+        const badge = document.getElementById('selected-plan-badge');
+        const planInput = document.getElementById('selected-plan');
+        const modal = document.getElementById('register-modal');
+        
+        if (badge) {
+          const planName = PricingSection.state.data.find(p => p.id === planId)?.name || planId.toUpperCase();
+          badge.textContent = planName || 'Starter';
+        }
+        if (planInput) planInput.value = planId;
+        if (modal) modal.classList.remove('hidden');
       }
     });
   }

@@ -63,15 +63,10 @@ class LandingPage {
       onLogin: () => this.handleLogin()
     });
 
-    // Pricing section events (delegated for dynamic content)
-    PricingSection.initEvents({
-      onSelectPlan: (plan) => this.selectPlan(plan)
-    });
+    // Pricing section events - no callback needed (direct modal control)
 
     // CTA section events
-    CTASection.initEvents({
-      onSelectPlan: (plan) => this.selectPlan(plan)
-    });
+    CTASection.initEvents({});
 
     // Register modal events
     RegisterModal.initEvents({
@@ -96,26 +91,7 @@ class LandingPage {
     }
   }
 
-  /**
-   * Select a plan and open register modal
-   */
-  selectPlan(plan) {
-    const planNames = {
-      'starter': 'Starter - Gratis',
-      'pro': 'Pro - Rp 150rb/bulan',
-      'enterprise': 'Enterprise - Rp 500rb/bulan'
-    };
-    
-    this.selectedPlan = plan;
-    
-    const badge = document.getElementById('selected-plan-badge');
-    const planInput = document.getElementById('selected-plan');
-    const modal = document.getElementById('register-modal');
-    
-    if (badge) badge.textContent = planNames[plan] || 'Starter - Gratis';
-    if (planInput) planInput.value = plan;
-    if (modal) modal.classList.remove('hidden');
-  }
+
 
   /**
    * Close register modal
