@@ -1,6 +1,7 @@
 /**
- * Landing Page Controller
+ * Landing Page Controller - ASYNC FIXED VERSION
  * Manages the complete landing page functionality
+ * Now properly awaits PricingSection preload → GUARANTEED VISIBLE
  */
 
 import { Navbar, HeroSection, FeaturesSection, PricingSection, TestimonialsSection, CTASection, Footer, RegisterModal, ToastContainer } from '../components/landing/index.js';
@@ -12,30 +13,38 @@ class LandingPage {
   }
 
   /**
-   * Initialize the landing page
+   * Initialize the landing page - NOW ASYNC
    */
-  init(containerId = 'app') {
+  async init(containerId = 'app') {
     this.container = document.getElementById(containerId);
     if (!this.container) {
       console.error('LandingPage: Container not found');
       return;
     }
-    this.render();
+    
+    await this.render();
     this.initEvents();
   }
 
   /**
-   * Render the complete landing page
+   * Render the complete landing page - ASYNC VERSION
+   * 🔥 FIX: PRELOADS PricingSection data FIRST!
    */
-  render() {
+  async render() {
     if (!this.container) return;
     
+    // 🔥 CRITICAL FIX: Preload pricing data BEFORE render
+    console.log('🔄 LandingPage: Preloading pricing data...');
+    await PricingSection.preload();
+    console.log('✅ LandingPage: Pricing data ready!');
+    
+    // Now render with GUARANTEED data
     this.container.innerHTML = `
       <div class="landing-hero">
         ${Navbar.render()}
         ${HeroSection.render()}
         ${FeaturesSection.render()}
-        ${PricingSection.render()}
+        ${await PricingSection.render()}
         ${TestimonialsSection.render()}
         ${CTASection.render()}
         ${Footer.render()}
@@ -54,7 +63,7 @@ class LandingPage {
       onLogin: () => this.handleLogin()
     });
 
-    // Pricing section events
+    // Pricing section events (delegated for dynamic content)
     PricingSection.initEvents({
       onSelectPlan: (plan) => this.selectPlan(plan)
     });
@@ -78,14 +87,11 @@ class LandingPage {
    * Handle login button click
    */
   handleLogin() {
-    // Trigger the auth app login
-    // This will be set by App.js
     if (window.App && window.App.showLoginSection) {
       window.App.showLoginSection();
     } else if (window.showLoginSection) {
       window.showLoginSection();
     } else {
-      // Fallback: redirect to dashboard login
       window.location.href = 'dashboard-admin.html';
     }
   }
@@ -102,7 +108,6 @@ class LandingPage {
     
     this.selectedPlan = plan;
     
-    // Update modal content if it exists
     const badge = document.getElementById('selected-plan-badge');
     const planInput = document.getElementById('selected-plan');
     const modal = document.getElementById('register-modal');
@@ -113,7 +118,7 @@ class LandingPage {
   }
 
   /**
-   * Close register modal (called from onclick)
+   * Close register modal
    */
   closeRegisterModal() {
     const modal = document.getElementById('register-modal');
@@ -128,12 +133,8 @@ class LandingPage {
   }
 }
 
-// Create and export singleton instance
+// Singleton instance
 const landingPage = new LandingPage();
-
-// Make available globally for onclick handlers
 window.LandingPage = landingPage;
-
-// Export for module usage
 export default landingPage;
 
