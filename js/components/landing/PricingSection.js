@@ -3,57 +3,32 @@
  * Pricing plans for landing page
  */
 
-// Pricing data - single source of truth
-const pricingData = [
-  {
-    plan: 'starter',
-    name: 'Starter',
-    price: 'Gratis',
-    period: '',
-    features: [
-      { text: '50 siswa aktif', included: true },
-      { text: 'Lucky Wheel basic', included: true },
-      { text: '5 jenis voucher', included: true },
-      { text: 'Dashboard simple', included: true },
-      { text: 'Export data', included: false },
-      { text: 'Priority support', included: false }
-    ],
-    cta: 'Mulai Gratis',
-    popular: false
-  },
-  {
-    plan: 'pro',
-    name: 'Pro',
-    price: '150',
-    period: '/bulan',
-    features: [
-      { text: '200 siswa aktif', included: true },
-      { text: 'Lucky Wheel premium', included: true },
-      { text: '10 jenis voucher', included: true },
-      { text: 'Dashboard lengkap', included: true },
-      { text: 'Export data Excel', included: true },
-      { text: 'Priority support', included: true }
-    ],
-    cta: 'Pilih Pro',
-    popular: true
-  },
-  {
-    plan: 'enterprise',
-    name: 'Enterprise',
-    price: '500',
-    period: '/bulan',
-    features: [
-      { text: 'Siswa unlimited', included: true },
-      { text: 'Lucky Wheel custom', included: true },
-      { text: 'Voucher tak terbatas', included: true },
-      { text: 'Dashboard advance', included: true },
-      { text: 'API Access', included: true },
-      { text: 'Dedicated support', included: true }
-    ],
-    cta: 'Hubungi Sales',
-    popular: false
-  }
+// Dynamic pricing from BE SUBSCRIPTION_PLANS sheet
+let pricingData = []; // Populated by loadPricingData()
+
+// Static fallback (if BE fails)
+const fallbackPlans = [
+  { id: 'starter', name: 'Starter', price: 0, priceDisplay: 'Gratis', maxStudents: 50 },
+  { id: 'pro', name: 'Pro', price: 150000, priceDisplay: 'Rp 150rb/bulan', maxStudents: 200 },
+  { id: 'enterprise', name: 'Enterprise', price: 500000, priceDisplay: 'Rp 500rb/bulan', maxStudents: -1 }
 ];
+
+// Load pricing data from BE
+const loadPricingData = async () => {
+  try {
+    const result = await authApi.getPricePlans();
+    if (result.success && result.plans) {
+      pricingData = result.plans;
+      return true;
+    }
+  } catch (e) {
+    console.warn('BE pricing fetch failed:', e);
+  }
+  
+  // Fallback
+  pricingData = fallbackPlans;
+  return false;
+};
 
 // Helper to generate feature list HTML
 const generateFeaturesList = (features) => {

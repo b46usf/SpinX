@@ -133,8 +133,8 @@ class AdminSchoolDashboard {
     });
 
     // Reward tabs
-    document.querySelectorAll('.reward-tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => this.switchRewardTab(btn.dataset.tab));
+    document.querySelectorAll('.reward-tab-btn').forEach(buttonEl => {
+      buttonEl.addEventListener('click', () => this.switchRewardTab(buttonEl.dataset.tab));
     });
 
     // Search
@@ -170,12 +170,12 @@ class AdminSchoolDashboard {
    * @param {string} tab
    */
   switchUserTab(tab) {
-    document.querySelectorAll('.user-tab-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.tab === tab);
-      btn.classList.toggle('bg-purple-500/20', btn.dataset.tab === tab);
-      btn.classList.toggle('text-purple-400', btn.dataset.tab === tab);
-      btn.classList.toggle('bg-white/5', btn.dataset.tab !== tab);
-      btn.classList.toggle('text-gray-400', btn.dataset.tab !== tab);
+    document.querySelectorAll('.user-tab-btn').forEach(buttonEl => {
+      buttonEl.classList.toggle('active', buttonEl.dataset.tab === tab);
+      buttonEl.classList.toggle('bg-purple-500/20', buttonEl.dataset.tab === tab);
+      buttonEl.classList.toggle('text-purple-400', buttonEl.dataset.tab === tab);
+      buttonEl.classList.toggle('bg-white/5', buttonEl.dataset.tab !== tab);
+      buttonEl.classList.toggle('text-gray-400', buttonEl.dataset.tab !== tab);
     });
 
     document.querySelectorAll('.user-list-content').forEach(list => {
@@ -188,12 +188,12 @@ class AdminSchoolDashboard {
    * @param {string} tab
    */
   switchRewardTab(tab) {
-    document.querySelectorAll('.reward-tab-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.tab === tab);
-      btn.classList.toggle('bg-purple-500/20', btn.dataset.tab === tab);
-      btn.classList.toggle('text-purple-400', btn.dataset.tab === tab);
-      btn.classList.toggle('bg-white/5', btn.dataset.tab !== tab);
-      btn.classList.toggle('text-gray-400', btn.dataset.tab !== tab);
+    document.querySelectorAll('.reward-tab-btn').forEach(buttonEl => {
+      buttonEl.classList.toggle('active', buttonEl.dataset.tab === tab);
+      buttonEl.classList.toggle('bg-purple-500/20', buttonEl.dataset.tab === tab);
+      buttonEl.classList.toggle('text-purple-400', buttonEl.dataset.tab === tab);
+      buttonEl.classList.toggle('bg-white/5', buttonEl.dataset.tab !== tab);
+      buttonEl.classList.toggle('text-gray-400', buttonEl.dataset.tab !== tab);
     });
 
     document.querySelectorAll('.reward-content').forEach(content => {

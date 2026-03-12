@@ -319,7 +319,30 @@ class AuthApi {
     return this.call('spin', { wa, cid });
   }
 
-// ==================== Admin Actions ====================
+  /**
+   * Get dynamic pricing plans from BE (single source of truth)
+   */
+  async getPricePlans() {
+    return this.call('getpriceplans', {}, false);
+  }
+
+  // ==================== School Subscription Actions ====================
+
+  /**
+   * Register new school (pending approval)
+   */
+  async registerSchoolPending(payload) {
+    return this.call('registerschoolpending', payload);
+  }
+
+  /**
+   * Approve pending school (admin-system only)
+   */
+  async approveSchool(schoolId) {
+    return this.call('approveschool', { schoolId: schoolId });
+  }
+
+  // ==================== Admin Actions ====================
 
   /**
    * Get admin dashboard stats
