@@ -1,7 +1,6 @@
 /**
- * Pricing Section Component - ASYNC FIXED VERSION
- * Now properly awaits data → GUARANTEED VISIBLE
- * Uses DRY utils from planUtils.js
+ * Pricing Section Component - PROFESSIONAL RESPONSIVE VERSION
+ * Fixed for BE data format + stunning UI/UX
  */
 
 import { 
@@ -17,78 +16,67 @@ export const PricingSection = {
     data: []
   },
 
-  /**
-   * Preload data (call from LandingPage)
-   */
   async preload() {
     try {
       this.state.loading = true;
       this.state.data = await loadPricingData();
       this.state.error = null;
-      console.log('✅ PricingSection preloaded:', this.state.data.length, 'plans');
+      console.log('✅ Pricing loaded:', this.state.data.length, 'plans');
     } catch (error) {
       this.state.error = error.message;
       this.state.data = [];
-      console.warn('Pricing preload failed - no data:', error);
+      console.warn('Pricing failed:', error);
     } finally {
       this.state.loading = false;
     }
   },
 
-  /**
-   * ASYNC RENDER - waits for data!
-   */
   async render() {
-    // Use cached/preloaded data or load now
-    if (this.state.loading && !this.state.data.length) {
-      await this.preload();
-    }
+    if (this.state.loading && !this.state.data.length) await this.preload();
 
     const { data, loading, error } = this.state;
     const plans = data.length ? data.map(mapPlanToDisplay) : [];
 
-    // Loading state
-    if (loading) {
-      return this.renderLoading();
-    }
-
-    // Error state (still shows fallback)
-    if (error) {
-      return this.renderError(plans);
-    }
-
-    // Success - generate plans
+    if (loading) return this.renderLoading();
+    if (error) return this.renderError();
+    
     const plansHTML = plans.map(plan => this.generatePlanCard(plan)).join('');
 
     return `
-      <section id="pricing" class="section-padding">
-        <div class="container mx-auto px-4">
-          <div class="text-center mb-16">
-            <span class="inline-block px-4 py-1 bg-indigo-500/20 text-indigo-400 rounded-full text-sm font-medium mb-4 animate-pulse">
-              <i class="fas fa-bolt mr-1"></i>HARGA TERJANGKAU
+      <section id="pricing" class="relative py-24 md:py-32 bg-gradient-to-b from-slate-950 via-slate-900 to-black overflow-hidden">
+        <div class="absolute inset-0 bg-grid-pattern opacity-10"></div>
+        <div class="container relative mx-auto px-6 lg:px-8">
+          <div class="text-center mb-20 lg:mb-28">
+            <span class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 text-indigo-200 text-sm font-semibold shadow-lg">
+              <i class="fas fa-bolt text-indigo-400"></i>
+              HARGA TERJANGKAU & TRANSPARAN
             </span>
-            <h2 class="text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent mb-4">
-              Paket yang <span class="block sm:inline">Tepat Untuk Anda</span>
+            <h2 class="text-4xl md:text-6xl lg:text-7xl font-black bg-gradient-to-r from-white via-indigo-100 to-purple-200 bg-clip-text text-transparent mb-6 leading-tight">
+              Pilih Paket <span class="block md:inline text-emerald-400">Tepat</span>
             </h2>
-            <p class="text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
-              Mulai gratis, upgrade kapan saja. <strong>Tidak ada biaya tersembunyi</strong> - data real-time dari sistem.
+            <p class="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+              Mulai gratis. Upgrade kapan saja. <strong class="text-white">Tanpa biaya tersembunyi</strong> - data real-time dari sistem SaaS.
             </p>
           </div>
           
-          <div class="pricing-grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 lg:gap-12 max-w-7xl mx-auto">
             ${plansHTML}
           </div>
           
-          <div class="text-center mt-12">
-            <div class="bg-gradient-to-r from-green-500/20 to-emerald-500/20 p-6 rounded-2xl border border-green-500/30 max-w-2xl mx-auto">
-              <i class="fas fa-shield-alt text-2xl text-green-400 mb-3 block"></i>
-              <p class="text-lg font-semibold text-white mb-2">
-                <i class="fas fa-lock mr-2 text-green-400"></i>
-                Pembayaran aman via Transfer Bank
+          <div class="text-center mt-20 lg:mt-28">
+            <div class="inline-flex max-w-2xl mx-auto bg-gradient-to-r from-emerald-500/10 via-green-500/10 to-teal-500/10 p-8 lg:p-12 rounded-3xl border-2 border-emerald-400/30 shadow-2xl ring-2 ring-emerald-500/30">
+              <i class="fas fa-shield-check text-4xl md:text-5xl text-emerald-400 mb-6 block mx-auto"></i>
+              <h3 class="text-2xl md:text-3xl font-bold text-white mb-4 text-center">
+                <i class="fas fa-lock text-emerald-400 mr-3"></i>100% Aman & Terjamin
+              </h3>
+              <p class="text-lg md:text-xl text-emerald-100 mb-6 max-w-xl mx-auto leading-relaxed">
+                Pembayaran via transfer bank terpercaya. Aktivasi instan. <strong>Garansi 7 hari uang kembali</strong>.
               </p>
-              <p class="text-gray-300 text-sm">
-                Garansi 7 hari • Aktivasi instan • Support 24/7
-              </p>
+              <div class="flex flex-wrap gap-4 justify-center text-sm md:text-base text-emerald-200">
+                <span><i class="fas fa-bolt mr-2"></i>Aktivasi Instan</span>
+                <span><i class="fas fa-headset mr-2"></i>Support 24/7</span>
+                <span><i class="fas fa-undo mr-2"></i>Refund 7 Hari</span>
+              </div>
             </div>
           </div>
         </div>
@@ -98,33 +86,48 @@ export const PricingSection = {
 
   renderLoading() {
     return `
-      <section id="pricing" class="section-padding min-h-[600px] flex items-center justify-center">
+      <section id="pricing" class="min-h-screen flex items-center justify-center py-24 bg-gradient-to-b from-slate-950 to-black">
         <div class="text-center animate-pulse">
-          <div class="w-16 h-16 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full mx-auto mb-6 animate-spin"></div>
-          <p class="text-xl text-gray-400">Memuat paket harga...</p>
-          <p class="text-sm text-gray-500 mt-2">Sinkronisasi data SUBSCRIPTION_PLANS</p>
+          <div class="w-20 h-20 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full mx-auto mb-8 shadow-2xl animate-spin"></div>
+          <h3 class="text-2xl md:text-3xl font-bold text-white mb-2">Memuat Paket Harga Premium</h3>
+          <p class="text-lg text-gray-400 mb-8">Sinkronisasi data real-time dari SaaS...</p>
+          <div class="flex justify-center gap-4">
+            <div class="w-3 h-3 bg-indigo-400 rounded-full animate-bounce"></div>
+            <div class="w-3 h-3 bg-purple-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+            <div class="w-3 h-3 bg-emerald-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+          </div>
         </div>
       </section>
     `;
   },
 
-  renderError(plans) {
+  renderError() {
     return `
-      <section id="pricing" class="section-padding min-h-screen flex flex-col items-center justify-center py-20">
-        <div class="container mx-auto px-4 text-center max-w-2xl">
-          <div class="inline-flex items-center gap-3 bg-yellow-500/20 border border-yellow-500/30 px-8 py-6 rounded-3xl mb-8">
-            <i class="fas fa-exclamation-triangle text-yellow-400 text-2xl"></i>
-            <div>
-              <h3 class="font-bold text-xl sm:text-2xl text-yellow-100 mb-2">Paket Harga Belum Tersedia</h3>
-              <p class="text-lg sm:text-xl text-yellow-200 mb-4">API pricing sedang maintenance. Hubungi support untuk info terkini.</p>
-              <button class="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
-                📞 Hubungi Support
-              </button>
+      <section id="pricing" class="min-h-screen flex items-center justify-center py-20 bg-gradient-to-b from-amber-500/10 to-orange-500/10">
+        <div class="container mx-auto px-6 max-w-2xl text-center">
+          <div class="inline-flex items-center gap-4 bg-gradient-to-r from-amber-400/20 to-orange-400/20 border-2 border-amber-400/40 p-8 rounded-3xl shadow-2xl">
+            <div class="p-4 bg-amber-400/20 rounded-2xl shadow-lg">
+              <i class="fas fa-tools text-5xl text-amber-400"></i>
             </div>
-          </div>
-          <div class="mt-12">
-            <p class="text-gray-400 text-lg mb-4">Segera kembali dalam 24 jam...</p>
-            <div class="w-24 h-24 border-4 border-yellow-500/30 border-t-yellow-500 rounded-full mx-auto animate-spin"></div>
+            <div>
+              <h2 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-amber-600 to-orange-500 bg-clip-text text-transparent mb-4">
+                Maintenance Sistem
+              </h2>
+              <p class="text-xl md:text-2xl text-gray-200 mb-6 leading-relaxed">
+                Paket pricing sedang diupdate. <br>Hubungi tim support untuk informasi terkini.
+              </p>
+              <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="mailto:support@gameumkm.com" class="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold py-4 px-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 text-lg">
+                  📧 Email Support
+                </a>
+                <a href="https://wa.me/6281234567890" class="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 text-lg">
+                  💬 WhatsApp
+                </a>
+              </div>
+              <p class="text-gray-400 mt-8 text-sm md:text-base">
+                Estimasi selesai: <strong>30 menit</strong>
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -132,69 +135,88 @@ export const PricingSection = {
   },
 
   generatePlanCard(plan) {
-    const popularClass = plan.popular 
-      ? 'relative bg-gradient-to-br from-indigo-600/10 via-purple-600/10 to-pink-600/10 border-2 border-indigo-400 ring-2 ring-indigo-500/20 shadow-xl hover:shadow-2xl hover:shadow-indigo-400/30 min-h-[480px] flex flex-col justify-between p-6 md:p-8 backdrop-blur-xl transition-all duration-300 hover:scale-105 focus-within:ring-4 focus-within:ring-indigo-400/50' 
-      : 'bg-gray-900/40 border border-gray-700/50 hover:border-indigo-400/60 hover:bg-gray-900/60 shadow-lg hover:shadow-xl min-h-[480px] flex flex-col justify-between p-6 md:p-8 backdrop-blur-xl transition-all duration-300 hover:scale-105 focus-within:ring-4 focus-within:ring-indigo-400/50';
-    
-    const btnClass = plan.popular 
-      ? 'mt-auto bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-lg shadow-emerald-400/30 hover:shadow-emerald-400/50 font-bold text-base md:text-lg rounded-xl py-3 px-6 md:px-8 min-h-[52px] flex items-center justify-center gap-2 transition-all duration-300 ring-2 ring-emerald-400/30 hover:ring-emerald-400/50 focus:ring-4 focus:ring-emerald-500 select-plan-btn group'
-      : 'mt-auto bg-white/10 border border-white/30 hover:bg-white/20 hover:border-white/50 text-white backdrop-blur-sm shadow-md hover:shadow-lg font-bold text-base md:text-lg rounded-xl py-3 px-6 md:px-8 min-h-[52px] flex items-center justify-center gap-2 transition-all duration-300 ring-2 ring-white/20 hover:ring-white/40 focus:ring-4 focus:ring-indigo-400 select-plan-btn group';
+    // Clean BE data: fix features string → array
+    const cleanPlan = {
+      ...plan,
+      name: plan.name.charAt(0).toUpperCase() + plan.name.slice(1),
+      features: plan.period ? JSON.parse(plan.period.replace(/\\r\\n/g, '')) : []
+    };
 
-    // Popular badge - mobile friendly positioning
-    const popularBadge = plan.popular ? `
-      <div class="absolute top-4 left-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-3 py-1.5 rounded-full text-xs md:text-sm font-bold shadow-lg z-10">
-        💎 MOST POPULAR
+    const isPopular = cleanPlan.popular || cleanPlan.id === 'pro';
+    const isFree = cleanPlan.price === 0;
+
+    const cardBg = isPopular ? 'bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-emerald-500/10' : 'bg-gradient-to-br from-slate-800/50 to-gray-900/50';
+    const borderColor = isPopular ? 'border-indigo-400/60 hover:border-indigo-400' : 'border-slate-700/50 hover:border-indigo-500/50';
+    const shadow = isPopular ? 'shadow-[0_25px_50px_-12px_rgba(99,102,241,0.25)] hover:shadow-[0_35px_60px_-12px_rgba(99,102,241,0.35)]' : 'shadow-xl hover:shadow-2xl';
+
+    const btnGradient = isPopular ? 'from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-600 hover:via-teal-600 hover:to-emerald-700' : 'from-slate-200/20 via-white/10 to-slate-300/20 hover:from-white/20 hover:to-slate-200/30';
+    const btnRing = isPopular ? 'ring-emerald-400/50 focus:ring-emerald-400 ring-2' : 'ring-white/30 focus:ring-indigo-400 ring-1';
+
+    const badge = isPopular ? `
+      <div class="absolute top-4 left-4 z-20">
+        <div class="flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-black px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wide shadow-2xl ring-2 ring-white/20 transform rotate-[-2deg]">
+          <i class="fas fa-crown text-xs"></i>
+          MOST POPULAR
+        </div>
       </div>
     ` : '';
 
-    return `
-      <div class="price-card rounded-2xl md:rounded-3xl ${popularClass}">
-        ${popularBadge}
-        <div class="text-center flex-1 flex flex-col justify-center mb-6 md:mb-8">
-          <h3 class="text-xl md:text-2xl lg:text-3xl font-black text-white mb-3 md:mb-4 tracking-tight leading-tight">${plan.name}</h3>
-          <div class="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-3 md:mb-4 leading-none">
-            ${plan.priceDisplay === 'Gratis' ? 
-              '<span class="text-3xl md:text-4xl">🎉 Gratis</span>' : 
-              `<span class="text-xl md:text-3xl">Rp</span><span class="ml-1">${plan.priceDisplay}</span><span class="text-lg md:text-2xl opacity-75">${plan.period}</span>`
-            }
-          </div>
-          ${!plan.period ? '<p class="text-gray-400 text-base md:text-lg font-medium">Selamanya</p>' : ''}
+    const priceSection = isFree ? `
+      <div class="flex flex-col items-center space-y-3 mb-8">
+        <div class="w-24 h-24 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-3xl flex items-center justify-center shadow-2xl ring-4 ring-emerald-200/50">
+          <i class="fas fa-infinity text-2xl text-white font-bold"></i>
         </div>
-        
-        <ul class="space-y-2 md:space-y-3 mb-6 md:mb-8 flex-1">
-          ${generateFeaturesHTML(plan.features)}
-        </ul>
-        
-        <div class="mt-auto">
-          <button 
-            data-plan="${plan.id}" 
-            class="${btnClass}"
-            aria-label="Pilih paket ${plan.name}"
-          >
-            <span class="group-hover:translate-x-1 transition-transform duration-300">${plan.cta}</span>
-            <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform duration-300"></i>
-          </div>
-        
-          <p class="text-center mt-3 text-xs md:text-sm ${plan.maxStudents < 0 ? 'text-emerald-400 font-medium' : 'text-gray-400'}">
-            ${plan.maxStudents < 0 ? '✅ Tak terbatas' : `${plan.maxStudents.toLocaleString()} siswa`}
-          </p>
+        <div class="text-center">
+          <span class="text-5xl md:text-6xl lg:text-7xl font-black bg-gradient-to-r from-emerald-400 to-teal-500 bg-clip-text text-transparent block tracking-tight">GRATIS</span>
+          <p class="text-sm md:text-base text-emerald-300 font-medium uppercase tracking-wide mt-1">SELAYANYA</p>
         </div>
       </div>
+    ` : `
+      <div class="text-center mb-8">
+        <div class="text-5xl md:text-6xl lg:text-7xl font-black bg-gradient-to-r from-white via-indigo-100 to-purple-200 bg-clip-text text-transparent mb-2 tracking-tight">
+          ${cleanPlan.priceDisplay}
+        </div>
+        <p class="text-lg md:text-xl text-gray-300 font-semibold">${cleanPlan.period}</p>
+      </div>
+    `;
+
+    return `
+      <article class="pricing-card group relative h-[580px] md:h-[620px] lg:h-[660px] flex flex-col overflow-hidden ${shadow} ${cardBg} ${borderColor} hover:shadow-indigo-500/40 transition-all duration-700 ease-out">
+        ${badge}
+        <div class="flex-1 flex flex-col justify-center items-center p-6 md:p-8 lg:p-10 text-center space-y-6">
+          <h3 class="text-2xl md:text-3xl lg:text-4xl font-black bg-gradient-to-r from-white via-gray-100 to-gray-200 bg-clip-text text-transparent drop-shadow-2xl uppercase tracking-wide">
+            ${cleanPlan.name.replace(/\\b./g, l => l.toUpperCase())}
+          </h3>
+          ${priceSection}
+        </div>
+        
+        <div class="p-6 md:p-8 lg:p-10 flex-1">
+          <ul class="space-y-3 text-sm md:text-base font-medium">
+            ${generateFeaturesHTML(cleanPlan.features)}
+          </ul>
+        </div>
+        
+        <div class="p-6 md:p-8 lg:p-10 mt-auto">
+          <button data-plan="${cleanPlan.id}" class="${isPopular ? popularBtn : regularBtn} text-lg md:text-xl font-black uppercase tracking-wide shadow-2xl" aria-label="Pilih ${cleanPlan.name}">
+            <span class="flex-1">${cleanPlan.cta}</span>
+            <i class="fas fa-arrow-right ml-3 text-lg group-hover:translate-x-2 transition-all duration-300"></i>
+          </button>
+          <p class="text-center mt-6 text-xs md:text-sm font-bold text-emerald-400 tracking-wide uppercase">
+            ${cleanPlan.maxStudents === 0 || cleanPlan.maxStudents >= 500 ? '✅ Tak Terbatas Siswa' : `${cleanPlan.maxStudents.toLocaleString()} Siswa Maks`}
+          </p>
+        </div>
+        
+        <!-- Subtle glow effect for popular -->
+        ${isPopular ? '<div class="absolute inset-0 bg-gradient-to-r from-emerald-400/10 via-transparent to-indigo-400/10 blur-xl opacity-75 group-hover:opacity-100 transition-opacity"></div>' : ''}
+      </article>
     `;
   },
 
-  /**
-   * Event handlers (delegated for dynamic content)
-   */
   initEvents(callbacks = {}) {
-    // Use event delegation for dynamic buttons
     document.addEventListener('click', (e) => {
       if (e.target.matches('.select-plan-btn, .select-plan-btn *')) {
         const planId = e.target.closest('.select-plan-btn').dataset.plan;
-        if (callbacks.onSelectPlan) {
-          callbacks.onSelectPlan(planId);
-        }
-        // Track analytics
+        callbacks.onSelectPlan?.(planId);
         console.log('Plan selected:', planId);
       }
     });
@@ -202,5 +224,4 @@ export const PricingSection = {
 };
 
 export default PricingSection;
-
 
