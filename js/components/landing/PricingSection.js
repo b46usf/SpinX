@@ -95,7 +95,7 @@ export const PricingSection = {
                             ${plan.popular ? 'Rekomendasi' : 'Paket'}
                           </span>
                           <div class="text-base font-bold text-white md:text-lg">${plan.name}</div>
-                          <div class="text-sm text-slate-400">${plan.priceDisplay}${plan.price > 0 ? `<span class="text-slate-500"> ${plan.period}</span>` : ''}</div>
+                          <div class="text-sm text-slate-400">${plan.fullPriceDisplay}</div>
                         </div>
                       </th>
                     `).join('')}
@@ -264,7 +264,7 @@ export const PricingSection = {
 
         <div class="mt-8 rounded-3xl border border-white/8 bg-slate-950/40 p-5 ${tone.ring}">
           <div class="bg-gradient-to-r ${tone.price} bg-clip-text text-4xl font-black text-transparent md:text-5xl">
-            ${plan.priceDisplay}
+            ${plan.fullPriceDisplay}
           </div>
           <div class="mt-2 text-sm font-medium uppercase tracking-[0.16em] text-slate-400">
             ${periodText}
@@ -303,7 +303,7 @@ export const PricingSection = {
         label: 'Harga',
         getValue: plan => ({
           type: 'text',
-          value: `${plan.priceDisplay}${plan.price > 0 ? ` ${plan.period}` : ''}`
+          value: plan.fullPriceDisplay
         })
       },
       {

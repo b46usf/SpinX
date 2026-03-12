@@ -136,8 +136,14 @@ function formatRupiah(value) {
 
 function normalizePeriod(plan, priceValue) {
   const rawPeriod = String(plan.period ?? plan.billingPeriod ?? plan.interval ?? '').trim();
-  if (rawPeriod) return rawPeriod.startsWith('/') ? rawPeriod : `/${rawPeriod}`;
-  return priceValue > 0 ? DEFAULT_PERIOD : 'Selamanya';
+  return rawPeriod || (priceValue > 0 ? DEFAULT_PERIOD : 'Selamanya');
+}
+
+function getFullPriceDisplay(plan, priceValue) {
+  const priceStr = String(plan.priceDisplay ?? '').trim();
+  if (priceValue <= 0) return priceStr || 'Gratis';
+  const periodStr = normalizePeriod(plan, priceValue).replace(/^\/+/, ''); // Clean slash
+  return priceStr ? `${priceStr}/${periodStr}` : formatRupiah(priceValue);
 }
 
 function normalizePlanId(plan) {
@@ -244,6 +250,7 @@ export function mapPlanToDisplay(plan = {}) {
     const price = toNumber(plan.price ?? plan.amount ?? plan.monthlyPrice, 0);
     const priceDisplay = String(plan.priceDisplay ?? '').trim() || formatRupiah(price);
     const period = normalizePeriod(plan, price);
+    const fullPriceDisplay = getFullPriceDisplay(plan, price);
     const maxStudents = normalizeStudentLimit(plan);
     const features = parseFeatures(plan.features);
     const popular = inferPopular(plan, id, price);
@@ -253,6 +260,7 @@ export function mapPlanToDisplay(plan = {}) {
       name,
       price,
       priceDisplay,
+      fullPriceDisplay,
       cta: String(plan.cta ?? plan.buttonText ?? 'Pilih Paket').trim() || 'Pilih Paket',
       period,
       maxStudents,
