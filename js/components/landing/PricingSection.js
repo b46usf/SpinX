@@ -28,8 +28,8 @@ export const PricingSection = {
       console.log('✅ PricingSection preloaded:', this.state.data.length, 'plans');
     } catch (error) {
       this.state.error = error.message;
-      this.state.data = FALLBACK_PLANS;
-      console.warn('Pricing preload fallback:', error);
+      this.state.data = [];
+      console.warn('Pricing preload failed - no data:', error);
     } finally {
       this.state.loading = false;
     }
