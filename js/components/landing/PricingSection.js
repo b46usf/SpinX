@@ -7,8 +7,7 @@
 import { 
   loadPricingData, 
   generateFeaturesHTML, 
-  mapPlanToDisplay,
-  FALLBACK_PLANS 
+  mapPlanToDisplay
 } from './utils/planUtils.js';
 
 export const PricingSection = {
@@ -46,7 +45,7 @@ export const PricingSection = {
     }
 
     const { data, loading, error } = this.state;
-    const plans = data.length ? data.map(mapPlanToDisplay) : FALLBACK_PLANS;
+    const plans = data.length ? data.map(mapPlanToDisplay) : [];
 
     // Loading state
     if (loading) {
@@ -88,7 +87,7 @@ export const PricingSection = {
                 Pembayaran aman via Transfer Bank
               </p>
               <p class="text-gray-300 text-sm">
-                Garansi uang kembali 7 hari • Aktivasi instan • Support 24/7
+                Garansi 7 hari • Aktivasi instan • Support 24/7
               </p>
             </div>
           </div>
@@ -110,29 +109,22 @@ export const PricingSection = {
   },
 
   renderError(plans) {
-    const plansHTML = plans.map(plan => this.generatePlanCard(plan)).join('');
     return `
-      <section id="pricing" class="section-padding">
-        <div class="container mx-auto px-4">
-          <div class="text-center mb-16">
-            <div class="inline-flex items-center gap-3 bg-yellow-500/20 border border-yellow-500/30 px-6 py-4 rounded-2xl mb-8">
-              <i class="fas fa-exclamation-triangle text-yellow-400 text-xl"></i>
-              <div>
-                <h3 class="font-bold text-lg text-yellow-100">Menggunakan Data Cadangan</h3>
-                <p class="text-sm text-yellow-200">BE API sementara unavailable → fallback plans</p>
-              </div>
+      <section id="pricing" class="section-padding min-h-screen flex flex-col items-center justify-center py-20">
+        <div class="container mx-auto px-4 text-center max-w-2xl">
+          <div class="inline-flex items-center gap-3 bg-yellow-500/20 border border-yellow-500/30 px-8 py-6 rounded-3xl mb-8">
+            <i class="fas fa-exclamation-triangle text-yellow-400 text-2xl"></i>
+            <div>
+              <h3 class="font-bold text-xl sm:text-2xl text-yellow-100 mb-2">Paket Harga Belum Tersedia</h3>
+              <p class="text-lg sm:text-xl text-yellow-200 mb-4">API pricing sedang maintenance. Hubungi support untuk info terkini.</p>
+              <button class="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300">
+                📞 Hubungi Support
+              </button>
             </div>
-            <!-- rest same as success -->
-            <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">Paket Tersedia</h2>
           </div>
-          <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            ${plansHTML}
-          </div>
-          <!-- security note -->
-          <div class="text-center mt-8">
-            <p class="text-gray-500 text-sm">
-              <i class="fas fa-lock mr-1"></i>Terjamin aman - Fallback untuk keandalan maksimal
-            </p>
+          <div class="mt-12">
+            <p class="text-gray-400 text-lg mb-4">Segera kembali dalam 24 jam...</p>
+            <div class="w-24 h-24 border-4 border-yellow-500/30 border-t-yellow-500 rounded-full mx-auto animate-spin"></div>
           </div>
         </div>
       </section>
@@ -141,51 +133,52 @@ export const PricingSection = {
 
   generatePlanCard(plan) {
     const popularClass = plan.popular 
-      ? 'relative bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border-2 border-indigo-500/50 shadow-2xl shadow-indigo-500/20 hover:shadow-indigo-500/40 transform hover:scale-[1.02] transition-all duration-300' 
-      : 'bg-gray-900/50 border border-gray-700/50 hover:border-indigo-500/50 hover:bg-gray-900/70 transition-all duration-300 hover:shadow-lg';
+      ? 'relative bg-gradient-to-br from-indigo-600/10 via-purple-600/10 to-pink-600/10 border-2 border-indigo-400 ring-2 ring-indigo-500/20 shadow-xl hover:shadow-2xl hover:shadow-indigo-400/30 min-h-[480px] flex flex-col justify-between p-6 md:p-8 backdrop-blur-xl transition-all duration-300 hover:scale-105 focus-within:ring-4 focus-within:ring-indigo-400/50' 
+      : 'bg-gray-900/40 border border-gray-700/50 hover:border-indigo-400/60 hover:bg-gray-900/60 shadow-lg hover:shadow-xl min-h-[480px] flex flex-col justify-between p-6 md:p-8 backdrop-blur-xl transition-all duration-300 hover:scale-105 focus-within:ring-4 focus-within:ring-indigo-400/50';
     
     const btnClass = plan.popular 
-      ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:from-emerald-600 hover:to-teal-600 transform hover:scale-[1.02] active:scale-[0.98]'
-      : 'bg-white/10 border-2 border-white/20 text-white backdrop-blur-sm hover:bg-white/20 hover:border-white/40 hover:shadow-lg transition-all duration-300';
+      ? 'mt-auto bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-lg shadow-emerald-400/30 hover:shadow-emerald-400/50 font-bold text-base md:text-lg rounded-xl py-3 px-6 md:px-8 min-h-[52px] flex items-center justify-center gap-2 transition-all duration-300 ring-2 ring-emerald-400/30 hover:ring-emerald-400/50 focus:ring-4 focus:ring-emerald-500 select-plan-btn group'
+      : 'mt-auto bg-white/10 border border-white/30 hover:bg-white/20 hover:border-white/50 text-white backdrop-blur-sm shadow-md hover:shadow-lg font-bold text-base md:text-lg rounded-xl py-3 px-6 md:px-8 min-h-[52px] flex items-center justify-center gap-2 transition-all duration-300 ring-2 ring-white/20 hover:ring-white/40 focus:ring-4 focus:ring-indigo-400 select-plan-btn group';
 
-    // Popular badge
+    // Popular badge - mobile friendly positioning
     const popularBadge = plan.popular ? `
-      <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-4 py-1 rounded-full text-xs font-bold shadow-lg transform rotate-[-3deg]">
-        💎 POPULAR
+      <div class="absolute top-4 left-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-3 py-1.5 rounded-full text-xs md:text-sm font-bold shadow-lg z-10">
+        💎 MOST POPULAR
       </div>
     ` : '';
 
     return `
-      <div class="price-card rounded-3xl p-8 ${popularClass} backdrop-blur-xl">
+      <div class="price-card rounded-2xl md:rounded-3xl ${popularClass}">
         ${popularBadge}
-        <div class="text-center mb-8">
-          <h3 class="text-2xl lg:text-3xl font-black text-white mb-4 tracking-tight">${plan.name}</h3>
-          <div class="text-5xl lg:text-6xl font-black text-white mb-2 leading-tight">
+        <div class="text-center flex-1 flex flex-col justify-center mb-6 md:mb-8">
+          <h3 class="text-xl md:text-2xl lg:text-3xl font-black text-white mb-3 md:mb-4 tracking-tight leading-tight">${plan.name}</h3>
+          <div class="text-4xl md:text-5xl lg:text-6xl font-black text-white mb-3 md:mb-4 leading-none">
             ${plan.priceDisplay === 'Gratis' ? 
-              '<span class="text-4xl">🎉 Gratis</span>' : 
-              `<span class="text-3xl">Rp</span> ${plan.priceDisplay}<span class="text-2xl opacity-75">${plan.period}</span>`
+              '<span class="text-3xl md:text-4xl">🎉 Gratis</span>' : 
+              `<span class="text-xl md:text-3xl">Rp</span><span class="ml-1">${plan.priceDisplay}</span><span class="text-lg md:text-2xl opacity-75">${plan.period}</span>`
             }
           </div>
-          ${!plan.period ? '<p class="text-gray-400 text-lg font-medium">Untuk mulai sekarang</p>' : ''}
+          ${!plan.period ? '<p class="text-gray-400 text-base md:text-lg font-medium">Selamanya</p>' : ''}
         </div>
         
-        <ul class="space-y-3 mb-10">
+        <ul class="space-y-2 md:space-y-3 mb-6 md:mb-8 flex-1">
           ${generateFeaturesHTML(plan.features)}
         </ul>
         
-        <button 
-          data-plan="${plan.id}" 
-          class="w-full py-4 px-8 ${btnClass} font-bold text-lg rounded-2xl shadow-xl select-plan-btn group"
-          aria-label="Pilih ${plan.name}"
-        >
-          <span class="group-hover:translate-x-1 transition-transform">${plan.cta}</span>
-          <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform ml-2"></i>
-        </button>
+        <div class="mt-auto">
+          <button 
+            data-plan="${plan.id}" 
+            class="${btnClass}"
+            aria-label="Pilih paket ${plan.name}"
+          >
+            <span class="group-hover:translate-x-1 transition-transform duration-300">${plan.cta}</span>
+            <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform duration-300"></i>
+          </div>
         
-        ${plan.maxStudents === -1 ? 
-          '<p class="text-center mt-4 text-xs text-emerald-400 font-medium">✅ Siswa tak terbatas</p>' : 
-          `<p class="text-center mt-4 text-xs text-gray-400">${plan.maxStudents} siswa maksimal</p>`
-        }
+          <p class="text-center mt-3 text-xs md:text-sm ${plan.maxStudents < 0 ? 'text-emerald-400 font-medium' : 'text-gray-400'}">
+            ${plan.maxStudents < 0 ? '✅ Tak terbatas' : `${plan.maxStudents.toLocaleString()} siswa`}
+          </p>
+        </div>
       </div>
     `;
   },

@@ -5,68 +5,7 @@
 
 import { authApi } from '../../../auth/AuthApi.js';
 
-/**
- * Fallback plans - used if BE fails
- */
-export const FALLBACK_PLANS = [
-  { 
-    id: 'starter', 
-    plan: 'STARTER',
-    name: 'Starter', 
-    price: 0, 
-    priceDisplay: 'Gratis', 
-    cta: 'Mulai Gratis', 
-    period: 'Selamanya',
-    maxStudents: 50,
-    popular: false,
-    features: [
-      { text: '50 Siswa Maksimal', included: true },
-      { text: 'Game Wheel Dasar', included: true },
-      { text: 'Voucher Terbatas', included: true },
-      { text: 'Support Email', included: true },
-      { text: 'Analitik Dasar', included: false },
-      { text: 'Custom Branding', included: false }
-    ]
-  },
-  { 
-    id: 'pro', 
-    plan: 'PRO',
-    name: 'Pro', 
-    price: 150000, 
-    priceDisplay: 'Rp 150rb', 
-    cta: 'Pilih Pro', 
-    period: '/bulan',
-    maxStudents: 200,
-    popular: true,
-    features: [
-      { text: '200 Siswa Maksimal', included: true },
-      { text: 'Game Wheel Full', included: true },
-      { text: 'Voucher Unlimited', included: true },
-      { text: 'Support Prioritas', included: true },
-      { text: 'Analitik Lengkap', included: true },
-      { text: 'Custom Branding', included: false }
-    ]
-  },
-  { 
-    id: 'enterprise', 
-    plan: 'ENTERPRISE',
-    name: 'Enterprise', 
-    price: 500000, 
-    priceDisplay: 'Rp 500rb', 
-    cta: 'Hubungi Sales', 
-    period: '/bulan',
-    maxStudents: -1, // unlimited
-    popular: false,
-    features: [
-      { text: 'Siswa Tak Terbatas', included: true },
-      { text: 'Semua Fitur Pro', included: true },
-      { text: 'White Label', included: true },
-      { text: 'Support 24/7', included: true },
-      { text: 'API Custom', included: true },
-      { text: 'On-premise Option', included: true }
-    ]
-  }
-];
+
 
 /**
  * Load pricing data from BE (with retry + cache)
@@ -98,9 +37,9 @@ export async function loadPricingData(retries = 3) {
     }
   }
 
-  // All retries failed → return fallback
-  console.warn('All pricing API attempts failed → using fallback');
-  return FALLBACK_PLANS;
+// All retries failed → no fallback data
+  console.warn('All pricing API attempts failed → no data available');
+  return [];
 }
 
 /**
