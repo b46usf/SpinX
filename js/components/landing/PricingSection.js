@@ -242,7 +242,7 @@ export const PricingSection = {
 
   generatePlanCard(plan) {
     const tone = this.getPlanTone(plan);
-    const periodText = plan.price > 0 ? plan.period : 'Sekali aktif';
+    const periodText = plan.period;
     const badgeText = plan.popular ? 'Paling dipilih' : plan.price <= 0 ? 'Mulai gratis' : 'Siap scaling';
 
     return `

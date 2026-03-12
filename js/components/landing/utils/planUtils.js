@@ -6,7 +6,7 @@
 import { authApi } from '../../../auth/AuthApi.js';
 
 const PRICING_CACHE_TTL = 5 * 60 * 1000;
-const DEFAULT_PERIOD = '/bulan';
+const DEFAULT_PERIOD = 'bulanan';
 const MAX_VISIBLE_FEATURES = 6;
 
 function toNumber(value, fallback = 0) {
