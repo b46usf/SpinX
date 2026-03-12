@@ -791,11 +791,11 @@ class AdminLogin {
     }
   }
 
-  /**
+/**
    * Redirect to admin dashboard
    */
   redirectToDashboard() {
-    window.location.href = 'dashboard-admin.html';
+    window.location.href = 'dashboard-admin-system.html';
   }
 
   /**

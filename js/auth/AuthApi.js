@@ -319,7 +319,7 @@ class AuthApi {
     return this.call('spin', { wa, cid });
   }
 
-  // ==================== Admin Actions ====================
+// ==================== Admin Actions ====================
 
   /**
    * Get admin dashboard stats
@@ -329,10 +329,45 @@ class AuthApi {
   }
 
   /**
+   * Get admin system dashboard stats
+   */
+  async getAdminStats() {
+    return this.call('getAdminStats', {}, false);
+  }
+
+  /**
    * Get recent activity
    */
   async getRecentActivity() {
     return this.call('getRecentActivity', {}, false);
+  }
+
+  /**
+   * Get all schools
+   */
+  async getAllSchools() {
+    return this.call('getAllSchools', {}, false);
+  }
+
+  /**
+   * Get subscription stats
+   */
+  async getSubscriptionStats() {
+    return this.call('getSubscriptionStats', {}, false);
+  }
+
+  /**
+   * Get invoices
+   */
+  async getInvoices() {
+    return this.call('getInvoices', {}, false);
+  }
+
+  /**
+   * Toggle school status
+   */
+  async toggleSchool(schoolId, status) {
+    return this.call('toggleSekolah', { schoolId, status });
   }
 
   // ==================== Guru Actions ====================

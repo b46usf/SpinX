@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SpinX - Admin Sistem</title>
+  <meta name="description" content="SpinX Admin System Dashboard">
+  <link rel="icon" href="data:,">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="css/style.css">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.all.min.js"></script>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body class="min-h-screen pb-20">
+
+  <!-- Top Header - Fixed -->
+  <header class="fixed top-0 left-0 right-0 z-40 glass-card border-b border-white/10">
+    <div class="flex justify-between items-center px-4 py-3">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center">
+          <i class="fas fa-shield-alt text-white text-sm"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-bold text-white">SpinX <span class="text-gradient">Admin</span></h1>
+          <p class="text-xs text-gray-400">Sistem</p>
+        </div>
+      </div>
+      
+      <div class="flex items-center gap-2">
+        <button id="notif-btn" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-300 transition-colors">
+          <i class="fas fa-bell"></i>
+        </button>
+        <img id="user-avatar" src="" alt="Avatar" class="w-9 h-9 rounded-full border-2 border-indigo-500">
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="pt-16 px-4 pb-4">
+    
+    <!-- DASHBOARD SECTION -->
+    <section id="section-dashboard" class="section-content">
+      <!-- Welcome Card -->
+      <div class="glass-card p-4 mb-4 animate-fade-in-up">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-lg font-bold">Welcome, <span id="welcome-name" class="text-gradient"></span>! 🔥</h2>
+            <p class="text-xs text-gray-400">Monitoring platform SpinX</p>
+          </div>
+          <div class="text-right">
+            <p class="text-xs text-gray-500" id="current-date"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Platform Stats -->
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="glass-card p-4 text-center animate-fade-in-up delay-1">
+          <div class="text-2xl mb-1">🏪</div>
+          <div class="text-xl font-bold text-gradient" id="stat-sekolah">-</div>
+          <div class="text-xs text-gray-400">Total Sekolah</div>
+        </div>
+        <div class="glass-card p-4 text-center animate-fade-in-up delay-2">
+          <div class="text-2xl mb-1">👨‍🎓</div>
+          <div class="text-xl font-bold text-gradient" id="stat-siswa">-</div>
+          <div class="text-xs text-gray-400">Total Siswa</div>
+        </div>
+        <div class="glass-card p-4 text-center animate-fade-in-up delay-3">
+          <div class="text-2xl mb-1">🎫</div>
+          <div class="text-xl font-bold text-gradient" id="stat-voucher">-</div>
+          <div class="text-xs text-gray-400">Total Voucher</div>
+        </div>
+        <div class="glass-card p-4 text-center animate-fade-in-up delay-4">
+          <div class="text-2xl mb-1">💰</div>
+          <div class="text-xl font-bold text-gradient" id="stat-revenue">-</div>
+          <div class="text-xs text-gray-400">Revenue SaaS</div>
+        </div>
+      </div>
+
+      <!-- Revenue Chart Placeholder -->
+      <div class="glass-card p-4 mb-4 animate-fade-in-up delay-3">
+        <h3 class="text-sm font-bold mb-3 flex items-center gap-2">
+          <i class="fas fa-chart-line text-green-400"></i>
+          Revenue Trend
+        </h3>
+        <div class="h-32 flex items-end justify-between gap-2 px-2">
+          <!-- Chart bars will be rendered by JS -->
+          <div id="revenue-chart" class="flex items-end justify-between gap-1 w-full h-full">
+            <div class="flex-1 bg-indigo-500/30 rounded-t hover:bg-indigo-500/50 transition-colors" style="height: 30%"></div>
+            <div class="flex-1 bg-indigo-500/30 rounded-t hover:bg-indigo-500/50 transition-colors" style="height: 50%"></div>
+            <div class="flex-1 bg-indigo-500/30 rounded-t hover:bg-indigo-500/50 transition-colors" style="height: 40%"></div>
+            <div class="flex-1 bg-indigo-500/30 rounded-t hover:bg-indigo-500/50 transition-colors" style="height: 70%"></div>
+            <div class="flex-1 bg-indigo-500/30 rounded-t hover:bg-indigo-500/50 transition-colors" style="height: 60%"></div>
+            <div class="flex-1 bg-indigo-500/30 rounded-t hover:bg-indigo-500/50 transition-colors" style="height: 80%"></div>
+            <div class="flex-1 bg-gradient-to-t from-indigo-500 to-pink-500 rounded-t" style="height: 100%"></div>
+          </div>
+        </div>
+        <div class="flex justify-between mt-2 text-xs text-gray-500">
+          <span>Sen</span>
+          <span>Sel</span>
+          <span>Rab</span>
+          <span>Kam</span>
+          <span>Jum</span>
+          <span>Sab</span>
+          <span>Min</span>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="glass-card p-4 animate-fade-in-up delay-4">
+        <h3 class="text-sm font-bold mb-3 flex items-center gap-2">
+          <i class="fas fa-history text-cyan-400"></i>
+          Aktivitas Terbaru
+        </h3>
+        <div class="space-y-2" id="activity-list">
+          <div class="text-center py-6 text-gray-500">
+            <i class="fas fa-spinner fa-spin text-xl mb-2"></i>
+            <p class="text-xs">Memuat...</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SEKOLAH SECTION -->
+    <section id="section-sekolah" class="section-content hidden">
+      <div class="glass-card p-4 mb-4 animate-fade-in-up">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-bold flex items-center gap-2">
+            <i class="fas fa-school text-purple-400"></i>
+            Kelola Sekolah
+          </h2>
+          <button id="add-sekolah-btn" class="btn btn-primary text-xs py-2 px-3">
+            <i class="fas fa-plus"></i>
+            Tambah
+          </button>
+        </div>
+        
+        <!-- Search & Filter -->
+        <div class="flex gap-2 mb-4">
+          <div class="flex-1 relative">
+            <input type="text" id="sekolah-search" placeholder="Cari sekolah..." class="input text-sm py-2 pl-9">
+            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm"></i>
+          </div>
+          <select id="sekolah-filter" class="select text-sm py-2 w-auto">
+            <option value="">Semua Status</option>
+            <option value="active">Aktif</option>
+            <option value="inactive">Nonaktif</option>
+          </select>
+        </div>
+
+        <!-- Stats Summary -->
+        <div class="grid grid-cols-3 gap-2 mb-4">
+          <div class="bg-green-500/10 rounded-lg p-3 text-center">
+            <div class="text-lg font-bold text-green-400" id="sekolah-aktif">-</div>
+            <div class="text-xs text-gray-400">Aktif</div>
+          </div>
+          <div class="bg-red-500/10 rounded-lg p-3 text-center">
+            <div class="text-lg font-bold text-red-400" id="sekolah-nonaktif">-</div>
+            <div class="text-xs text-gray-400">Nonaktif</div>
+          </div>
+          <div class="bg-blue-500/10 rounded-lg p-3 text-center">
+            <div class="text-lg font-bold text-blue-400" id="sekolah-revenue">-</div>
+            <div class="text-xs text-gray-400">Revenue</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- School List -->
+      <div id="sekolah-list" class="space-y-3">
+        <div class="text-center py-8 text-gray-500">
+          <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+          <p>Memuat data sekolah...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SUBSCRIPTION SECTION -->
+    <section id="section-subscription" class="section-content hidden">
+      <div class="glass-card p-4 mb-4 animate-fade-in-up">
+        <h2 class="text-lg font-bold flex items-center gap-2 mb-4">
+          <i class="fas fa-credit-card text-yellow-400"></i>
+          Subscription
+        </h2>
+        
+        <!-- Plan Stats -->
+        <div class="grid grid-cols-3 gap-2 mb-4">
+          <div class="bg-gray-500/10 rounded-lg p-3 text-center">
+            <div class="text-xl mb-1">🚀</div>
+            <div class="text-lg font-bold text-gray-300" id="sub-starter">-</div>
+            <div class="text-xs text-gray-400">Starter</div>
+          </div>
+          <div class="bg-indigo-500/10 rounded-lg p-3 text-center">
+            <div class="text-xl mb-1">⭐</div>
+            <div class="text-lg font-bold text-indigo-400" id="sub-pro">-</div>
+            <div class="text-xs text-gray-400">Pro</div>
+          </div>
+          <div class="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 rounded-lg p-3 text-center">
+            <div class="text-xl mb-1">👑</div>
+            <div class="text-lg font-bold text-yellow-400" id="sub-enterprise">-</div>
+            <div class="text-xs text-gray-400">Enterprise</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subscription Tabs -->
+      <div class="flex gap-2 mb-4">
+        <button class="flex-1 py-2 px-3 rounded-lg bg-indigo-500/20 text-indigo-400 text-sm font-medium tab-btn active" data-tab="invoice">
+          <i class="fas fa-file-invoice mr-1"></i> Invoice
+        </button>
+        <button class="flex-1 py-2 px-3 rounded-lg bg-white/5 text-gray-400 text-sm font-medium tab-btn" data-tab="pembayaran">
+          <i class="fas fa-money-bill mr-1"></i> Pembayaran
+        </button>
+      </div>
+
+      <!-- Invoice List -->
+      <div id="invoice-list" class="glass-card p-4">
+        <h3 class="text-sm font-bold mb-3">Invoice Terbaru</h3>
+        <div class="space-y-2" id="invoice-content">
+          <div class="text-center py-6 text-gray-500">
+            <i class="fas fa-spinner fa-spin text-xl mb-2"></i>
+            <p class="text-xs">Memuat invoice...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment List (Hidden by default) -->
+      <div id="pembayaran-list" class="glass-card p-4 hidden">
+        <h3 class="text-sm font-bold mb-3">Riwayat Pembayaran</h3>
+        <div class="space-y-2" id="payment-content">
+          <div class="text-center py-6 text-gray-500">
+            <i class="fas fa-spinner fa-spin text-xl mb-2"></i>
+            <p class="text-xs">Memuat pembayaran...</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- AKUN SECTION -->
+    <section id="section-akun" class="section-content hidden">
+      <!-- Profile Card -->
+      <div class="glass-card p-4 mb-4 animate-fade-in-up">
+        <div class="flex items-center gap-4 mb-4">
+          <img id="profile-avatar" src="" alt="Profile" class="w-16 h-16 rounded-full border-2 border-indigo-500">
+          <div>
+            <h2 class="text-lg font-bold" id="profile-name">-</h2>
+            <p class="text-sm text-gray-400" id="profile-email">-</p>
+            <span class="badge badge-primary text-xs">Admin Sistem</span>
+          </div>
+        </div>
+        
+        <button id="edit-profile-btn" class="btn btn-secondary w-full text-sm">
+          <i class="fas fa-edit"></i>
+          Edit Profil
+        </button>
+      </div>
+
+      <!-- Menu Items -->
+      <div class="glass-card p-2 mb-4 animate-fade-in-up delay-1">
+        <button class="menu-item w-full flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors" data-action="settings">
+          <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400">
+            <i class="fas fa-cog"></i>
+          </div>
+          <div class="flex-1 text-left">
+            <div class="font-medium text-sm">Pengaturan Sistem</div>
+            <div class="text-xs text-gray-500">Konfigurasi platform</div>
+          </div>
+          <i class="fas fa-chevron-right text-gray-500 text-xs"></i>
+        </button>
+        
+        <button class="menu-item w-full flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors" data-action="activity">
+          <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400">
+            <i class="fas fa-history"></i>
+          </div>
+          <div class="flex-1 text-left">
+            <div class="font-medium text-sm">Log Aktivitas</div>
+            <div class="text-xs text-gray-500">Riwayat aktivitas admin</div>
+          </div>
+          <i class="fas fa-chevron-right text-gray-500 text-xs"></i>
+        </button>
+        
+        <button class="menu-item w-full flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors" data-action="logs">
+          <div class="w-10 h-10 rounded-lg bg-orange-500/20 flex items-center justify-center text-orange-400">
+            <i class="fas fa-clipboard-list"></i>
+          </div>
+          <div class="flex-1 text-left">
+            <div class="font-medium text-sm">System Logs</div>
+            <div class="text-xs text-gray-500">Log sistem & error</div>
+          </div>
+          <i class="fas fa-chevron-right text-gray-500 text-xs"></i>
+        </button>
+      </div>
+
+      <!-- Logout -->
+      <button id="logout-btn" class="w-full glass-card p-4 flex items-center gap-3 text-red-400 hover:bg-red-500/10 transition-colors rounded-lg">
+        <div class="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center">
+          <i class="fas fa-sign-out-alt"></i>
+        </div>
+        <div class="font-medium">Logout</div>
+      </button>
+    </section>
+
+  </main>
+
+  <!-- Bottom Navigation - Fixed -->
+  <nav class="fixed bottom-0 left-0 right-0 z-50 glass-card border-t border-white/10">
+    <div class="flex justify-around items-center px-2 py-2">
+      <button class="bottom-nav-item active flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all" data-section="dashboard">
+        <i class="fas fa-th-large text-lg mb-1"></i>
+        <span class="text-xs">Dashboard</span>
+      </button>
+      
+      <button class="bottom-nav-item flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all text-gray-400" data-section="sekolah">
+        <i class="fas fa-school text-lg mb-1"></i>
+        <span class="text-xs">Sekolah</span>
+      </button>
+      
+      <button class="bottom-nav-item flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all text-gray-400" data-section="subscription">
+        <i class="fas fa-credit-card text-lg mb-1"></i>
+        <span class="text-xs">Subscription</span>
+      </button>
+      
+      <button class="bottom-nav-item flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all text-gray-400" data-section="akun">
+        <i class="fas fa-user-cog text-lg mb-1"></i>
+        <span class="text-xs">Akun</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed top-20 right-4 z-50"></div>
+
+  <!-- Modular Scripts -->
+  <script type="module">
+    // Import core modules
+    import './js/components/utils/Toast.js';
+    import { AdminSystemDashboard } from './js/pages/AdminSystemDashboard.js';
+    
+    // Auto-init
+  </script>
+
+</body>
+</html>
+

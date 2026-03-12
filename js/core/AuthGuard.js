@@ -132,9 +132,9 @@ class AuthGuard {
    */
   redirectToDashboard() {
     const role = this.getRole();
-    const dashboards = {
-      'admin-system': 'dashboard-admin.html',
-      'admin-sekolah': 'dashboard-admin-sekolah.html',
+const dashboards = {
+      'admin-system': 'dashboard-admin-system.html',
+      'admin-sekolah': 'dashboard-admin.html',
       'siswa': 'dashboard-siswa.html',
       'mitra': 'dashboard-mitra.html',
       'guru': 'dashboard-guru.html'
