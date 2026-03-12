@@ -8,7 +8,7 @@
 import { authGuard } from '../core/AuthGuard.js';
 import { themeManager } from '../core/ThemeManager.js';
 import { authApi } from '../auth/AuthApi.js';
-import Toast from '../components/utils/Toast.js';
+import { toastConfig } from '../components/utils/Toast.js';
 
 class AdminSchoolDashboard {
   constructor() {

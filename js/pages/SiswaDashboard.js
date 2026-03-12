@@ -8,6 +8,7 @@
 import { authGuard } from '../core/AuthGuard.js';
 import { themeManager } from '../core/ThemeManager.js';
 import { authApi } from '../auth/AuthApi.js';
+import { showSuccess, showError, showWarning, showInfo, showLoading } from '../components/utils/Toast.js';
 
 /**
  * Wheel Configuration
@@ -44,34 +45,51 @@ const gameState = {
 
 class SiswaDashboard {
   constructor() {
+    this.currentSection = 'dashboard';
+    this.currentUser = null;
     this.customerId = null;
+    this.data = {
+      stats: {},
+      mitra: [],
+      pesanan: [],
+      activity: [],
+      leaderboard: []
+    };
+    this.gameState = {
+      spinning: false,
+      canvas: null,
+      ctx: null
+    };
   }
 
   /**
-   * Initialize siswa dashboard
+   * Initialize full siswa dashboard
    */
-  init() {
-    // Auth protection
-    if (!authGuard.init('siswa', {
+  async init() {
+    // Auth protection - siswa role
+    const authResult = authGuard.init('siswa', {
       avatarId: 'user-avatar',
-      nameId: 'user-name',
-      welcomeId: 'welcome-name',
-      logoutId: 'logout-btn'
-    })) {
-      return;
-    }
+      welcomeId: 'welcome-name'
+    });
+    if (!authResult) return;
 
-    // Initialize theme
+    this.currentUser = authGuard.getUser();
+    document.getElementById('kelas-name').textContent = this.currentUser.kelas || '-';
+    document.getElementById('student-name').textContent = this.currentUser.name;
+    document.getElementById('student-kelas').textContent = this.currentUser.kelas;
+    document.getElementById('school-name').textContent = this.currentUser.schoolName || 'Sekolah';
+    document.getElementById('profile-name').textContent = this.currentUser.name;
+    document.getElementById('profile-email').textContent = this.currentUser.email;
+
+    // Setup UI
     themeManager.init();
-
-    // Load saved WA
+    this.setupNavigation();
+    this.setupEventListeners();
     this.loadSavedWa();
 
-    // Initialize game
+    // Load data
+    await this.loadDashboardData();
     this.initGame();
-
-    // Load user data
-    this.loadUserData();
   }
 
   /**
@@ -283,72 +301,292 @@ class SiswaDashboard {
   }
 
   /**
-   * Load user data (vouchers, play count)
+   * Setup navigation
    */
-  async loadUserData() {
-    try {
-      // Get vouchers
-      const vouchersResult = await authApi.getVouchers();
-      if (vouchersResult.success) {
-        this.updateVoucherCount(vouchersResult.data?.length || 0);
-      }
+  setupNavigation() {
+    document.querySelectorAll('.bottom-nav-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        this.switchSection(e.currentTarget.dataset.section);
+      });
+    });
 
-      // Get play count
-      const playResult = await authApi.getPlayCount();
-      if (playResult.success) {
-        this.updatePlayCount(playResult.data || 0);
-      }
-    } catch (error) {
-      console.error('Failed to load user data:', error);
+    // Pesanan tabs
+    document.querySelectorAll('.pesanan-tab').forEach(btn => {
+      btn.addEventListener('click', (e) => this.switchPesananTab(e.currentTarget.dataset.tab));
+    });
+
+    // Kategori mitra (placeholder)
+    document.querySelectorAll('.kategori-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.kategori-btn').forEach(b => b.classList.remove('active', 'bg-purple-500/30', 'text-purple-400'));
+        btn.classList.add('active', 'bg-purple-500/30', 'text-purple-400');
+        this.loadMitra(); // Reload with filter
+      });
+    });
+  }
+
+  /**
+   * Switch section
+   */
+  switchSection(section) {
+    this.currentSection = section;
+
+    // Update nav
+    document.querySelectorAll('.bottom-nav-item').forEach(item => {
+      item.classList.toggle('active', item.dataset.section === section);
+      item.classList.toggle('text-purple-400', item.dataset.section === section);
+      item.classList.toggle('text-gray-400', item.dataset.section !== section);
+    });
+
+    // Update sections
+    document.querySelectorAll('.section-content').forEach(sec => {
+      sec.classList.toggle('hidden', sec.id !== `section-${section}`);
+    });
+
+    // Load data
+    this.loadSectionData(section);
+  }
+
+  /**
+   * Load section data
+   */
+  async loadSectionData(section) {
+    switch (section) {
+      case 'dashboard':
+        await this.loadDashboardData();
+        break;
+      case 'mitra':
+        await this.loadMitra();
+        break;
+      case 'pesanan':
+        await this.loadPesanan();
+        break;
+      case 'akun':
+        this.loadAkunData();
+        break;
     }
   }
 
   /**
-   * Update voucher count display
-   * @param {number} count - Number of vouchers
+   * Load dashboard data
    */
-  updateVoucherCount(count) {
-    const el = document.getElementById('voucher-count');
-    if (el) el.textContent = count;
+  async loadDashboardData() {
+    try {
+      showLoading('Memuat dashboard...');
+      const result = await authApi.call('getsiswadata', { userId: this.currentUser.id });
+      if (result.success) {
+        // Update quick info
+        document.getElementById('spin-available').textContent = result.spinAvailable || 0;
+        document.getElementById('voucher-active').textContent = result.voucherActive || 0;
+        document.getElementById('reward-points').textContent = result.points || 0;
+
+        // Activity
+        this.renderActivity(result.activity || []);
+
+        // Leaderboard
+        this.renderLeaderboard(result.leaderboard || []);
+      }
+    } catch (error) {
+      showError('Error', 'Gagal memuat data dashboard');
+    } finally {
+      closeLoading();
+    }
+  }
+
+  renderActivity(activities) {
+    const container = document.getElementById('activity-list');
+    if (activities.length === 0) {
+      container.innerHTML = '<div class="text-center py-6 text-gray-500"><i class="fas fa-inbox text-lg mb-2"></i><p class="text-sm">Belum ada aktivitas</p></div>';
+      return;
+    }
+    container.innerHTML = activities.map(act => `
+      <div class="glass-card p-4 flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400 text-sm font-bold">${act.icon || '🎫'}</div>
+        <div class="flex-1">
+          <div class="font-medium text-sm">${act.title}</div>
+          <div class="text-xs text-gray-500">${act.subtitle}</div>
+        </div>
+        <div class="text-xs text-gray-400">${act.time}</div>
+      </div>
+    `).join('');
+  }
+
+  renderLeaderboard(leaderboard) {
+    const container = document.getElementById('leaderboard');
+    if (leaderboard.length === 0) {
+      container.innerHTML = '<div class="text-center py-4 text-gray-500"><i class="fas fa-crown text-lg mb-2"></i><p class="text-xs">Loading top siswa...</p></div>';
+      return;
+    }
+    container.innerHTML = leaderboard.slice(0, 10).map((user, idx) => `
+      <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
+        <div class="w-8 h-8 rounded-full bg-gradient-to-r from-yellow-400 to-orange-400 text-white flex items-center justify-center text-xs font-bold">${idx + 1}</div>
+        <div class="flex-1">
+          <div class="font-medium text-sm">${user.name}</div>
+          <div class="text-xs text-gray-400">${user.kelas}</div>
+        </div>
+        <div class="text-sm font-bold text-purple-400">${user.score}</div>
+      </div>
+    `).join('');
   }
 
   /**
-   * Update play count display
-   * @param {number} count - Number of plays
+   * Load mitra list
    */
-  updatePlayCount(count) {
-    const el = document.getElementById('play-count');
-    if (el) el.textContent = count;
+  async loadMitra() {
+    try {
+      const result = await authApi.call('getmitra', { role: 'siswa' });
+      if (result.success) {
+        this.data.mitra = result.mitra || [];
+        this.renderMitra();
+      }
+    } catch (error) {
+      showError('Error', 'Gagal memuat mitra');
+    }
   }
 
-  // ==================== Toast Helpers ====================
+  renderMitra() {
+    const container = document.getElementById('mitra-list');
+    const search = document.getElementById('mitra-search').value.toLowerCase();
+    const filtered = this.data.mitra.filter(m => 
+      m.nama.toLowerCase().includes(search) || 
+      m.kategori.toLowerCase().includes(search)
+    );
 
-  showSuccess(title, message) {
-    const Toast = window.Toast;
-    if (Toast) Toast.success(title, message);
+    if (filtered.length === 0) {
+      container.innerHTML = '<div class="text-center py-12 text-gray-500"><i class="fas fa-store-slash text-3xl mb-4 opacity-50"></i><p class="text-lg">Mitra tidak ditemukan</p></div>';
+      return;
+    }
+
+    container.innerHTML = filtered.map(mitra => `
+      <div class="glass-card p-4 cursor-pointer hover:bg-white/10 transition-all rounded-xl" onclick="dashboard.pesanDiMitra('${mitra.id}')">
+        <div class="flex items-start gap-4">
+          <img src="${mitra.foto || 'data:image/svg+xml;base64,...'}" alt="${mitra.nama}" class="w-20 h-20 rounded-xl object-cover">
+          <div class="flex-1">
+            <div class="font-bold text-lg mb-1">${mitra.nama}</div>
+            <div class="text-sm text-gray-400 mb-2">${mitra.kategori}</div>
+            <div class="text-xs text-gray-500">${mitra.alamat?.slice(0, 50)}...</div>
+            <div class="flex gap-2 mt-2">
+              <span class="badge badge-success text-xs">⭐ ${mitra.rating || 4.5}</span>
+              <span class="badge badge-primary text-xs">${mitra.jarak || '1.2km'}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `).join('');
   }
 
-  showWarning(title, message) {
-    const Toast = window.Toast;
-    if (Toast) Toast.warning(title, message);
+  /**
+   * Load pesanan
+   */
+  async loadPesanan() {
+    try {
+      const result = await authApi.call('getpesanan', { userId: this.currentUser.id });
+      if (result.success) {
+        this.data.pesanan = result.pesanan || [];
+        this.renderPesanan('aktif');
+      }
+    } catch (error) {
+      showError('Error', 'Gagal memuat pesanan');
+    }
   }
 
-  showError(title, message) {
-    const Toast = window.Toast;
-    if (Toast) Toast.error(title, message);
+  switchPesananTab(tab) {
+    document.querySelectorAll('.pesanan-tab').forEach(btn => {
+      btn.classList.remove('active', 'bg-green-500/20', 'text-green-400');
+      btn.classList.add('bg-gray-500/20', 'text-gray-400');
+    });
+    event.target.classList.add('active', 'bg-green-500/20', 'text-green-400');
+
+    this.renderPesanan(tab);
   }
+
+  renderPesanan(status) {
+    const filtered = this.data.pesanan.filter(p => p.status === status);
+    const container = document.getElementById('pesanan-list');
+
+    if (filtered.length === 0) {
+      container.innerHTML = '<div class="text-center py-12 text-gray-500"><i class="fas fa-receipt text-3xl mb-4 opacity-50"></i><p class="text-lg">Belum ada pesanan ' + status + '</p></div>';
+      return;
+    }
+
+    container.innerHTML = filtered.map(pesan => `
+      <div class="glass-card p-4 rounded-xl cursor-pointer hover:bg-white/10" onclick="dashboard.showPesananDetail('${pesan.id}')">
+        <div class="flex items-start gap-4">
+          <img src="${pesan.mitraFoto}" alt="${pesan.mitraNama}" class="w-16 h-16 rounded-xl">
+          <div class="flex-1">
+            <div class="font-bold text-lg">${pesan.produk}</div>
+            <div class="text-sm text-gray-400 mb-1">${pesan.mitraNama}</div>
+            <div class="inline-flex items-center gap-1 text-xs mb-2">
+              <i class="fas fa-tag text-green-400"></i> Rp ${pesan.total}
+              ${pesan.voucher && `<span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full">Voucher</span>`}
+            </div>
+            <div class="text-xs text-gray-500">Status: <span class="font-bold capitalize">${pesan.status}</span></div>
+          </div>
+          <div class="text-right">
+            <div class="text-sm font-bold text-purple-400 mb-1">QR Ready</div>
+            <div class="text-xs text-gray-400">${new Date(pesan.expired).toLocaleString()}</div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  /**
+   * Load akun data
+   */
+  loadAkunData() {
+    // Already set in init
+    showInfo('Akun', 'Data profil dimuat');
+  }
+
+  /**
+   * Event listeners
+   */
+  setupEventListeners() {
+    // Search mitra
+    document.getElementById('mitra-search').addEventListener('input', (e) => {
+      this.renderMitra(e.target.value);
+    });
+
+    // Menu items
+    document.querySelectorAll('.menu-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        const action = e.currentTarget.dataset.action;
+        this.handleAkunAction(action);
+      });
+    });
+
+    // Edit profile etc.
+    document.getElementById('edit-profile-btn').addEventListener('click', () => showInfo('Edit Profil', 'Fitur segera hadir'));
+
+    // Logout
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      if (confirm('Logout?')) authGuard.logout();
+    });
+  }
+
+  handleAkunAction(action) {
+    const actions = {
+      voucher: () => showInfo('Voucher', 'Lihat di dashboard'),
+      'riwayat-spin': () => showInfo('Riwayat Spin', 'Fitur segera hadir'),
+      'riwayat-pesanan': () => this.switchSection('pesanan'),
+      notifikasi: () => showInfo('Notifikasi', '0 notifikasi baru'),
+      bantuan: () => showInfo('Bantuan', 'FAQ & Support')
+    };
+    actions[action]?.() || showInfo('Menu', action);
+  }
+
+  // ... keep existing game methods: initGame, startGame, spinWheel, etc.
 }
 
-// Export
-export { SiswaDashboard, WHEEL_CONFIG, gameState };
+// Keep existing WHEEL_CONFIG and game methods here...
 
-// Auto-init when DOM ready
+// Export & Auto-init
+export { SiswaDashboard };
+
 document.addEventListener('DOMContentLoaded', () => {
-  const dashboard = new SiswaDashboard();
-  dashboard.init();
-
-  // Expose functions globally for inline HTML onclicks
-  window.startGame = () => dashboard.startGame();
-  window.spinWheel = () => dashboard.spinWheel();
+  window.dashboard = new SiswaDashboard();
+  window.startGame = () => window.dashboard.startGame();
+  window.spinWheel = () => window.dashboard.spinWheel();
 });
 

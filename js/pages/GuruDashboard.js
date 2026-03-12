@@ -10,89 +10,278 @@ import { authApi } from '../auth/AuthApi.js';
 
 class GuruDashboard {
   constructor() {
-    this.schoolName = 'SMA Negeri';
+    this.currentSection = 'dashboard';
+    this.currentUser = null;
+    this.kelasId = null;
+    this.data = {
+      stats: {},
+      siswa: [],
+      kelas: [],
+      rewards: {}
+    };
   }
 
   /**
    * Initialize guru dashboard
    */
-  init() {
-    // Auth protection
-    if (!authGuard.init('guru', {
+  async init() {
+    // Auth protection - guru role only
+    const authResult = authGuard.init('guru', {
       avatarId: 'user-avatar',
-      nameId: 'user-name',
-      welcomeId: 'welcome-name',
-      logoutId: 'logout-btn'
-    })) {
+      welcomeId: 'welcome-name'
+    });
+    if (!authResult) return;
+
+    this.currentUser = authGuard.getUser();
+    this.kelasId = this.currentUser.kelasId || this.currentUser.kelas;
+    
+    themeManager.init();
+    this.setupProfile();
+    this.setupNavigation();
+    this.setupEventListeners();
+    this.setCurrentDate();
+    
+    document.getElementById('kelas-name').textContent = this.currentUser.kelasName || 'Kelas';
+
+    await this.loadDashboardData();
+    await this.loadAkunData();
+  }
+
+  setupProfile() {
+    const avatar = document.getElementById('user-avatar');
+    if (avatar) {
+      avatar.src = this.currentUser.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.currentUser.name)}&background=random`;
+    }
+
+    const profileAvatar = document.getElementById('profile-avatar');
+    if (profileAvatar) profileAvatar.src = avatar.src;
+
+    document.getElementById('profile-name').textContent = this.currentUser.name;
+    document.getElementById('profile-email').textContent = this.currentUser.email;
+  }
+
+  setupNavigation() {
+    document.querySelectorAll('.bottom-nav-item').forEach(item => {
+      item.addEventListener('click', () => this.switchSection(item.dataset.section));
+    });
+  }
+
+  switchSection(section) {
+    this.currentSection = section;
+
+    document.querySelectorAll('.bottom-nav-item').forEach(item => {
+      item.classList.toggle('active', item.dataset.section === section);
+    });
+
+    document.querySelectorAll('.section-content').forEach(sec => {
+      sec.classList.toggle('hidden', sec.id !== `section-${section}`);
+    });
+
+    this.loadSectionData(section);
+  }
+
+  setupEventListeners() {
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) logoutBtn.addEventListener('click', () => this.handleLogout());
+
+    document.querySelectorAll('.reward-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => this.switchRewardTab(btn.dataset.tab));
+    });
+
+    const siswaSearch = document.getElementById('siswa-search');
+    if (siswaSearch) siswaSearch.addEventListener('input', (e) => this.filterSiswa(e.target.value));
+
+    // Reward buttons (placeholders - implement API calls)
+    document.getElementById('beri-spin-btn')?.addEventListener('click', () => this.giveReward('spin'));
+    document.getElementById('beri-voucher-btn')?.addEventListener('click', () => this.giveReward('voucher'));
+    document.getElementById('beri-poin-btn')?.addEventListener('click', () => this.giveReward('poin'));
+  }
+
+  setCurrentDate() {
+    document.getElementById('current-date').textContent = new Date().toLocaleDateString('id-ID', {
+      weekday: 'long', day: 'numeric', month: 'long'
+    });
+  }
+
+  switchRewardTab(tab) {
+    document.querySelectorAll('.reward-tab-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tab));
+    document.querySelectorAll('.reward-content').forEach(content => content.classList.toggle('hidden', content.id !== `reward-${tab}`));
+  }
+
+  filterSiswa(query) {
+    const filtered = this.data.siswa.filter(siswa => 
+      siswa.nama.toLowerCase().includes(query.toLowerCase()) ||
+      siswa.nis.toLowerCase().includes(query.toLowerCase())
+    );
+    this.renderSiswaList(filtered);
+  }
+
+  async loadSectionData(section) {
+    switch (section) {
+      case 'siswa':
+        if (this.data.siswa.length === 0) await this.loadSiswa();
+        break;
+      case 'reward':
+        await this.loadRewardData();
+        break;
+      case 'akun':
+        this.loadAkunData();
+        break;
+    }
+  }
+
+  async loadDashboardData() {
+    try {
+      const result = await authApi.call('getgurudashboard', { kelasId: this.kelasId });
+      if (result.success) {
+        this.data.stats = result.stats;
+        this.updateDashboardStats();
+        this.renderTopSiswa(result.topSiswa || []);
+        this.renderAktivitas(result.aktivitas || []);
+      }
+    } catch (error) {
+      console.error(error);
+window.Toast?.error('Error', 'Gagal memuat dashboard');
+    }
+  }
+
+  updateDashboardStats() {
+    const stats = this.data.stats;
+    document.getElementById('stat-siswa-kelas').textContent = stats.siswaKelas || 0;
+    document.getElementById('stat-spin-kelas').textContent = stats.spinKelas || 0;
+    document.getElementById('stat-voucher-kelas').textContent = stats.voucherKelas || 0;
+    document.getElementById('stat-siswa-aktif').textContent = stats.siswaAktif || 0;
+    document.getElementById('stat-hadir').textContent = stats.hadir || 0;
+  }
+
+  renderTopSiswa(siswa) {
+    const container = document.getElementById('top-siswa-kelas');
+    if (siswa.length === 0) {
+      container.innerHTML = '<div class="text-center py-4 text-gray-500"><i class="fas fa-trophy text-lg mb-2"></i><p class="text-xs">Belum ada data</p></div>';
       return;
     }
-
-    // Initialize theme
-    themeManager.init();
-
-    // Load school info
-    this.loadSchoolInfo();
-    this.loadStudentsActivity();
-    this.loadTopVouchers();
+    container.innerHTML = siswa.slice(0, 5).map((s, idx) => `
+      <div class="flex items-center gap-3 p-2 bg-white/5 rounded-lg">
+        <span class="text-lg font-bold text-yellow-400">${idx+1}</span>
+        <div class="flex-1">
+          <div class="font-medium text-xs">${s.nama}</div>
+          <div class="text-xs text-gray-500">${s.nis}</div>
+        </div>
+        <span class="text-xs text-purple-400">${s.spin} spin</span>
+      </div>
+    `).join('');
   }
 
-  /**
-   * Load school info from user profile
-   */
-  loadSchoolInfo() {
-    const user = authGuard.getUser();
-    if (user?.profile?.sekolah) {
-      const schoolEl = document.getElementById('school-name');
-      if (schoolEl) schoolEl.textContent = user.profile.sekolah;
+  renderAktivitas(activities) {
+    const container = document.getElementById('aktivitas-terbaru');
+    if (activities.length === 0) {
+      container.innerHTML = '<div class="text-center py-4 text-gray-500"><i class="fas fa-history text-lg mb-2"></i><p class="text-xs">Belum ada aktivitas</p></div>';
+      return;
     }
+    container.innerHTML = activities.slice(0, 10).map(a => `
+      <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
+        <div class="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
+          <i class="fas fa-user text-blue-400 text-xs"></i>
+        </div>
+        <div class="flex-1">
+          <div class="font-medium text-xs">${a.siswa}</div>
+          <div class="text-xs text-gray-500">${a.aktivitas}</div>
+        </div>
+        <div class="text-xs text-gray-500">${a.waktu}</div>
+      </div>
+    `).join('');
   }
 
-  /**
-   * Load students activity
-   */
-  async loadStudentsActivity() {
+  async loadSiswa() {
     try {
-      const result = await authApi.getStudentsActivity();
-      
+      const result = await authApi.call('getsiswakelas', { kelasId: this.kelasId });
       if (result.success) {
-        this.renderStudentsActivity(result.data || []);
+        this.data.siswa = result.siswa;
+        this.renderSiswaList(result.siswa);
       }
     } catch (error) {
-      console.error('Failed to load students activity:', error);
+      console.error(error);
+      Toast.error('Error', 'Gagal memuat siswa');
     }
   }
 
-  /**
-   * Render students activity
-   * @param {Array} students - Students list
-   */
-  renderStudentsActivity(students) {
-    // Placeholder - implement based on HTML structure
-    console.log('Students activity:', students);
-  }
-
-  /**
-   * Load top vouchers
-   */
-  async loadTopVouchers() {
-    try {
-      const result = await authApi.getTopVouchers();
-      
-      if (result.success) {
-        this.renderTopVouchers(result.data || []);
-      }
-    } catch (error) {
-      console.error('Failed to load vouchers:', error);
+  renderSiswaList(siswa) {
+    const container = document.getElementById('siswa-list');
+    if (siswa.length === 0) {
+      container.innerHTML = '<div class="text-center py-6 text-gray-500"><i class="fas fa-user-graduate text-xl mb-2"></i><p class="text-sm">Belum ada siswa</p></div>';
+      return;
     }
+    container.innerHTML = siswa.map(s => `
+      <div class="glass-card p-3 flex items-center gap-3 hover:bg-white/10 cursor-pointer" onclick="window.dashboard.showSiswaDetail('${s.id}')">
+        <div class="w-12 h-12 rounded-full bg-gradient-to-r from-blue-400 to-cyan-400 flex items-center justify-center text-white font-bold text-sm">${s.nama.charAt(0)}</div>
+        <div class="flex-1 min-w-0">
+          <div class="font-medium text-sm">${s.nama}</div>
+          <div class="text-xs text-gray-500">${s.nis} • ${s.status}</div>
+        </div>
+        <i class="fas fa-chevron-right text-gray-500"></i>
+      </div>
+    `).join('');
   }
 
-  /**
-   * Render top vouchers
-   * @param {Array} vouchers - Vouchers list
-   */
-  renderTopVouchers(vouchers) {
-    // Placeholder - implement based on HTML structure
-    console.log('Top vouchers:', vouchers);
+  showSiswaDetail(id) {
+    Toast.info('Detail Siswa', `Show history reward for siswa ${id}`);
+    // Implement modal/detail
+  }
+
+  async loadRewardData() {
+    // Load siswa dropdowns for rewards
+    const siswaOptions = [{value: '', text: 'Pilih Siswa'}].concat(
+      this.data.siswa.map(s => ({value: s.id, text: s.nama}))
+    );
+    ['spin-siswa', 'voucher-siswa', 'poin-siswa'].forEach(id => {
+      const select = document.getElementById(id);
+      if (select) select.innerHTML = siswaOptions.map(opt => `<option value="${opt.value}">${opt.text}</option>`).join('');
+    });
+  }
+
+  giveReward(type) {
+    const siswaId = document.getElementById(`${type}-siswa`)?.value;
+window.Toast?.warning('Pilih Siswa', 'Harap pilih siswa terlebih dahulu');
+    
+    let jumlah;
+    if (type === 'voucher') {
+      jumlah = document.getElementById('voucher-kode')?.value;
+    } else {
+      jumlah = parseInt(document.getElementById(`${type}-jumlah`)?.value) || 0;
+window.Toast?.warning('Jumlah', 'Masukkan jumlah yang valid');
+    }
+    
+window.Toast?.loading('Memberikan reward...');
+    // Call API: authApi.call('givereward', {kelasId, siswaId, type, jumlah})
+    setTimeout(() => { // Simulate
+window.Toast?.closeLoading();
+      Toast.success('Berhasil', `Reward ${type} diberikan!`);
+      // Refresh lists
+      this.loadDashboardData();
+    }, 1500);
+  }
+
+  async loadAkunData() {
+    // Load kelas list
+    const container = document.getElementById('kelas-list');
+    container.innerHTML = `
+      <div class="p-3 bg-white/5 rounded-lg cursor-pointer hover:bg-white/10" onclick="window.dashboard.manageKelas()">
+        <div class="font-medium">XII IPA 1</div>
+        <div class="text-xs text-gray-400">25 siswa • Aktif</div>
+      </div>
+    `;
+  }
+
+  manageKelas() {
+    Toast.info('Kelola Kelas', 'Manage kelas interface');
+  }
+
+  handleLogout() {
+    Toast.fire({
+      title: 'Logout?',
+      icon: 'warning',
+      showCancelButton: true
+    }).then(r => r.isConfirmed && authGuard.logout());
   }
 }
 

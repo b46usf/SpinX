@@ -2,154 +2,295 @@
 <html lang="id" data-theme="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SpinX - Student Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SpinX - Siswa Dashboard</title>
+  <meta name="description" content="SpinX Siswa - Spin voucher, jelajahi mitra, pesan produk">
   <link rel="icon" href="data:,">
+  
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Custom Styles -->
   <link rel="stylesheet" href="css/style.css">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.all.min.js"></script>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 </head>
 
-<body class="min-h-screen">
+<body class="min-h-screen pb-20">
 
-  <!-- Header -->
-  <header class="glass-card border-b border-white/10">
-    <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-      <div class="flex items-center gap-4">
-        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center">
-          <i class="fas fa-ticket text-white"></i>
+  <!-- Top Header - Fixed -->
+  <header class="fixed top-0 left-0 right-0 z-40 glass-card border-b border-white/10">
+    <div class="flex justify-between items-center px-4 py-3">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center">
+          <i class="fas fa-user-graduate text-white text-sm"></i>
         </div>
-<h1 class="text-xl font-bold">SpinX <span class="text-gradient">Lucky</span></h1>
+        <div>
+          <h1 class="text-base font-bold text-white">SpinX <span class="text-gradient">Siswa</span></h1>
+          <p class="text-xs text-gray-400" id="kelas-name">-</p>
+        </div>
       </div>
       
-      <div class="flex items-center gap-4">
-        <!-- Theme Toggle -->
-        <button class="theme-btn" onclick="toggleTheme()" title="Toggle Theme">
-          <i class="fas fa-moon" id="theme-icon"></i>
+      <div class="flex items-center gap-2">
+        <button id="notif-btn" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-300 transition-colors">
+          <i class="fas fa-bell"></i>
         </button>
-        
-        <!-- User Menu -->
-        <div class="flex items-center gap-3 glass-card px-4 py-2">
-          <img id="user-avatar" src="" alt="Avatar" class="w-8 h-8 rounded-full">
-          <span id="user-name" class="font-medium text-sm"></span>
-          <button id="logout-btn" class="text-red-400 hover:text-red-300 ml-2">
-            <i class="fas fa-sign-out-alt"></i>
-          </button>
-        </div>
+        <img id="user-avatar" src="" alt="Avatar" class="w-9 h-9 rounded-full border-2 border-purple-500">
       </div>
     </div>
   </header>
 
-  <!-- Main Content -->
-  <main class="container mx-auto px-6 py-8">
+  <!-- Main Content Area -->
+  <main class="pt-16 px-4 pb-4">
     
-    <!-- Welcome Card -->
-    <div class="glass-card p-8 mb-8 animate-fade-in-up">
-      <div class="flex items-center justify-between">
-        <div>
-<h2 class="text-3xl font-bold mb-2">Heyy <span id="welcome-name" class="text-gradient"></span>! ✨</h2>
-<p class="text-secondary">Coba keberuntunganmu sekarang! 🍀</p>
-        </div>
-        <div class="hidden md:block">
-          <div class="w-24 h-24 rounded-full bg-gradient-to-br from-green-400 via-cyan-400 to-blue-500 flex items-center justify-center animate-float">
-            <i class="fas fa-dice text-4xl text-white"></i>
+    <!-- DASHBOARD SECTION -->
+    <section id="section-dashboard" class="section-content">
+      
+      <!-- Student Header -->
+      <div class="glass-card p-4 mb-4 animate-fade-in-up">
+        <div class="flex items-center gap-4">
+          <img id="student-avatar" src="" alt="Foto Siswa" class="w-16 h-16 rounded-full border-2 border-purple-500">
+          <div>
+            <h2 class="text-lg font-bold text-white" id="student-name">-</h2>
+            <p class="text-sm text-gray-400 mb-1" id="student-kelas">-</p>
+            <div class="flex gap-2">
+              <span class="badge badge-primary text-xs" id="school-name">-</span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Spin Game Section -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      
-      <!-- Wheel Section -->
-      <div class="glass-card p-8 animate-fade-in-up delay-1">
-<h3 class="text-xl font-bold mb-6 flex items-center gap-2">
-          <i class="fas fa-circle-notch text-indigo-400"></i>
-          Spin & Win! 🎯
-        </h3>
+      <!-- Quick Info -->
+      <div class="grid grid-cols-3 gap-3 mb-6">
+        <div class="glass-card p-4 text-center">
+          <div class="text-2xl mb-1">🎮</div>
+          <div class="text-xl font-bold text-gradient" id="spin-available">5</div>
+          <div class="text-xs text-gray-400">Spin Tersedia</div>
+        </div>
+        <div class="glass-card p-4 text-center">
+          <div class="text-2xl mb-1">🎫</div>
+          <div class="text-xl font-bold text-gradient" id="voucher-active">3</div>
+          <div class="text-xs text-gray-400">Voucher Aktif</div>
+        </div>
+        <div class="glass-card p-4 text-center">
+          <div class="text-2xl mb-1">⭐</div>
+          <div class="text-xl font-bold text-gradient" id="reward-points">150</div>
+          <div class="text-xs text-gray-400">Poin Reward</div>
+        </div>
+      </div>
 
-        <!-- WhatsApp Input -->
+      <!-- Shortcut Actions -->
+      <div class="grid grid-cols-2 gap-4 mb-6">
+        <button onclick="startGame()" id="spin-btn-shortcut" class="glass-card p-6 text-center hover:bg-white/10 transition-all">
+          <i class="fas fa-circle-notch text-3xl text-indigo-400 mb-2 block"></i>
+          <div class="font-bold text-lg">SPIN</div>
+          <div class="text-xs text-gray-400">Lucky Wheel</div>
+        </button>
+        <button id="voucher-btn" class="glass-card p-6 text-center hover:bg-white/10 transition-all">
+          <i class="fas fa-ticket-alt text-3xl text-green-400 mb-2 block"></i>
+          <div class="font-bold text-lg">Voucher</div>
+          <div class="text-xs text-gray-400">Lihat Voucher</div>
+        </button>
+      </div>
+
+      <!-- WhatsApp Input & Main Spin (migrated) -->
+      <div class="glass-card p-6 mb-6">
+        <label class="block text-sm font-bold mb-4 text-left flex items-center gap-2">
+          <i class="fas fa-phone text-green-400"></i>Nomor WhatsApp
+        </label>
         <div class="mb-6">
-          <label class="block text-sm font-medium mb-2 text-left">
-            <i class="fas fa-phone mr-2 text-green-400"></i>Nomor WhatsApp
-          </label>
           <div class="input-group">
             <input type="text" id="wa" placeholder="08xxxxxxxxxx" class="input">
             <i class="input-icon fab fa-whatsapp"></i>
           </div>
         </div>
-
         <button onclick="startGame()" class="btn btn-primary w-full mb-6">
-          <i class="fas fa-play"></i>
-          Mulai Permainan
+          <i class="fas fa-play"></i> Mulai Permainan
         </button>
+      </div>
 
-        <!-- Wheel -->
-        <div class="relative flex justify-center mb-6">
-          <canvas id="wheel" width="300" height="300" class="border-4 border-white/20 rounded-full"></canvas>
-          <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2">
+      <!-- Wheel -->
+      <div class="glass-card p-6 mb-6 text-center">
+        <div class="relative mx-auto mb-6 w-[300px] h-[300px]">
+          <canvas id="wheel" width="300" height="300" class="border-4 border-white/20 rounded-full mx-auto block"></canvas>
+          <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 pointer-events-none">
             <div class="w-0 h-0 border-l-[15px] border-l-transparent border-r-[15px] border-r-transparent border-t-[25px] border-t-red-500 filter drop-shadow-lg"></div>
           </div>
         </div>
-
-        <button onclick="spinWheel()" id="spin-btn" class="btn btn-primary w-full text-lg py-4" disabled>
-          <i class="fas fa-sync-alt"></i>
-          SPIN SEKARANG!
+        <button onclick="spinWheel()" id="spin-btn" class="btn btn-primary w-full text-lg py-4 max-w-sm mx-auto block" disabled>
+          <i class="fas fa-sync-alt fa-spin" id="spin-icon"></i> SPIN SEKARANG!
         </button>
-
-        <div id="result" class="mt-6 text-center font-bold text-xl min-h-[60px] flex items-center justify-center"></div>
+        <div id="result" class="mt-6 font-bold text-xl min-h-[60px] flex items-center justify-center text-center"></div>
       </div>
 
-      <!-- Stats & History -->
-      <div class="space-y-6">
-        
-        <!-- Quick Stats -->
-        <div class="grid grid-cols-2 gap-4">
-          <div class="glass-card p-6 text-center animate-fade-in-up delay-2">
-            <div class="text-3xl mb-2">🎫</div>
-            <div class="text-2xl font-bold text-gradient" id="voucher-count">0</div>
-            <div class="text-sm text-muted">Voucher Dimiliki</div>
+      <!-- Activity -->
+      <div class="space-y-4">
+        <h3 class="text-lg font-bold flex items-center gap-2">
+          <i class="fas fa-history text-cyan-400"></i> Aktivitas Terbaru
+        </h3>
+        <div id="activity-list" class="space-y-3">
+          <div class="text-center py-6 text-gray-500">
+            <i class="fas fa-spinner fa-spin text-lg mb-2"></i>
+            <p class="text-xs">Memuat...</p>
           </div>
-          <div class="glass-card p-6 text-center animate-fade-in-up delay-3">
-            <div class="text-3xl mb-2">🎮</div>
-            <div class="text-2xl font-bold text-gradient" id="play-count">0</div>
-            <div class="text-sm text-muted">Kali Main</div>
-          </div>
-        </div>
-
-        <!-- Voucher List -->
-        <div class="glass-card p-6 animate-fade-in-up delay-4">
-          <h4 class="font-bold mb-4 flex items-center gap-2">
-            <i class="fas fa-ticket-alt text-yellow-400"></i>
-            Voucher Saya
-          </h4>
-          <div id="voucher-list" class="space-y-3">
-            <p class="text-muted text-sm text-center py-4">Belum ada voucher</p>
-          </div>
-        </div>
-
-        <!-- Info Card -->
-        <div class="glass-card p-6 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 animate-fade-in-up delay-5">
-          <h4 class="font-bold mb-3 flex items-center gap-2">
-            <i class="fas fa-info-circle text-cyan-400"></i>
-            Cara Main
-          </h4>
-          <ol class="text-sm text-secondary space-y-2">
-            <li class="flex items-start gap-2">
-              <span class="text-indigo-400 font-bold">1.</span>
-              Masukkan nomor WhatsApp
-            </li>
-            <li class="flex items-start gap-2">
-              <span class="text-indigo-400 font-bold">2.</span>
-              Klik "Mulai Permainan"
-            </li>
-            <li class="flex items-start gap-2">
-              <span class="text-indigo-400 font-bold">3.</span>
-              Klik "SPIN" dan selamat mencoba!
-            </li>
-          </ol>
         </div>
       </div>
-    </div>
+
+      <!-- Leaderboard (optional) -->
+      <div class="glass-card p-4 mt-6">
+        <h3 class="text-lg font-bold flex items-center gap-2 mb-4">
+          <i class="fas fa-trophy text-yellow-400"></i> Leaderboard Kelas
+        </h3>
+        <div id="leaderboard" class="space-y-2 max-h-48 overflow-y-auto">
+          <div class="text-center py-4 text-gray-500">
+            <i class="fas fa-crown text-lg mb-2"></i>
+            <p class="text-xs">Loading top siswa...</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MITRA SECTION -->
+    <section id="section-mitra" class="section-content hidden">
+      <!-- Search -->
+      <div class="relative mb-6">
+        <input type="text" id="mitra-search" placeholder="Cari mitra atau kategori..." class="input text-sm py-3 pl-10 w-full">
+        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+      </div>
+
+      <!-- Kategori -->
+      <div class="flex gap-2 overflow-x-auto pb-4 mb-6">
+        <button class="kategori-btn px-4 py-2 text-xs rounded-full bg-white/10 hover:bg-white/20">Makanan</button>
+        <button class="kategori-btn px-4 py-2 text-xs rounded-full bg-white/10 hover:bg-white/20">Minuman</button>
+        <button class="kategori-btn px-4 py-2 text-xs rounded-full bg-white/10 hover:bg-white/20 active bg-purple-500/30 text-purple-400">Semua</button>
+        <button class="kategori-btn px-4 py-2 text-xs rounded-full bg-white/10 hover:bg-white/20">Snack</button>
+        <button class="kategori-btn px-4 py-2 text-xs rounded-full bg-white/10 hover:bg-white/20">Lainnya</button>
+      </div>
+
+      <!-- Mitra List -->
+      <div id="mitra-list" class="space-y-4">
+        <div class="text-center py-12 text-gray-500">
+          <i class="fas fa-store text-3xl mb-4 opacity-50"></i>
+          <p class="text-lg">Cari mitra terdekat</p>
+          <p class="text-sm">Gunakan search atau kategori</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PESANAN SECTION -->
+    <section id="section-pesanan" class="section-content hidden">
+      <!-- Pesanan Tabs -->
+      <div class="flex gap-1 mb-6 overflow-x-auto pb-2">
+        <button class="pesanan-tab active flex-shrink-0 py-3 px-6 rounded-xl bg-green-500/20 text-green-400 text-sm font-bold border border-green-400/30" data-tab="aktif">
+          Aktif
+        </button>
+        <button class="pesanan-tab flex-shrink-0 py-3 px-6 rounded-xl bg-orange-500/20 text-orange-400 text-sm font-bold border border-orange-400/30" data-tab="diproses">
+          Diproses
+        </button>
+        <button class="pesanan-tab flex-shrink-0 py-3 px-6 rounded-xl bg-blue-500/20 text-blue-400 text-sm font-bold border border-blue-400/30" data-tab="selesai">
+          Selesai
+        </button>
+        <button class="pesanan-tab flex-shrink-0 py-3 px-6 rounded-xl bg-gray-500/20 text-gray-400 text-sm font-bold border border-gray-400/30" data-tab="batal">
+          Batal
+        </button>
+      </div>
+
+      <!-- Pesanan List -->
+      <div id="pesanan-list" class="space-y-4">
+        <div class="text-center py-12 text-gray-500">
+          <i class="fas fa-receipt text-3xl mb-4 opacity-50"></i>
+          <p class="text-lg">Belum ada pesanan</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- AKUN SECTION -->
+    <section id="section-akun" class="section-content hidden">
+      <!-- Profile Card -->
+      <div class="glass-card p-6 mb-6 animate-fade-in-up">
+        <div class="flex items-center gap-4 mb-6">
+          <img id="profile-avatar" src="" alt="Profile" class="w-20 h-20 rounded-full border-3 border-purple-500">
+          <div>
+            <h2 class="text-xl font-bold" id="profile-name">-</h2>
+            <p class="text-sm text-gray-400" id="profile-email">-</p>
+            <span class="badge badge-primary text-xs mt-1">Siswa</span>
+          </div>
+        </div>
+        <button id="edit-profile-btn" class="btn btn-secondary w-full py-3 text-sm">
+          <i class="fas fa-edit mr-2"></i> Edit Profil
+        </button>
+      </div>
+
+      <!-- Menu Items -->
+      <div class="glass-card space-y-2 mb-6">
+        <button class="menu-item w-full flex items-center gap-4 p-4 rounded-xl hover:bg-white/10 transition-all" data-action="voucher">
+          <div class="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center text-green-400">
+            <i class="fas fa-ticket-alt text-xl"></i>
+          </div>
+          <div class="flex-1 text-left">
+            <div class="font-bold text-sm">Voucher Saya</div>
+            <div class="text-xs text-gray-500">Lihat semua voucher aktif</div>
+          </div>
+          <i class="fas fa-chevron-right text-gray-500"></i>
+        </button>
+        <button class="menu-item w-full flex items-center gap-4 p-4 rounded-xl hover:bg-white/10 transition-all" data-action="riwayat-spin">
+          <div class="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+            <i class="fas fa-circle-notch text-xl"></i>
+          </div>
+          <div class="flex-1 text-left">
+            <div class="font-bold text-sm">Riwayat Spin</div>
+            <div class="text-xs text-gray-500">Semua hasil spin kamu</div>
+          </div>
+          <i class="fas fa-chevron-right text-gray-500"></i>
+        </button>
+        <button class="menu-item w-full flex items-center gap-4 p-4 rounded-xl hover:bg-white/10 transition-all" data-action="riwayat-pesanan">
+          <div class="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400">
+            <i class="fas fa-receipt text-xl"></i>
+          </div>
+          <div class="flex-1 text-left">
+            <div class="font-bold text-sm">Riwayat Pesanan</div>
+            <div class="text-xs text-gray-500">Semua transaksi kamu</div>
+          </div>
+          <i class="fas fa-chevron-right text-gray-500"></i>
+        </button>
+        <button class="menu-item w-full flex items-center gap-4 p-4 rounded-xl hover:bg-white/10 transition-all" data-action="notifikasi">
+          <div class="w-12 h-12 rounded-xl bg-orange-500/20 flex items-center justify-center text-orange-400">
+            <i class="fas fa-bell text-xl"></i>
+          </div>
+          <div class="flex-1 text-left">
+            <div class="font-bold text-sm">Notifikasi</div>
+            <div class="text-xs text-gray-500">Pesan dan pengumuman</div>
+          </div>
+          <i class="fas fa-chevron-right text-gray-500"></i>
+        </button>
+        <button class="menu-item w-full flex items-center gap-4 p-4 rounded-xl hover:bg-white/10 transition-all" data-action="bantuan">
+          <div class="w-12 h-12 rounded-xl bg-gray-500/20 flex items-center justify-center text-gray-400">
+            <i class="fas fa-question-circle text-xl"></i>
+          </div>
+          <div class="flex-1 text-left">
+            <div class="font-bold text-sm">Bantuan</div>
+            <div class="text-xs text-gray-500">FAQ dan support</div>
+          </div>
+          <i class="fas fa-chevron-right text-gray-500"></i>
+        </button>
+      </div>
+
+      <!-- Logout -->
+      <button id="logout-btn" class="w-full glass-card p-5 flex items-center gap-4 text-red-400 hover:bg-red-500/10 transition-all rounded-xl border-2 border-red-400/30">
+        <div class="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center">
+          <i class="fas fa-sign-out-alt text-xl"></i>
+        </div>
+        <div class="font-bold text-left">Logout</div>
+      </button>
+    </section>
+
   </main>
 
   <!-- Load Toast first for notifications -->
@@ -169,14 +310,43 @@
     });
   </script>
 
-  <!-- Modular Scripts - Clean & DRY -->
+  <!-- Bottom Navigation -->
+  <nav class="fixed bottom-0 left-0 right-0 z-50 glass-card border-t border-white/10">
+    <div class="flex justify-around items-center px-2 py-3">
+      <button class="bottom-nav-item active flex flex-col items-center justify-center py-2 px-4 rounded-xl transition-all text-purple-400" data-section="dashboard">
+        <i class="fas fa-th-large text-lg mb-1"></i>
+        <span class="text-xs font-medium">Dashboard</span>
+      </button>
+      
+      <button class="bottom-nav-item flex flex-col items-center justify-center py-2 px-4 rounded-xl transition-all text-gray-400" data-section="mitra">
+        <i class="fas fa-store text-lg mb-1"></i>
+        <span class="text-xs">Mitra</span>
+      </button>
+      
+      <button class="bottom-nav-item flex flex-col items-center justify-center py-2 px-4 rounded-xl transition-all text-gray-400" data-section="pesanan">
+        <i class="fas fa-receipt text-lg mb-1"></i>
+        <span class="text-xs">Pesanan</span>
+      </button>
+      
+      <button class="bottom-nav-item flex flex-col items-center justify-center py-2 px-4 rounded-xl transition-all text-gray-400" data-section="akun">
+        <i class="fas fa-user-cog text-lg mb-1"></i>
+        <span class="text-xs">Akun</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed top-20 right-4 z-[60]"></div>
+
+  <!-- Modal Container -->
+  <div id="modal-container"></div>
+
+  <!-- Modular Scripts -->
   <script type="module">
-    // Import core modules - no more duplicate code!
     import './js/components/utils/Toast.js';
     import { SiswaDashboard } from './js/pages/SiswaDashboard.js';
     
-    // SiswaDashboard auto-initializes on DOMContentLoaded
-    // Exposes startGame and spinWheel globally for HTML onclick
+    // Auto-init
   </script>
 
 </body>

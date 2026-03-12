@@ -7,82 +7,159 @@
 import { authGuard } from '../core/AuthGuard.js';
 import { themeManager } from '../core/ThemeManager.js';
 import { authApi } from '../auth/AuthApi.js';
+import { showLoading, showSuccess, showError } from '../components/utils/Toast.js';
 
 class MitraDashboard {
   constructor() {
+    this.currentSection = 'dashboard';
     this.stats = {
       voucherRedeemed: 0,
       totalDiscount: 0,
-      customerCount: 0
+      customerCount: 0,
+      produk: 0,
+      transaksi: 0,
+      voucherAktif: 0
     };
+    this.qrStream = null;
   }
 
   /**
    * Initialize mitra dashboard
    */
-  init() {
+  async init() {
     // Auth protection
     if (!authGuard.init('mitra', {
       avatarId: 'user-avatar',
-      nameId: 'user-name',
+      nameId: 'user-name', 
       welcomeId: 'welcome-name',
-      logoutId: 'logout-btn'
+      logoutId: 'logout-btn',
+      profileIds: ['profile-name', 'profile-email', 'mitra-nama', 'mitra-kategori', 'mitra-kontak', 'toko-nama', 'toko-alamat', 'toko-telepon']
     })) {
       return;
     }
 
-    // Initialize theme
+    // Update mitra name in header
+    const mitraNameEl = document.getElementById('mitra-name');
+    if (mitraNameEl) {
+      const user = authGuard.getUser();
+      mitraNameEl.textContent = user?.profile?.namaMitra || 'Mitra';
+    }
+
+    // Theme + date
     themeManager.init();
+    this.updateDate();
 
-    // Load store info
-    this.loadStoreInfo();
+    // Bottom nav
+    this.initBottomNav();
 
-    // Setup redeem functionality
-    this.setupRedeem();
+    // Load dashboard (default)
+    this.loadDashboard();
 
-    // Load stats
-    this.loadStats();
-
-    // Load history
-    this.loadRedeemHistory();
+    // Event listeners
+    this.initEventListeners();
   }
 
   /**
-   * Load store info from user profile
+   * Update current date
    */
-  loadStoreInfo() {
-    const user = authGuard.getUser();
-    const profile = user?.profile;
+  updateDate() {
+    const dateEl = document.getElementById('current-date');
+    if (dateEl) {
+      dateEl.textContent = new Date().toLocaleDateString('id-ID', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    }
+  }
 
-    const elements = {
-      'store-name': profile?.namaMitra || '-',
-      'store-category': profile?.kategori || '-',
-      'store-address': profile?.alamat || '-'
-    };
-
-    Object.entries(elements).forEach(([id, value]) => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = value;
+  /**
+   * Initialize bottom navigation
+   */
+  initBottomNav() {
+    document.querySelectorAll('.bottom-nav-item').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const section = e.currentTarget.dataset.section;
+        this.switchSection(section);
+      });
     });
   }
 
   /**
-   * Setup redeem functionality
+   * Switch between sections
    */
-  setupRedeem() {
-    const form = document.getElementById('otp-form');
-    if (form) {
-      form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        this.redeemVoucher();
-      });
+  switchSection(section) {
+    // Update nav
+    document.querySelectorAll('.bottom-nav-item').forEach(btn => {
+      btn.classList.remove('active');
+    });
+    document.querySelector(`[data-section="${section}"]`).classList.add('active');
+
+    // Hide all sections
+    document.querySelectorAll('.section-content').forEach(s => {
+      s.classList.add('hidden');
+    });
+
+    // Show target section
+    document.getElementById(`section-${section}`).classList.remove('hidden');
+
+    // Load section data
+    this.currentSection = section;
+    this[`load${this.capitalize(section)}`]();
+  }
+
+  /**
+   * Capitalize string
+   */
+  capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
+  /**
+   * Initialize event listeners
+   */
+  initEventListeners() {
+    // Manual scan (Scan tab)
+    const manualBtn = document.getElementById('manual-scan-btn');
+    if (manualBtn) {
+      manualBtn.addEventListener('click', () => this.manualScan());
     }
 
-    // Also setup button click
-    const redeemBtn = document.querySelector('button[onclick="redeemVoucher()"]');
-    if (redeemBtn) {
-      redeemBtn.addEventListener('click', () => this.redeemVoucher());
-    }
+    // Scan camera toggle
+    document.querySelectorAll('.scan-tab-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const tab = e.currentTarget.dataset.tab;
+        this.switchScanTab(tab);
+      });
+    });
+
+    // Transaksi filters
+    ['hari', 'minggu', 'bulan'].forEach(period => {
+      const btn = document.getElementById(`filter-${period}`);
+      if (btn) {
+        btn.addEventListener('click', () => this.filterTransaksi(period));
+      }
+    });
+
+    // Akun menu actions
+    document.querySelectorAll('.menu-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        const action = e.currentTarget.dataset.action;
+        this.handleAkunAction(action);
+      });
+    });
+  }
+
+  /**
+   * Switch scan tabs (camera/manual)
+   */
+  switchScanTab(tab) {
+    document.querySelectorAll('.scan-tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.scan-content').forEach(content => content.classList.add('hidden'));
+    
+    document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+    document.getElementById(`scan-${tab}`).classList.remove('hidden');
   }
 
   /**
@@ -228,6 +305,118 @@ class MitraDashboard {
   formatNumber(num) {
     return new Intl.NumberFormat('id-ID').format(num);
   }
+
+  /**
+   * Load Dashboard section (default)
+   */
+  async loadDashboard() {
+    const topProdukList = document.getElementById('top-produk-list');
+    const activityList = document.getElementById('activity-list');
+    
+    // Mock data - replace with API
+    topProdukList.innerHTML = `
+      <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-400 to-orange-400 flex items-center justify-center text-white font-bold text-xs">#1</div>
+        <div class="flex-1">
+          <div class="font-medium text-sm">Mie Goreng</div>
+          <div class="text-xs text-gray-400">25 terjual</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center text-white font-bold text-xs">#2</div>
+        <div class="flex-1">
+          <div class="font-medium text-sm">Es Teh</div>
+          <div class="text-xs text-gray-400">18 terjual</div>
+        </div>
+      </div>
+    `;
+
+    activityList.innerHTML = `
+      <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
+        <div class="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
+          <i class="fas fa-check text-green-400 text-xs"></i>
+        </div>
+        <div class="flex-1">
+          <div class="font-medium text-sm">Voucher SPIN001 ditebus</div>
+          <div class="text-xs text-gray-400">2 menit lalu</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
+        <div class="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
+          <i class="fas fa-plus text-blue-400 text-xs"></i>
+        </div>
+        <div class="flex-1">
+          <div class="font-medium text-sm">Produk baru ditambahkan</div>
+          <div class="text-xs text-gray-400">1 jam lalu</div>
+        </div>
+      </div>
+    `;
+
+    // Update stats with mock
+    setTimeout(() => {
+      document.getElementById('stat-produk').textContent = '47';
+      document.getElementById('stat-transaksi').textContent = '12';
+      document.getElementById('stat-voucher').textContent = '8';
+    }, 500);
+  }
+
+  /**
+   * Load Transaksi (mock)
+   */
+  async loadTransaksi() {
+    const container = document.getElementById('transaksi-list');
+    container.innerHTML = `
+      <div class="glass-card p-3">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-sm font-medium">Budi S.</span>
+          <span class="badge badge-success">Rp 5.000</span>
+        </div>
+        <div class="text-xs text-gray-400">Hari ini 14:32</div>
+        <div class="text-xs text-gray-500">VOUCHER123</div>
+      </div>
+      <div class="glass-card p-3">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-sm font-medium">Sari K.</span>
+          <span class="badge badge-success">Rp 10.000</span>
+        </div>
+        <div class="text-xs text-gray-400">Hari ini 13:45</div>
+        <div class="text-xs text-gray-500">DISKON50</div>
+      </div>
+    `;
+  }
+
+  /**
+   * Load Scan (init camera)
+   */
+  async loadScan() {
+    // Camera logic here
+    document.getElementById('scan-status').innerHTML = 
+      '<i class="fas fa-camera text-yellow-400"></i> Arahkan kamera ke QR code';
+  }
+
+  /**
+   * Load Statistik (mock charts)
+   */
+  async loadStatistik() {
+    document.getElementById('stat-voucher-hari').textContent = '5';
+    document.getElementById('stat-voucher-minggu').textContent = '28';
+    
+    // Simple chart
+    const container = document.getElementById('diskon-chart');
+    container.innerHTML = `
+      <div style="flex:1"><div class="w-3 bg-green-500 rounded-t" style="height:30%"></div></div>
+      <div style="flex:1"><div class="w-3 bg-green-500 rounded-t" style="height:60%"></div></div>
+      <div style="flex:1"><div class="w-3 bg-green-500 rounded-t" style="height:80%"></div></div>
+      <div style="flex:1"><div class="w-3 bg-green-500 rounded-t bg-green-600" style="height:100%"></div></div>
+    `;
+  }
+
+  /**
+   * Load Akun (profile)
+   */
+  loadAkun() {
+    // Data from authGuard
+  }
 }
 
 // Export
@@ -235,7 +424,7 @@ export { MitraDashboard };
 
 // Auto-init when DOM ready
 document.addEventListener('DOMContentLoaded', () => {
-  const dashboard = new MitraDashboard();
-  dashboard.init();
+  new MitraDashboard().init();
 });
+
 
