@@ -9,6 +9,8 @@ import {
   mapPlanToDisplay
 } from './utils/planUtils.js';
 
+import { getFallbackPlans } from './utils/planUtils.js';
+
 export const PricingSection = {
   state: {
     loading: true,
@@ -35,10 +37,14 @@ export const PricingSection = {
     if (this.state.loading && !this.state.data.length) await this.preload();
 
     const { data, loading, error } = this.state;
-    const plans = data.length ? data.map(this.cleanPlanData) : [];
+    const plans = data.length ? data.map(this.cleanPlanData) : getFallbackPlans().map(mapPlanToDisplay);
 
     if (loading) return this.renderLoading();
-    if (error || !plans.length) return this.renderError();
+    // Always render if we have plans (fallback available)
+    if (!plans.length) {
+      console.warn('No pricing plans available - critical error');
+      return this.renderError();
+    }
     
     const plansHTML = plans.map(plan => this.generatePlanCard(plan)).join('');
 
@@ -61,6 +67,105 @@ export const PricingSection = {
           
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
             ${plansHTML}
+          </div>
+          
+          <!-- Price Comparison Table -->
+          <div class="mt-20 lg:mt-28">
+            <div class="max-w-6xl mx-auto">
+              <div class="text-center mb-12">
+                <h3 class="text-3xl lg:text-4xl font-black bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent mb-4">
+                  <i class="fas fa-chart-bar mr-3"></i>Perbandingan Lengkap
+                </h3>
+                <p class="text-xl text-gray-300 max-w-2xl mx-auto">Pilih plan yang sesuai kebutuhan sekolah Anda</p>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10">
+                  <thead>
+                    <tr class="divide-x divide-white/10">
+                      <th class="px-6 py-6 text-left">
+                        <span class="text-2xl font-bold text-white">Fitur</span>
+                      </th>
+                      <th class="px-6 py-6 text-center bg-gradient-to-r from-emerald-500/10 border-r border-white/20">
+                        <div class="text-center">
+                          <div class="text-4xl font-black text-emerald-400 mb-2 animate-pulse">GRATIS</div>
+                          <div class="text-sm uppercase tracking-wider text-emerald-300">Starter</div>
+                        </div>
+                      </th>
+                      <th class="px-6 py-6 text-center bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-r border-white/20 relative">
+                        <div class="absolute inset-0 bg-gradient-to-br from-amber-400 via-orange-400 to-amber-500 -skew-x-3 -rotate-1 transform"></div>
+                        <div class="relative z-10">
+                          <div class="text-3xl font-black text-yellow-900 mb-2 animate-bounce">Rp 150k</div>
+                          <div class="text-xs uppercase tracking-widest text-yellow-800 font-bold bg-yellow-400 px-3 py-1 rounded-full inline-block">⭐ POPULAR</div>
+                          <div class="text-xs uppercase tracking-wider text-yellow-700 mt-1">Pro</div>
+                        </div>
+                      </th>
+                      <th class="px-6 py-6 text-center">
+                        <div class="text-center">
+                          <div class="text-3xl font-black text-indigo-400 mb-2">Rp 500k</div>
+                          <div class="text-sm uppercase tracking-wider text-indigo-300">Enterprise</div>
+                        </div>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-white/5">
+                    <tr class="hover:bg-white/5">
+                      <td class="px-6 py-6 font-semibold text-white">Jumlah Siswa</td>
+                      <td class="px-6 py-6 text-center text-emerald-400 font-bold">50</td>
+                      <td class="px-6 py-6 text-center text-yellow-400 font-bold">200</td>
+                      <td class="px-6 py-6 text-center text-indigo-400 font-bold">Unlimited</td>
+                    </tr>
+                    <tr class="hover:bg-white/5">
+                      <td class="px-6 py-6 font-semibold text-white">Game Wheel</td>
+                      <td class="px-6 py-6 text-center">
+                        <i class="fas fa-check-circle text-emerald-400 text-lg"></i>
+                      </td>
+                      <td class="px-6 py-6 text-center">
+                        <i class="fas fa-check-circle text-emerald-400 text-lg"></i>
+                      </td>
+                      <td class="px-6 py-6 text-center">
+                        <i class="fas fa-check-circle text-emerald-400 text-lg"></i>
+                      </td>
+                    </tr>
+                    <tr class="hover:bg-white/5">
+                      <td class="px-6 py-6 font-semibold text-white">Voucher Unlimited</td>
+                      <td class="px-6 py-6 text-center">
+                        <i class="fas fa-times-circle text-red-400 text-lg"></i>
+                      </td>
+                      <td class="px-6 py-6 text-center">
+                        <i class="fas fa-check-circle text-emerald-400 text-lg"></i>
+                      </td>
+                      <td class="px-6 py-6 text-center">
+                        <i class="fas fa-check-circle text-emerald-400 text-lg"></i>
+                      </td>
+                    </tr>
+                    <tr class="hover:bg-white/5">
+                      <td class="px-6 py-6 font-semibold text-white">Support Prioritas</td>
+                      <td class="px-6 py-6 text-center">
+                        <i class="fas fa-envelope text-gray-400 text-lg"></i>
+                      </td>
+                      <td class="px-6 py-6 text-center">
+                        <i class="fas fa-headset text-emerald-400 text-lg"></i>
+                      </td>
+                      <td class="px-6 py-6 text-center">
+                        <i class="fas fa-headset text-emerald-400 text-lg animate-spin"></i>
+                      </td>
+                    </tr>
+                    <tr class="hover:bg-white/5">
+                      <td class="px-6 py-6 font-semibold text-white">Custom Branding</td>
+                      <td class="px-6 py-6 text-center">
+                        <i class="fas fa-times-circle text-red-400 text-lg"></i>
+                      </td>
+                      <td class="px-6 py-6 text-center">
+                        <i class="fas fa-times-circle text-red-400 text-lg"></i>
+                      </td>
+                      <td class="px-6 py-6 text-center">
+                        <i class="fas fa-check-circle text-emerald-400 text-lg"></i>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
           
           <div class="text-center mt-28 lg:mt-36">
@@ -148,18 +253,14 @@ export const PricingSection = {
   },
 
   cleanPlanData(plan) {
-    // Fix BE malformed data safely
-    try {
-      const fixedName = plan.name.charAt(0).toUpperCase() + plan.name.slice(1);
-      return {
-        ...plan,
-        name: fixedName,
-        features: [] // BE sends broken string, use empty for now
-      };
-    } catch (e) {
-      return plan || { name: 'Plan', priceDisplay: 'Rp 0', features: [] };
-    }
+    // Use robust mapping from utils (handles BE malformed data)
+    console.log('🧹 Cleaning plan data:', plan);
+    const cleanPlan = mapPlanToDisplay(plan);
+    console.log('✅ Cleaned plan:', cleanPlan);
+    return cleanPlan;
   },
+
+  // Remove defaultFeatures - now handled by fallback data
 
   generatePlanCard(plan) {
     const cleanPlan = this.cleanPlanData(plan);
@@ -216,7 +317,7 @@ export const PricingSection = {
         <!-- Features Section -->
         <div class="px-6 md:px-8 lg:px-12 py-8 border-t border-white/10 flex-1">
           <ul class="space-y-4 text-lg">
-            ${generateFeaturesHTML(cleanPlan.features.length ? cleanPlan.features : this.defaultFeatures(cleanPlan.id))}
+            ${generateFeaturesHTML(cleanPlan.features)}
           </ul>
         </div>
         
