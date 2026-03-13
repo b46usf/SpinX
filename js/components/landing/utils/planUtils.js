@@ -142,8 +142,8 @@ function normalizePeriod(plan, priceValue) {
 function getFullPriceDisplay(plan, priceValue) {
   const priceStr = String(plan.priceDisplay ?? '').trim();
   if (priceValue <= 0) return priceStr || 'Gratis';
-  const periodStr = normalizePeriod(plan, priceValue).replace(/^\/+/, ''); // Clean slash
-  return priceStr ? `${priceStr}/${periodStr}` : formatRupiah(priceValue);
+  // const periodStr = normalizePeriod(plan, priceValue).replace(/^\/+/, ''); // Clean slash
+  return priceStr ? `${priceStr}` : formatRupiah(priceValue);
 }
 
 function normalizePlanId(plan) {
