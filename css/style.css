@@ -591,7 +591,44 @@ body::before {
 }
 
 .pricing-card:hover {
-  box-shadow: 0 25px 50px -12px rgba(99, 102, 241, 0.4), 0 0 40px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 20px 40px -10px rgba(16, 185, 129, 0.3), 0 0 0 1px rgba(16, 185, 129, 0.2), 0 0 30px rgba(99, 102, 241, 0.15);
+  transform: translateY(-4px) scale(1.02);
+}
+
+.pricing-card .select-plan-btn {
+  position: relative;
+  z-index: 10;
+}
+
+.pricing-card.popular .select-plan-btn {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.95) 0%, rgba(34, 197, 94, 0.95) 50%, rgba(6, 182, 212, 0.95) 100%);
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+  backdrop-filter: blur(20px);
+}
+
+.pricing-card.popular .select-plan-btn:hover {
+  box-shadow: 0 12px 35px rgba(16, 185, 129, 0.5), 0 0 0 1px rgba(16, 185, 129, 0.3);
+  transform: scale(1.05);
+}
+
+.pricing-card:not(.popular) .select-plan-btn {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.pricing-card:not(.popular) .select-plan-btn:hover {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(139, 92, 246, 0.25) 100%);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
+  transform: scale(1.03);
+}
+
+@keyframes cta-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
+  50% { box-shadow: 0 0 30px rgba(16, 185, 129, 0.6), 0 0 40px rgba(99, 102, 241, 0.2); }
+}
+
+.pricing-card.popular .select-plan-btn {
+  animation: cta-glow 3s ease-in-out infinite;
 }
 
 .testimonial-card {

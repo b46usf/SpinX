@@ -48,11 +48,11 @@ export const PricingSection = {
     const comparisonHTML = comparisonRows.map(row => this.renderComparisonRow(row, normalizedPlans)).join('');
 
     return `
-      <section id="pricing" class="relative overflow-hidden bg-slate-950 py-20 md:py-24">
+      <section id="pricing" class="relative overflow-hidden bg-slate-950 py-12 md:py-16">
         <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.08),transparent_35%),radial-gradient(circle_at_80%_20%,rgba(99,102,241,0.10),transparent_28%),linear-gradient(to_bottom,rgba(15,23,42,0.98),rgba(2,6,23,1))]"></div>
 
-        <div class="relative z-10 container mx-auto max-w-7xl px-6 lg:px-8">
-          <div class="mx-auto mb-14 max-w-3xl text-center">
+        <div class="relative z-10 container mx-auto max-w-6xl px-4 lg:px-8">
+          <div class="mx-auto mb-8 max-w-2xl text-center">
             <span class="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-emerald-300">
               <i class="fas fa-layer-group text-[11px]"></i>
               Paket Harga Fleksibel
@@ -63,18 +63,18 @@ export const PricingSection = {
                 sesuai kebutuhan sekolah
               </span>
             </h2>
-            <p class="mt-5 text-base leading-7 text-slate-300 md:text-lg">
-              Tampilan dibuat lebih ringkas, mudah dibaca, dan aman untuk data pricing dari backend
-              yang formatnya bisa berubah-ubah.
+            <p class="mt-4 text-base leading-6 text-slate-300 md:text-lg">
+              Pilih paket pricing fleksibel dan scalable untuk sekolah Anda. Termasuk update otomatis, 
+              support prioritas, dan scaling tanpa batas.
             </p>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             ${plansHTML}
           </div>
 
-          <div class="mt-16 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04] shadow-[0_20px_80px_rgba(0,0,0,0.25)] backdrop-blur">
-            <div class="border-b border-white/10 px-6 py-5 md:px-8">
+          <div class="mt-12 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] shadow-xl backdrop-blur">
+            <div class="border-b border-white/10 px-4 py-4 md:px-6">
               <h3 class="text-xl font-bold text-white md:text-2xl">Perbandingan fitur utama</h3>
               <p class="mt-2 text-sm leading-6 text-slate-400 md:text-base">
                 Bandingkan batas siswa, fitur utama, dan dukungan untuk tiap paket secara cepat.
@@ -108,7 +108,7 @@ export const PricingSection = {
             </div>
           </div>
 
-          <div class="mt-12 grid gap-4 rounded-3xl border border-emerald-400/15 bg-gradient-to-r from-emerald-500/8 via-cyan-500/5 to-indigo-500/8 p-6 md:grid-cols-3 md:p-8">
+          <div class="mt-10 grid gap-3 rounded-2xl border border-emerald-400/15 bg-gradient-to-r from-emerald-500/8 via-cyan-500/5 to-indigo-500/8 p-4 md:grid-cols-3 md:p-6">
             <div class="rounded-2xl border border-white/8 bg-white/[0.03] p-5">
               <div class="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-400/10 text-emerald-300">
                 <i class="fas fa-bolt"></i>
@@ -246,7 +246,7 @@ export const PricingSection = {
     const badgeText = plan.popular ? 'Paling dipilih' : plan.price <= 0 ? 'Mulai gratis' : 'Siap scaling';
 
     return `
-      <article class="group relative flex h-full flex-col rounded-[28px] border ${tone.card} p-6 shadow-[0_18px_60px_rgba(0,0,0,0.22)] backdrop-blur transition duration-300 hover:-translate-y-1">
+      <article class="group relative flex h-full flex-col rounded-2xl border ${tone.card} p-5 shadow-lg backdrop-blur transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 pricing-card">
         <div class="flex items-start justify-between gap-4">
           <div>
             <span class="inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${tone.badge}">
@@ -279,7 +279,7 @@ export const PricingSection = {
           <div class="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
             Fitur utama
           </div>
-          <ul class="space-y-3">
+          <ul class="space-y-2.5">
             ${generateFeaturesHTML(plan.features)}
           </ul>
         </div>
@@ -290,8 +290,10 @@ export const PricingSection = {
             class="select-plan-btn inline-flex w-full items-center justify-center rounded-2xl px-5 py-4 text-sm font-bold transition ${tone.button}"
           >
             <span>${plan.cta || 'Pilih Paket'}</span>
-            <i class="fas fa-arrow-right ml-2 text-xs transition group-hover:translate-x-1"></i>
+            <i class="fas fa-arrow-right ml-2 text-xs transition-transform group-hover:translate-x-2"></i>
           </button>
+          ${plan.popular ? '<div class="absolute -inset-1 bg-gradient-to-r from-emerald-400/20 to-cyan-400/20 rounded-2xl blur opacity-75 animate-ping group-hover:opacity-100 transition-opacity"></div>' : ''}
+        </div>
         </div>
       </article>
     `;
