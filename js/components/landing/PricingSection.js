@@ -138,7 +138,6 @@ export const PricingSection = {
                             ${plan.popular ? 'Paling direkomendasikan' : 'Paket'}
                           </span>
                           <strong>${plan.name}</strong>
-                          <small>${plan.fullPriceDisplay}</small>
                         </div>
                       </th>
                     `).join('')}

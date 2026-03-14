@@ -335,7 +335,7 @@ export const TestimonialsSection = {
   render: () => `
     <section id="testimonials" class="landing-section landing-anchor testimonials-section" data-nav-section>
       <div class="landing-shell">
-        <div class="landing-section-head">
+        <div class="landing-section-head landing-section-head--single">
           <div class="landing-fade" style="--fade-delay: 40ms;">
             <span class="landing-eyebrow landing-fade" style="--fade-delay: 80ms;">
               <span class="landing-eyebrow__dot"></span>
@@ -346,11 +346,6 @@ export const TestimonialsSection = {
               <span class="landing-heading__accent">kenapa sekolah berani lanjut aktivasi</span>
             </h2>
           </div>
-
-          <p class="landing-subheading landing-section-head__copy landing-fade" style="--fade-delay: 140ms;">
-            Saat manfaatnya terbaca jelas dan hasilnya terdengar masuk akal,
-            pengunjung lebih cepat percaya lalu bergerak ke CTA berikutnya.
-          </p>
         </div>
 
         <div id="testimonial-carousel" class="testimonial-carousel">

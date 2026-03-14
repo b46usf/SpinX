@@ -58,7 +58,7 @@ export const FeaturesSection = {
   render: () => `
     <section id="features" class="landing-section landing-anchor" data-nav-section>
       <div class="landing-shell">
-        <div class="landing-section-head">
+        <div class="landing-section-head landing-section-head--single">
           <div class="landing-fade" style="--fade-delay: 40ms;">
             <span class="landing-eyebrow landing-fade" style="--fade-delay: 80ms;">
               <span class="landing-eyebrow__dot"></span>
@@ -69,11 +69,6 @@ export const FeaturesSection = {
               <span class="landing-heading__accent">menjadi transaksi di kantin</span>
             </h2>
           </div>
-
-          <p class="landing-subheading landing-section-head__copy landing-fade" style="--fade-delay: 140ms;">
-            Section ini sekarang langsung menjawab pertanyaan yang menentukan closing:
-            bagaimana promo bekerja, kenapa sekolah percaya, dan apa langkah berikutnya untuk mulai aktif.
-          </p>
         </div>
 
         <div class="feature-grid">

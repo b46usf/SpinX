@@ -42,15 +42,6 @@ export const HeroSection = {
             <a href="#features" class="landing-btn landing-btn--secondary">Lihat Alur Demo</a>
           </div>
 
-          <div class="hero-signals">
-            ${heroSignals.map((signal, index) => `
-              <div class="hero-signal landing-fade" style="--fade-delay: ${280 + (index * 60)}ms;">
-                <span class="hero-signal__icon"><i class="fas fa-check"></i></span>
-                <span>${signal}</span>
-              </div>
-            `).join('')}
-          </div>
-
           <div class="hero-stats">
             ${heroStats.map((stat, index) => `
               <div class="hero-stat landing-fade" style="--fade-delay: ${420 + (index * 70)}ms;">
@@ -72,24 +63,35 @@ export const HeroSection = {
             </div>
 
             <div class="hero-panel__content">
-              <div class="hero-wheel-card">
-                <div class="hero-wheel-card__meta">
-                  <span>Lucky Wheel aktif</span>
-                  <strong>08:00 - 16:00</strong>
-                </div>
+              <div class="hero-primary-stack">
+                <div class="hero-wheel-card">
+                  <div class="hero-wheel-card__meta">
+                    <span>Lucky Wheel aktif</span>
+                    <strong>08:00 - 16:00</strong>
+                  </div>
 
-                <div class="hero-wheel">
-                  <div class="hero-wheel__pointer"></div>
-                  <div class="hero-wheel__center">
-                    <span>spinX</span>
-                    <small>promo</small>
+                  <div class="hero-wheel">
+                    <div class="hero-wheel__pointer"></div>
+                    <div class="hero-wheel__center">
+                      <span>spinX</span>
+                      <small>promo</small>
+                    </div>
+                  </div>
+
+                  <div class="hero-wheel-card__steps">
+                    <span>Scan</span>
+                    <span>Spin</span>
+                    <span>Redeem</span>
                   </div>
                 </div>
 
-                <div class="hero-wheel-card__steps">
-                  <span>Scan</span>
-                  <span>Spin</span>
-                  <span>Redeem</span>
+                <div class="hero-signals">
+                  ${heroSignals.map((signal, index) => `
+                    <div class="hero-signal landing-fade" style="--fade-delay: ${280 + (index * 60)}ms;">
+                      <span class="hero-signal__icon"><i class="fas fa-check"></i></span>
+                      <span>${signal}</span>
+                    </div>
+                  `).join('')}
                 </div>
               </div>
 

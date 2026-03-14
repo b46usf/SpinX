@@ -163,7 +163,7 @@ export const Navbar = {
         return;
       }
 
-      const duration = Math.min(420, Math.max(220, Math.abs(distance) * 0.18));
+      const duration = Math.min(240, Math.max(120, Math.abs(distance) * 0.08));
       let startTime = null;
 
       const easeOutCubic = (progress) => 1 - ((1 - progress) ** 3);
