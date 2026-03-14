@@ -1,6 +1,6 @@
 /**
- * DRY Plan Utils - Shared across PricingSection + future components
- * Single source of truth for pricing logic
+ * DRY Plan Utils
+ * Shared pricing helpers for landing components.
  */
 
 import { authApi } from '../../../auth/AuthApi.js';
@@ -11,21 +11,25 @@ const MAX_VISIBLE_FEATURES = 6;
 
 function toNumber(value, fallback = 0) {
   if (typeof value === 'number' && Number.isFinite(value)) return value;
+
   if (typeof value === 'string') {
     const normalized = value.replace(/[^\d.-]/g, '');
     const parsed = Number(normalized);
     if (Number.isFinite(parsed)) return parsed;
   }
+
   return fallback;
 }
 
 function toBoolean(value) {
   if (typeof value === 'boolean') return value;
   if (typeof value === 'number') return value === 1;
+
   if (typeof value === 'string') {
     const normalized = value.trim().toLowerCase();
     return ['true', '1', 'yes', 'y', 'popular'].includes(normalized);
   }
+
   return false;
 }
 
@@ -33,14 +37,16 @@ function capitalizeLabel(text = '') {
   return String(text)
     .trim()
     .replace(/\s+/g, ' ')
-    .replace(/\b\w/g, char => char.toUpperCase());
+    .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
 function detectIncludedFeature(rawFeature) {
   if (typeof rawFeature?.included === 'boolean') return rawFeature.included;
   if (rawFeature?.enabled !== undefined) return toBoolean(rawFeature.enabled);
   if (rawFeature?.available !== undefined) return toBoolean(rawFeature.available);
-  if (rawFeature?.value !== undefined && typeof rawFeature.value === 'boolean') return rawFeature.value;
+  if (rawFeature?.value !== undefined && typeof rawFeature.value === 'boolean') {
+    return rawFeature.value;
+  }
 
   const text = String(
     rawFeature?.text ??
@@ -72,6 +78,7 @@ function normalizeFeature(rawFeature) {
   if (typeof rawFeature === 'string') {
     const text = rawFeature.trim();
     if (!text) return null;
+
     return {
       text,
       included: detectIncludedFeature(rawFeature)
@@ -105,16 +112,14 @@ function parseFeatures(features) {
 
   if (typeof rawFeatures === 'string') {
     const trimmed = rawFeatures.trim();
-
     if (!trimmed) return [];
 
     try {
-      const parsed = JSON.parse(trimmed);
-      rawFeatures = parsed;
+      rawFeatures = JSON.parse(trimmed);
     } catch {
       rawFeatures = trimmed
-        .split(/\r?\n|[,;•]/)
-        .map(item => item.trim())
+        .split(/\r?\n|[,;]|\u2022/)
+        .map((item) => item.trim())
         .filter(Boolean);
     }
   }
@@ -142,8 +147,7 @@ function normalizePeriod(plan, priceValue) {
 function getFullPriceDisplay(plan, priceValue) {
   const priceStr = String(plan.priceDisplay ?? '').trim();
   if (priceValue <= 0) return priceStr || 'Gratis';
-  // const periodStr = normalizePeriod(plan, priceValue).replace(/^\/+/, ''); // Clean slash
-  return priceStr ? `${priceStr}` : formatRupiah(priceValue);
+  return priceStr || formatRupiah(priceValue);
 }
 
 function normalizePlanId(plan) {
@@ -153,7 +157,9 @@ function normalizePlanId(plan) {
 
   if (source.includes('enterprise')) return 'enterprise';
   if (source.includes('pro')) return 'pro';
-  if (source.includes('free') || source.includes('gratis') || source.includes('starter')) return 'starter';
+  if (source.includes('free') || source.includes('gratis') || source.includes('starter')) {
+    return 'starter';
+  }
 
   return source.replace(/\s+/g, '-');
 }
@@ -175,11 +181,12 @@ function normalizeStudentLimit(plan) {
 
   for (const candidate of candidates) {
     if (candidate === null || candidate === undefined || candidate === '') continue;
+
     if (typeof candidate === 'string' && /unlimited|tak terbatas/i.test(candidate)) {
       return Number.POSITIVE_INFINITY;
     }
 
-    const numeric = toNumber(candidate, NaN);
+    const numeric = toNumber(candidate, Number.NaN);
     if (Number.isFinite(numeric)) return numeric;
   }
 
@@ -192,9 +199,6 @@ function inferPopular(plan, id, priceValue) {
   return id === 'pro' || (priceValue > 0 && priceValue < 500000);
 }
 
-/**
- * Load pricing data from BE (with retry + cache)
- */
 export async function loadPricingData(retries = 3) {
   if (
     window._pricingCache &&
@@ -203,7 +207,7 @@ export async function loadPricingData(retries = 3) {
     return window._pricingCache.plans;
   }
 
-  for (let attempt = 1; attempt <= retries; attempt++) {
+  for (let attempt = 1; attempt <= retries; attempt += 1) {
     try {
       const result = await authApi.getPricePlans();
       if (result?.success && Array.isArray(result.plans) && result.plans.length > 0) {
@@ -218,7 +222,7 @@ export async function loadPricingData(retries = 3) {
     }
 
     if (attempt < retries) {
-      await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+      await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
     }
   }
 
@@ -226,23 +230,17 @@ export async function loadPricingData(retries = 3) {
   return [];
 }
 
-/**
- * Generate features HTML (DRY)
- */
 export function generateFeaturesHTML(features = []) {
-  return features.map(feature => `
-    <li class="flex items-start gap-3 rounded-2xl border border-white/6 bg-white/[0.03] px-4 py-3 ${feature.included ? 'text-slate-200' : 'text-slate-500'}">
-      <span class="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full ${feature.included ? 'bg-emerald-500/15 text-emerald-400' : 'bg-rose-500/10 text-rose-300'}">
-        <i class="fas fa-${feature.included ? 'check' : 'minus'} text-[10px]"></i>
+  return features.map((feature) => `
+    <li class="pricing-feature ${feature.included ? 'is-included' : 'is-disabled'}">
+      <span class="pricing-feature__icon">
+        <i class="fas fa-${feature.included ? 'check' : 'minus'}"></i>
       </span>
-      <span class="text-sm leading-6 ${feature.included ? '' : 'line-through decoration-slate-500/60'}">${feature.text}</span>
+      <span class="pricing-feature__text">${feature.text}</span>
     </li>
   `).join('');
 }
 
-/**
- * Map BE plan to display plan (normalize)
- */
 export function mapPlanToDisplay(plan = {}) {
   try {
     const id = normalizePlanId(plan);
@@ -272,19 +270,20 @@ export function mapPlanToDisplay(plan = {}) {
         plan.description ??
         plan.subtitle ??
         (price <= 0
-          ? 'Mulai gratis untuk mencoba fitur inti.'
-          : 'Cocok untuk sekolah yang ingin bertumbuh lebih cepat.')
+          ? 'Mulai dari alur inti untuk validasi kebutuhan sekolah.'
+          : 'Dirancang untuk sekolah yang butuh operasional promo lebih stabil.')
       ).trim(),
       features
     };
   } catch (error) {
-    console.error('❌ Plan parsing failed:', error, plan);
+    console.error('Plan parsing failed:', error, plan);
 
     return {
       id: 'starter',
       name: 'Starter',
       price: 0,
       priceDisplay: 'Gratis',
+      fullPriceDisplay: 'Gratis',
       cta: 'Pilih Paket',
       period: 'Selamanya',
       maxStudents: 0,
@@ -296,13 +295,10 @@ export function mapPlanToDisplay(plan = {}) {
   }
 }
 
-/**
- * Preload pricing data globally
- */
 export async function preloadPricingData() {
   try {
     await loadPricingData();
-    console.log('✅ Pricing data preloaded successfully');
+    console.log('Pricing data preloaded successfully');
   } catch (error) {
     console.warn('Pricing preload failed (fallback will be used):', error);
   }

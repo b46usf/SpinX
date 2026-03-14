@@ -1,89 +1,89 @@
 /**
  * Footer Component
- * Footer for landing page
+ * Compact footer aligned with the refreshed landing page style.
  */
 
-// Footer links data - single source of truth
-const footerLinks = {
-  products: [
-    { text: 'Fitur', href: '#features' },
-    { text: 'Harga', href: '#pricing' },
-    { text: 'Demo', href: '#' },
-    { text: 'API', href: '#' }
-  ],
-  company: [
-    { text: 'Tentang Kami', href: '#' },
-    { text: 'Blog', href: '#' },
-    { text: 'Karir', href: '#' },
-    { text: 'Kontak', href: '#' }
-  ],
-  social: [
-    { icon: 'fab fa-instagram', href: '#' },
-    { icon: 'fab fa-telegram', href: '#' },
-    { icon: 'fab fa-whatsapp', href: '#' }
-  ]
-};
+const footerColumns = [
+  {
+    title: 'Navigasi',
+    links: [
+      { text: 'Beranda', href: '#home' },
+      { text: 'Solusi', href: '#features' },
+      { text: 'Paket', href: '#pricing' },
+      { text: 'Testimoni', href: '#testimonials' }
+    ]
+  },
+  {
+    title: 'Aksi',
+    links: [
+      { text: 'Ajukan Aktivasi', href: '#cta' },
+      { text: 'Bandingkan Paket', href: '#pricing' },
+      { text: 'Lihat Testimoni', href: '#testimonials' },
+      { text: 'Support', href: 'mailto:support@gameumkm.com' }
+    ]
+  }
+];
+
+const socialLinks = [
+  { icon: 'fas fa-envelope', href: 'mailto:support@gameumkm.com', label: 'Email' },
+  { icon: 'fas fa-arrow-trend-up', href: '#pricing', label: 'Pricing' },
+  { icon: 'fas fa-headset', href: '#cta', label: 'Contact' }
+];
 
 export const Footer = {
-  render: () => {
-    const productsLinks = footerLinks.products.map(l => 
-      `<li><a href="${l.href}" class="text-gray-400 hover:text-white text-sm transition-colors">${l.text}</a></li>`
-    ).join('');
-    
-    const companyLinks = footerLinks.company.map(l => 
-      `<li><a href="${l.href}" class="text-gray-400 hover:text-white text-sm transition-colors">${l.text}</a></li>`
-    ).join('');
-    
-    const socialLinks = footerLinks.social.map(s => 
-      `<a href="${s.href}" class="w-10 h-10 rounded-lg bg-gray-800 flex items-center justify-center text-gray-400 hover:text-white hover:bg-indigo-600 transition-all"><i class="${s.icon}"></i></a>`
-    ).join('');
-    
-    return `
-      <footer class="bg-gray-900/80 border-t border-gray-800">
-        <div class="container mx-auto px-4 py-12">
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <!-- Logo & Description - Full width on mobile, 2 cols on desktop -->
-            <div class="md:col-span-2">
-              <div class="flex items-center gap-3 mb-4">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center">
-                  <i class="fas fa-dharmachakra text-white text-lg"></i>
-                </div>
-                <span class="font-bold text-xl text-white">spin<span class="text-indigo-400">X</span></span>
-              </div>
-              <p class="text-gray-400 text-sm mb-4 max-w-sm">Lucky Wheel promo platform untuk kantin sekolah. Tingkatkan penjualan dan engage siswa dengan cara yang fun!</p>
-              <div class="flex gap-4">
-                ${socialLinks}
-              </div>
-            </div>
-            
-            <!-- Products & Company - 2 column inline grid on all screens -->
-            <div class="col-span-2 grid grid-cols-2 gap-8">
-              <div>
-                <h4 class="text-white font-semibold mb-4">Produk</h4>
-                <ul class="space-y-2">
-                  ${productsLinks}
-                </ul>
-              </div>
-              <div>
-                <h4 class="text-white font-semibold mb-4">Perusahaan</h4>
-                <ul class="space-y-2">
-                  ${companyLinks}
-                </ul>
-              </div>
+  render: () => `
+    <footer class="landing-footer">
+      <div class="landing-shell">
+        <div class="landing-footer__top">
+          <div class="landing-footer__brand">
+            <a href="#home" class="lp-brand lp-brand--footer">
+              <span class="lp-brand__mark">
+                <i class="fas fa-dharmachakra"></i>
+              </span>
+              <span class="lp-brand__copy">
+                <strong>spinX Booster</strong>
+                <small>Promo interaktif yang lebih tertata untuk kantin sekolah.</small>
+              </span>
+            </a>
+
+            <p>
+              Landing page ini dirapikan agar tiap komponen terasa lebih padat, mudah dipindai,
+              dan tetap konsisten dari hero sampai proses aktivasi.
+            </p>
+
+            <div class="landing-footer__social">
+              ${socialLinks.map((item) => `
+                <a href="${item.href}" aria-label="${item.label}">
+                  <i class="${item.icon}"></i>
+                </a>
+              `).join('')}
             </div>
           </div>
-          <div class="border-t border-gray-800 mt-8 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p class="text-gray-500 text-sm">© 2024 spinX. All rights reserved.</p>
-            <div class="flex gap-4">
-              <a href="#" class="text-gray-500 hover:text-white text-sm transition-colors">Privacy Policy</a>
-              <a href="#" class="text-gray-500 hover:text-white text-sm transition-colors">Terms of Service</a>
-            </div>
+
+          <div class="landing-footer__columns">
+            ${footerColumns.map((column) => `
+              <div class="landing-footer__column">
+                <h4>${column.title}</h4>
+                <ul>
+                  ${column.links.map((link) => `
+                    <li><a href="${link.href}">${link.text}</a></li>
+                  `).join('')}
+                </ul>
+              </div>
+            `).join('')}
           </div>
         </div>
-      </footer>
-    `;
-  }
+
+        <div class="landing-footer__bottom">
+          <p>Copyright 2026 spinX Booster. Semua hak dilindungi.</p>
+          <div class="landing-footer__bottom-links">
+            <a href="#pricing">Paket</a>
+            <a href="#cta">Kontak</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  `
 };
 
 export default Footer;
-

@@ -1,60 +1,141 @@
 /**
  * Hero Section Component
- * Main hero section with wheel animation for landing page
+ * Presents the product value proposition with a cleaner dashboard-style layout.
  */
+
+const heroStats = [
+  { value: '500+', label: 'Sekolah aktif' },
+  { value: '50rb+', label: 'Siswa terlayani' },
+  { value: '87%', label: 'Voucher terpakai' }
+];
+
+const heroSignals = [
+  'Aktivasi cepat tanpa setup berlapis',
+  'Voucher promo langsung siap dipakai',
+  'Dashboard ringkas untuk tim sekolah'
+];
 
 export const HeroSection = {
   render: () => `
-    <section class="relative min-h-screen flex items-center pt-16">
-      <div class="container mx-auto px-4 py-20">
-        <div class="grid lg:grid-cols-2 gap-12 items-center">
-          <div class="text-center lg:text-left relative z-10">
-            <div class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-500/20 border border-indigo-500/30 rounded-full mb-6">
-              <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-              <span class="text-indigo-300 text-sm">Sekarang di Kantin Sekolah!</span>
-            </div>
-            <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
-              Booster Bisnis Kantin
-              <span class="gradient-text">Sekolah Anda!</span>
-            </h1>
-            <p class="text-gray-400 text-lg sm:text-xl mb-8 max-w-xl mx-auto lg:mx-0">
-              Tingkatkan penjualan kantin dengan Lucky Wheel promo interaktif. Murah, mudah, dan terbukti menambah pelanggan!
-            </p>
-            <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <a href="#pricing" class="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white font-bold rounded-xl shadow-xl shadow-indigo-500/30 hover:shadow-indigo-500/50 transition-all transform hover:scale-105">
-                <i class="fas fa-rocket mr-2"></i>Mulai Sekarang
-              </a>
-              <a href="#features" class="inline-flex items-center justify-center px-8 py-4 bg-white/10 border border-white/20 text-white font-semibold rounded-xl hover:bg-white/20 transition-all">
-                <i class="fas fa-play mr-2"></i>Pelajari Lebih Lanjut
-              </a>
-            </div>
-            <div class="grid grid-cols-3 gap-6 mt-12 pt-8 border-t border-white/10">
-              <div><div class="text-2xl sm:text-3xl font-bold text-white">500+</div><div class="text-gray-500 text-sm">Sekolah</div></div>
-              <div><div class="text-2xl sm:text-3xl font-bold text-white">50rb+</div><div class="text-gray-500 text-sm">Siswa</div></div>
-              <div><div class="text-2xl sm:text-3xl font-bold text-white">4.9</div><div class="text-gray-500 text-sm">Rating</div></div>
-            </div>
+    <section id="home" class="landing-section landing-section--hero landing-anchor hero-section" data-nav-section>
+      <div class="landing-shell hero-layout">
+        <div class="hero-copy">
+          <span class="landing-eyebrow">
+            <span class="landing-eyebrow__dot"></span>
+            Platform promo yang rapi untuk operasional kantin sekolah
+          </span>
+
+          <h1 class="landing-heading hero-title">
+            Promo Lucky Wheel yang terlihat menarik,
+            <span class="landing-heading__accent">tetap terasa profesional</span>
+            saat dijalankan di sekolah.
+          </h1>
+
+          <p class="landing-subheading hero-description">
+            spinX membantu tim sekolah mengelola promo interaktif dengan alur yang lebih singkat,
+            tampilan lebih proporsional, dan monitoring yang mudah dipahami dari hari pertama.
+          </p>
+
+          <div class="hero-actions">
+            <a href="#pricing" class="landing-btn landing-btn--primary">Lihat Paket</a>
+            <a href="#features" class="landing-btn landing-btn--secondary">Pelajari Solusi</a>
           </div>
-          <div class="relative flex justify-center lg:justify-end">
-            <div class="wheel-glow"></div>
-            <div class="w-80 h-80 sm:w-96 sm:h-96 relative floating">
-              <svg viewBox="0 0 400 400" class="w-full h-full transform hover:rotate-12 transition-transform duration-700">
-                <defs><filter id="glow"><feGaussianBlur stdDeviation="3" result="coloredBlur"/><feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
-                <circle cx="200" cy="200" r="190" fill="none" stroke="#6366f1" stroke-width="8" filter="url(#glow)"/>
-                <circle cx="200" cy="200" r="175" fill="#1a1a2e" stroke="rgba(99,102,241,0.3)" stroke-width="2"/>
-                <path d="M200 200 L200 25 A175 175 0 0 1 353 118 Z" fill="#ef4444" opacity="0.8"/>
-                <path d="M200 200 L353 118 A175 175 0 0 1 353 282 Z" fill="#f59e0b" opacity="0.8"/>
-                <path d="M200 200 L353 282 A175 175 0 0 1 200 375 Z" fill="#10b981" opacity="0.8"/>
-                <path d="M200 200 L200 375 A175 175 0 0 1 47 282 Z" fill="#3b82f6" opacity="0.8"/>
-                <path d="M200 200 L47 282 A175 175 0 0 1 47 118 Z" fill="#8b5cf6" opacity="0.8"/>
-                <path d="M200 200 L47 118 A175 175 0 0 1 200 25 Z" fill="#ec4899" opacity="0.8"/>
-                <circle cx="200" cy="200" r="50" fill="url(#centerGradient)" filter="url(#glow)"/>
-                <defs><radialGradient id="centerGradient"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#8b5cf6"/></radialGradient></defs>
-                <text x="200" y="195" text-anchor="middle" fill="white" font-size="14" font-weight="bold">spin</text>
-                <text x="200" y="215" text-anchor="middle" fill="white" font-size="14" font-weight="bold">X</text>
-                <polygon points="200,10 190,40 210,40" fill="#ffffff" filter="url(#glow)"/>
-              </svg>
-              <div class="absolute -top-4 -right-4 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg"><i class="fas fa-gift mr-1"></i> Discount 20%</div>
-              <div class="absolute -bottom-2 -left-4 bg-pink-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg"><i class="fas fa-star mr-1"></i> Gratis Spin</div>
+
+          <div class="hero-signals">
+            ${heroSignals.map((signal) => `
+              <div class="hero-signal">
+                <span class="hero-signal__icon"><i class="fas fa-check"></i></span>
+                <span>${signal}</span>
+              </div>
+            `).join('')}
+          </div>
+
+          <div class="hero-stats">
+            ${heroStats.map((stat) => `
+              <div class="hero-stat">
+                <strong>${stat.value}</strong>
+                <span>${stat.label}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="hero-visual">
+          <div class="hero-panel">
+            <div class="hero-panel__header">
+              <div>
+                <span class="hero-panel__label">Preview operasional</span>
+                <h2>Dashboard promo harian</h2>
+              </div>
+              <span class="hero-panel__status">Live</span>
+            </div>
+
+            <div class="hero-panel__content">
+              <div class="hero-wheel-card">
+                <div class="hero-wheel-card__meta">
+                  <span>Lucky Wheel aktif</span>
+                  <strong>08:00 - 16:00</strong>
+                </div>
+
+                <div class="hero-wheel">
+                  <div class="hero-wheel__pointer"></div>
+                  <div class="hero-wheel__center">
+                    <span>spinX</span>
+                    <small>promo</small>
+                  </div>
+                </div>
+
+                <div class="hero-wheel-card__steps">
+                  <span>Scan</span>
+                  <span>Spin</span>
+                  <span>Redeem</span>
+                </div>
+              </div>
+
+              <div class="hero-side-stack">
+                <div class="hero-metric-card">
+                  <span class="hero-metric-card__label">Redeem voucher</span>
+                  <strong>87%</strong>
+                  <small>Naik 18% dibanding minggu lalu</small>
+                </div>
+
+                <div class="hero-metric-card hero-metric-card--accent">
+                  <span class="hero-metric-card__label">Antrian tetap lancar</span>
+                  <strong>14 dtk</strong>
+                  <small>Rata-rata proses redeem di kasir</small>
+                </div>
+
+                <div class="hero-activity-card">
+                  <div class="hero-activity-card__head">
+                    <span>Aktivitas terbaru</span>
+                    <strong>Hari ini</strong>
+                  </div>
+
+                  <div class="hero-activity-card__list">
+                    <div class="hero-activity-item">
+                      <span class="hero-activity-item__badge">A1</span>
+                      <div>
+                        <strong>Voucher 20% berhasil dipakai</strong>
+                        <small>Kantin SMPN 3 - 10:42 WIB</small>
+                      </div>
+                    </div>
+                    <div class="hero-activity-item">
+                      <span class="hero-activity-item__badge">B7</span>
+                      <div>
+                        <strong>Promo baru aktif untuk jam istirahat</strong>
+                        <small>Otomatis berjalan - 09:55 WIB</small>
+                      </div>
+                    </div>
+                    <div class="hero-activity-item">
+                      <span class="hero-activity-item__badge">C4</span>
+                      <div>
+                        <strong>Dashboard siswa sinkron kembali</strong>
+                        <small>Data siap dipantau bendahara</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -64,4 +145,3 @@ export const HeroSection = {
 };
 
 export default HeroSection;
-

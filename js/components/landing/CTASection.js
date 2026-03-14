@@ -1,40 +1,83 @@
 /**
  * CTA Section Component
- * Call-to-action section for landing page
+ * Closing section with a clearer action path.
  */
+
+const ctaChecklist = [
+  'Pilih paket sesuai kapasitas sekolah',
+  'Isi data admin sekolah dalam satu langkah',
+  'Lanjut onboarding tanpa alur yang memanjang'
+];
 
 export const CTASection = {
   render: () => `
-    <section class="section-padding">
-      <div class="container mx-auto px-4">
-        <div class="cta-gradient rounded-3xl p-8 sm:p-12 text-center relative overflow-hidden">
-          <div class="absolute top-0 left-0 w-32 h-32 bg-white/10 rounded-full -translate-x-16 -translate-y-16"></div>
-          <div class="absolute bottom-0 right-0 w-32 h-32 bg-white/10 rounded-full translate-x-16 translate-y-16"></div>
-          <div class="relative z-10">
-            <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">Siap Booster Kantin Anda?</h2>
-            <p class="text-white/80 mb-8 max-w-xl mx-auto">Mulai sekarang dan rasakan perbedaan dalam bisnis kantin Anda.</p>
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
-              <button data-plan="starter" class="cta-start-btn inline-flex items-center justify-center px-8 py-4 bg-white text-indigo-600 font-bold rounded-xl hover:bg-gray-100 transition-all shadow-lg">
-                <i class="fas fa-rocket mr-2"></i>Coba Gratis Sekarang
+    <section id="cta" class="landing-section landing-section--tight landing-anchor" data-nav-section>
+      <div class="landing-shell">
+        <div class="cta-panel">
+          <div class="cta-panel__copy">
+            <span class="landing-eyebrow">
+              <span class="landing-eyebrow__dot"></span>
+              Siap dipakai tanpa proses yang rumit
+            </span>
+            <h2 class="landing-heading">
+              Butuh landing flow yang lebih rapi untuk mulai aktivasi sekolah?
+            </h2>
+            <p class="landing-subheading">
+              Mulai dari paket yang paling sesuai, lalu tim sekolah bisa langsung masuk ke proses
+              pendaftaran dan pendampingan tanpa kebingungan.
+            </p>
+
+            <div class="cta-panel__list">
+              ${ctaChecklist.map((item) => `
+                <div class="cta-panel__list-item">
+                  <span><i class="fas fa-check"></i></span>
+                  <p>${item}</p>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="cta-panel__actions">
+            <div class="cta-contact-card">
+              <span class="cta-contact-card__label">Support onboarding</span>
+              <strong>Respon lebih cepat di jam kerja sekolah</strong>
+              <p>Gunakan tombol aktivasi untuk langsung memilih paket dan mengirim data sekolah.</p>
+            </div>
+
+            <div class="cta-panel__buttons">
+              <button data-plan="pro" class="cta-start-btn landing-btn landing-btn--primary">
+                Ajukan Aktivasi
               </button>
-              <a href="#pricing" class="inline-flex items-center justify-center px-8 py-4 bg-white/10 border border-white/30 text-white font-semibold rounded-xl hover:bg-white/20 transition-all">
-                <i class="fas fa-comments mr-2"></i>Chat via WhatsApp
+              <a href="#pricing" class="landing-btn landing-btn--secondary">
+                Bandingkan Paket
               </a>
+            </div>
+
+            <div class="cta-panel__meta">
+              <div>
+                <span>Email</span>
+                <strong>support@gameumkm.com</strong>
+              </div>
+              <div>
+                <span>Mode implementasi</span>
+                <strong>Remote onboarding</strong>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </section>
   `,
-  
+
   initEvents: (callbacks = {}) => {
-    document.querySelectorAll('.cta-start-btn').forEach(btn => {
+    document.querySelectorAll('.cta-start-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
-        if (callbacks.onSelectPlan) callbacks.onSelectPlan(btn.dataset.plan);
+        if (callbacks.onSelectPlan) {
+          callbacks.onSelectPlan(btn.dataset.plan || 'starter');
+        }
       });
     });
   }
 };
 
 export default CTASection;
-

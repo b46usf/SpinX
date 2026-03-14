@@ -1,6 +1,6 @@
 /**
  * Pricing Section Component
- * Cleaner visual hierarchy + safer BE data parsing
+ * Compact pricing layout with fixed plan-to-modal interaction.
  */
 
 import {
@@ -9,11 +9,30 @@ import {
   mapPlanToDisplay
 } from './utils/planUtils.js';
 
+const pricingHighlights = [
+  {
+    icon: 'fa-bolt',
+    title: 'Aktivasi lebih singkat',
+    text: 'Mulai dari paket lalu lanjut isi data sekolah tanpa langkah berulang.'
+  },
+  {
+    icon: 'fa-shield-halved',
+    title: 'Benefit lebih terbaca',
+    text: 'Kapasitas, fitur inti, dan status paket tampil lebih proporsional.'
+  },
+  {
+    icon: 'fa-headset',
+    title: 'Support lebih jelas',
+    text: 'Pengunjung langsung tahu ke mana harus lanjut jika siap aktivasi.'
+  }
+];
+
 export const PricingSection = {
   state: {
     loading: true,
     error: null,
-    data: []
+    data: [],
+    eventsBound: false
   },
 
   async preload() {
@@ -21,7 +40,6 @@ export const PricingSection = {
       this.state.loading = true;
       this.state.data = await loadPricingData();
       this.state.error = null;
-      console.log('✅ Pricing loaded:', this.state.data.length, 'plans');
     } catch (error) {
       this.state.error = error.message;
       this.state.data = [];
@@ -31,71 +49,96 @@ export const PricingSection = {
     }
   },
 
+  getNormalizedPlans() {
+    return this.state.data.length
+      ? this.state.data.map((plan) => this.cleanPlanData(plan))
+      : [];
+  },
+
+  findPlanById(planId) {
+    return this.getNormalizedPlans().find((plan) => plan.id === planId) || null;
+  },
+
   async render() {
     if (this.state.loading && !this.state.data.length) {
       await this.preload();
     }
 
-    const { data, loading } = this.state;
-    const plans = data.length ? data.map(plan => this.cleanPlanData(plan)) : [];
+    const { loading } = this.state;
+    const plans = this.sortPlans(this.getNormalizedPlans());
 
     if (loading) return this.renderLoading();
     if (!plans.length) return this.renderError();
 
-    const normalizedPlans = this.sortPlans(plans);
-    const plansHTML = normalizedPlans.map(plan => this.generatePlanCard(plan)).join('');
-    const comparisonRows = this.getComparisonRows(normalizedPlans);
-    const comparisonHTML = comparisonRows.map(row => this.renderComparisonRow(row, normalizedPlans)).join('');
+    const plansHTML = plans.map((plan) => this.generatePlanCard(plan)).join('');
+    const comparisonRows = this.getComparisonRows(plans);
+    const comparisonHTML = comparisonRows
+      .map((row) => this.renderComparisonRow(row, plans))
+      .join('');
 
     return `
-      <section id="pricing" class="relative overflow-hidden bg-slate-950 py-12 md:py-16">
-        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.08),transparent_35%),radial-gradient(circle_at_80%_20%,rgba(99,102,241,0.10),transparent_28%),linear-gradient(to_bottom,rgba(15,23,42,0.98),rgba(2,6,23,1))]"></div>
-
-        <div class="relative z-10 container mx-auto max-w-6xl px-4 lg:px-8">
-          <div class="mx-auto mb-8 max-w-2xl text-center">
-            <span class="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-emerald-300">
-              <i class="fas fa-layer-group text-[11px]"></i>
-              Paket Harga Fleksibel
-            </span>
-            <h2 class="mt-6 text-4xl font-black leading-tight text-white md:text-5xl">
-              Pilih paket yang
-              <span class="bg-gradient-to-r from-emerald-300 to-cyan-300 bg-clip-text text-transparent">
-                sesuai kebutuhan sekolah
+      <section id="pricing" class="landing-section landing-anchor pricing-section" data-nav-section>
+        <div class="landing-shell">
+          <div class="landing-section-head pricing-section__head">
+            <div>
+              <span class="landing-eyebrow">
+                <span class="landing-eyebrow__dot"></span>
+                Pricing yang lebih rapi dan mudah dibandingkan
               </span>
-            </h2>
-            <p class="mt-4 text-base leading-6 text-slate-300 md:text-lg">
-              Pilih paket pricing fleksibel dan scalable untuk sekolah Anda. Termasuk update otomatis, 
-              support prioritas, dan scaling tanpa batas.
-            </p>
+              <h2 class="landing-heading">
+                Paket dibuat lebih compact,
+                <span class="landing-heading__accent">tanpa menghilangkan konteks penting</span>
+              </h2>
+            </div>
+
+            <div class="pricing-summary-card">
+              <span class="pricing-summary-card__label">Ringkasan cepat</span>
+              <strong>Semua paket sudah siap untuk alur promo inti</strong>
+              <p>Pilih sesuai skala sekolah, lalu lanjutkan pendaftaran dari tombol paket yang paling cocok.</p>
+            </div>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-3 gap-4">
+          <div class="pricing-plan-grid">
             ${plansHTML}
           </div>
 
-          <div class="mt-12 overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] shadow-xl backdrop-blur">
-            <div class="border-b border-white/10 px-4 py-4 md:px-6">
-              <h3 class="text-xl font-bold text-white md:text-2xl">Perbandingan fitur utama</h3>
-              <p class="mt-2 text-sm leading-6 text-slate-400 md:text-base">
-                Bandingkan batas siswa, fitur utama, dan dukungan untuk tiap paket secara cepat.
-              </p>
+          <div class="pricing-highlights">
+            ${pricingHighlights.map((item) => `
+              <div class="pricing-highlight">
+                <span class="pricing-highlight__icon"><i class="fas ${item.icon}"></i></span>
+                <div>
+                  <strong>${item.title}</strong>
+                  <p>${item.text}</p>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+
+          <div class="pricing-comparison">
+            <div class="pricing-comparison__head">
+              <div>
+                <span class="landing-eyebrow">
+                  <span class="landing-eyebrow__dot"></span>
+                  Perbandingan fitur utama
+                </span>
+                <h3>Bandingkan paket secara cepat sebelum aktivasi</h3>
+              </div>
+              <p>Geser tabel di layar kecil untuk melihat semua paket.</p>
             </div>
 
-            <div class="overflow-x-auto">
-              <table class="min-w-full text-sm text-slate-200">
-                <thead class="bg-white/[0.03]">
-                  <tr class="border-b border-white/10">
-                    <th class="min-w-[220px] px-6 py-4 text-left text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 md:px-8">
-                      Fitur
-                    </th>
-                    ${normalizedPlans.map(plan => `
-                      <th class="min-w-[180px] px-5 py-4 text-center md:px-6">
-                        <div class="inline-flex flex-col items-center gap-2">
-                          <span class="rounded-full ${plan.popular ? 'bg-emerald-400/15 text-emerald-300 border-emerald-400/20' : 'bg-white/5 text-slate-300 border-white/10'} border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em]">
-                            ${plan.popular ? 'Rekomendasi' : 'Paket'}
+            <div class="pricing-comparison__table-wrap">
+              <table class="pricing-table">
+                <thead>
+                  <tr>
+                    <th>Fitur</th>
+                    ${plans.map((plan) => `
+                      <th>
+                        <div class="pricing-table__plan">
+                          <span class="pricing-table__badge ${plan.popular ? 'is-popular' : ''}">
+                            ${plan.popular ? 'Paling direkomendasikan' : 'Paket'}
                           </span>
-                          <div class="text-base font-bold text-white md:text-lg">${plan.name}</div>
-                          <div class="text-sm text-slate-400">${plan.fullPriceDisplay}</div>
+                          <strong>${plan.name}</strong>
+                          <small>${plan.fullPriceDisplay}</small>
                         </div>
                       </th>
                     `).join('')}
@@ -107,30 +150,6 @@ export const PricingSection = {
               </table>
             </div>
           </div>
-
-          <div class="mt-10 grid gap-3 rounded-2xl border border-emerald-400/15 bg-gradient-to-r from-emerald-500/8 via-cyan-500/5 to-indigo-500/8 p-4 md:grid-cols-3 md:p-6">
-            <div class="rounded-2xl border border-white/8 bg-white/[0.03] p-5">
-              <div class="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-400/10 text-emerald-300">
-                <i class="fas fa-bolt"></i>
-              </div>
-              <h4 class="text-base font-semibold text-white">Aktivasi cepat</h4>
-              <p class="mt-2 text-sm leading-6 text-slate-400">Paket dapat langsung dipilih tanpa alur yang membingungkan.</p>
-            </div>
-            <div class="rounded-2xl border border-white/8 bg-white/[0.03] p-5">
-              <div class="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-400/10 text-cyan-300">
-                <i class="fas fa-headset"></i>
-              </div>
-              <h4 class="text-base font-semibold text-white">Support jelas</h4>
-              <p class="mt-2 text-sm leading-6 text-slate-400">Informasi bantuan dan benefit ditampilkan lebih rapi dan konsisten.</p>
-            </div>
-            <div class="rounded-2xl border border-white/8 bg-white/[0.03] p-5">
-              <div class="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-400/10 text-indigo-300">
-                <i class="fas fa-shield-alt"></i>
-              </div>
-              <h4 class="text-base font-semibold text-white">Data lebih aman</h4>
-              <p class="mt-2 text-sm leading-6 text-slate-400">Parsing plan kini lebih tahan terhadap data backend yang tidak seragam.</p>
-            </div>
-          </div>
         </div>
       </section>
     `;
@@ -138,27 +157,22 @@ export const PricingSection = {
 
   renderLoading() {
     return `
-      <section id="pricing" class="bg-slate-950 py-20 md:py-24">
-        <div class="container mx-auto max-w-6xl px-6 lg:px-8">
-          <div class="mx-auto mb-12 max-w-2xl text-center">
-            <div class="mx-auto h-12 w-44 animate-pulse rounded-full bg-white/5"></div>
-            <div class="mx-auto mt-6 h-10 w-3/4 animate-pulse rounded-2xl bg-white/5"></div>
-            <div class="mx-auto mt-4 h-6 w-2/3 animate-pulse rounded-xl bg-white/5"></div>
+      <section id="pricing" class="landing-section landing-anchor pricing-section" data-nav-section>
+        <div class="landing-shell">
+          <div class="landing-loading-card">
+            <div class="landing-loading-card__head"></div>
+            <div class="landing-loading-card__subhead"></div>
           </div>
 
-          <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
-            ${[1, 2, 3].map(() => `
-              <div class="rounded-3xl border border-white/10 bg-white/[0.04] p-6 backdrop-blur">
-                <div class="h-6 w-24 animate-pulse rounded-lg bg-white/5"></div>
-                <div class="mt-5 h-10 w-32 animate-pulse rounded-xl bg-white/5"></div>
-                <div class="mt-3 h-5 w-24 animate-pulse rounded-lg bg-white/5"></div>
-                <div class="mt-6 space-y-3">
-                  <div class="h-14 animate-pulse rounded-2xl bg-white/5"></div>
-                  <div class="h-14 animate-pulse rounded-2xl bg-white/5"></div>
-                  <div class="h-14 animate-pulse rounded-2xl bg-white/5"></div>
-                  <div class="h-14 animate-pulse rounded-2xl bg-white/5"></div>
-                </div>
-                <div class="mt-6 h-12 animate-pulse rounded-2xl bg-white/5"></div>
+          <div class="pricing-plan-grid">
+            ${Array.from({ length: 3 }, () => `
+              <div class="landing-loading-card landing-loading-card--plan">
+                <div class="landing-loading-card__pill"></div>
+                <div class="landing-loading-card__title"></div>
+                <div class="landing-loading-card__subhead"></div>
+                <div class="landing-loading-card__price"></div>
+                <div class="landing-loading-card__list"></div>
+                <div class="landing-loading-card__button"></div>
               </div>
             `).join('')}
           </div>
@@ -169,31 +183,18 @@ export const PricingSection = {
 
   renderError() {
     return `
-      <section id="pricing" class="bg-slate-950 py-20 md:py-24">
-        <div class="container mx-auto max-w-3xl px-6 lg:px-8">
-          <div class="rounded-3xl border border-amber-400/20 bg-amber-500/10 p-8 text-center shadow-[0_20px_60px_rgba(0,0,0,0.25)] backdrop-blur md:p-10">
-            <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-400/15 text-amber-300">
-              <i class="fas fa-exclamation-triangle text-2xl"></i>
-            </div>
-            <h2 class="mt-5 text-2xl font-black text-white md:text-3xl">Pricing belum tersedia</h2>
-            <p class="mx-auto mt-3 max-w-2xl text-sm leading-7 text-slate-300 md:text-base">
-              Data paket belum berhasil dimuat. Silakan hubungi tim support untuk mendapatkan informasi harga terbaru.
+      <section id="pricing" class="landing-section landing-anchor pricing-section" data-nav-section>
+        <div class="landing-shell">
+          <div class="pricing-error-card">
+            <span class="pricing-error-card__icon"><i class="fas fa-circle-exclamation"></i></span>
+            <h2>Data paket belum tersedia saat ini</h2>
+            <p>
+              Informasi pricing belum berhasil dimuat. Anda masih bisa menghubungi tim support
+              untuk mendapatkan paket terbaru dan opsi implementasi yang sesuai.
             </p>
-            <div class="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-              <a
-                href="mailto:support@gameumkm.com"
-                class="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
-              >
-                <i class="fas fa-envelope mr-2"></i>
-                Email Support
-              </a>
-              <a
-                href="https://wa.me/6281234567890?text=Halo%2C%20saya%20ingin%20bertanya%20tentang%20paket%20pricing"
-                class="inline-flex items-center justify-center rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-5 py-3 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-400/15"
-              >
-                <i class="fab fa-whatsapp mr-2"></i>
-                WhatsApp
-              </a>
+            <div class="pricing-error-card__actions">
+              <a href="mailto:support@gameumkm.com" class="landing-btn landing-btn--primary">Email Support</a>
+              <a href="#cta" class="landing-btn landing-btn--secondary">Lihat Kontak</a>
             </div>
           </div>
         </div>
@@ -213,88 +214,66 @@ export const PricingSection = {
   getPlanTone(plan) {
     if (plan.popular) {
       return {
-        badge: 'border-emerald-400/20 bg-emerald-400/10 text-emerald-300',
-        price: 'from-emerald-300 to-cyan-300',
-        button: 'bg-emerald-400 text-slate-950 hover:bg-emerald-300',
-        ring: 'ring-1 ring-emerald-400/20',
-        card: 'border-emerald-400/20 bg-gradient-to-b from-emerald-500/10 to-white/[0.04]'
+        icon: 'fa-crown',
+        badge: 'Paling seimbang',
+        helper: 'Untuk promo rutin sekolah',
+        cardClass: 'is-popular'
       };
     }
 
     if (plan.price <= 0) {
       return {
-        badge: 'border-cyan-400/20 bg-cyan-400/10 text-cyan-300',
-        price: 'from-cyan-300 to-sky-300',
-        button: 'bg-white/8 text-white hover:bg-white/12',
-        ring: 'ring-1 ring-white/10',
-        card: 'border-white/10 bg-white/[0.04]'
+        icon: 'fa-seedling',
+        badge: 'Mulai ringan',
+        helper: 'Untuk validasi kebutuhan awal',
+        cardClass: 'is-starter'
       };
     }
 
     return {
-      badge: 'border-indigo-400/20 bg-indigo-400/10 text-indigo-300',
-      price: 'from-indigo-300 to-violet-300',
-      button: 'bg-white/8 text-white hover:bg-white/12',
-      ring: 'ring-1 ring-white/10',
-      card: 'border-white/10 bg-white/[0.04]'
+      icon: 'fa-building',
+      badge: 'Untuk skala lanjut',
+      helper: 'Untuk sekolah dengan skala lebih besar',
+      cardClass: 'is-enterprise'
     };
   },
 
   generatePlanCard(plan) {
     const tone = this.getPlanTone(plan);
-    const periodText = plan.period;
-    const badgeText = plan.popular ? 'Paling dipilih' : plan.price <= 0 ? 'Mulai gratis' : 'Siap scaling';
 
     return `
-      <article class="group relative flex h-full flex-col rounded-2xl border ${tone.card} p-5 shadow-lg backdrop-blur transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 pricing-card">
-        <div class="flex items-start justify-between gap-4">
+      <article class="pricing-plan ${tone.cardClass}">
+        <div class="pricing-plan__header">
           <div>
-            <span class="inline-flex items-center rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${tone.badge}">
-              ${badgeText}
-            </span>
-            <h3 class="mt-4 text-2xl font-black text-white">${plan.name}</h3>
-            <p class="mt-2 text-sm leading-6 text-slate-400">${plan.description}</p>
+            <span class="pricing-plan__badge">${tone.badge}</span>
+            <h3>${plan.name}</h3>
           </div>
-          ${plan.popular ? `
-            <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-400/15 text-emerald-300">
-              <i class="fas fa-crown"></i>
-            </div>
-          ` : ''}
+          <span class="pricing-plan__icon"><i class="fas ${tone.icon}"></i></span>
         </div>
 
-        <div class="mt-8 rounded-3xl border border-white/8 bg-slate-950/40 p-5 ${tone.ring}">
-          <div class="bg-gradient-to-r ${tone.price} bg-clip-text text-4xl font-black text-transparent md:text-5xl">
-            ${plan.fullPriceDisplay}
-          </div>
-          <div class="mt-2 text-sm font-medium uppercase tracking-[0.16em] text-slate-400">
-            ${periodText}
-          </div>
-          <div class="mt-4 inline-flex items-center gap-2 rounded-full bg-white/[0.04] px-3 py-2 text-xs font-medium text-slate-300">
-            <i class="fas fa-users text-emerald-300"></i>
-            ${plan.maxStudentsDisplay}
-          </div>
+        <p class="pricing-plan__description">${plan.description}</p>
+
+        <div class="pricing-plan__price">
+          <strong>${plan.fullPriceDisplay}</strong>
+          <span>${plan.period}</span>
         </div>
 
-        <div class="mt-6">
-          <div class="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
-            Fitur utama
-          </div>
-          <ul class="space-y-2.5">
-            ${generateFeaturesHTML(plan.features)}
-          </ul>
+        <div class="pricing-plan__meta">
+          <span><i class="fas fa-users"></i>${plan.maxStudentsDisplay}</span>
+          <span><i class="fas fa-bolt"></i>${tone.helper}</span>
         </div>
 
-        <div class="mt-8 pt-2">
-          <button
-            data-plan="${plan.id}"
-            class="select-plan-btn inline-flex w-full items-center justify-center rounded-2xl px-5 py-4 text-sm font-bold transition ${tone.button}"
-          >
-            <span>${plan.cta || 'Pilih Paket'}</span>
-            <i class="fas fa-arrow-right ml-2 text-xs transition-transform group-hover:translate-x-2"></i>
-          </button>
-          ${plan.popular ? '<div class="absolute -inset-1 bg-gradient-to-r from-emerald-400/20 to-cyan-400/20 rounded-2xl blur opacity-75 animate-ping group-hover:opacity-100 transition-opacity"></div>' : ''}
-        </div>
-        </div>
+        <div class="pricing-plan__feature-head">Fitur utama yang langsung didapat</div>
+        <ul class="pricing-plan__features">
+          ${generateFeaturesHTML(plan.features)}
+        </ul>
+
+        <button
+          data-plan="${plan.id}"
+          class="select-plan-btn landing-btn ${plan.popular ? 'landing-btn--primary' : 'landing-btn--secondary'}"
+        >
+          ${plan.cta || 'Pilih Paket'}
+        </button>
       </article>
     `;
   },
@@ -303,23 +282,17 @@ export const PricingSection = {
     return [
       {
         label: 'Harga',
-        getValue: plan => ({
-          type: 'text',
-          value: plan.fullPriceDisplay
-        })
+        getValue: (plan) => ({ type: 'text', value: plan.fullPriceDisplay })
       },
       {
         label: 'Kapasitas siswa',
-        getValue: plan => ({
-          type: 'text',
-          value: plan.maxStudentsDisplay
-        })
+        getValue: (plan) => ({ type: 'text', value: plan.maxStudentsDisplay })
       },
       {
         label: 'Status paket',
-        getValue: plan => ({
+        getValue: (plan) => ({
           type: 'badge',
-          value: plan.popular ? 'Rekomendasi' : plan.price <= 0 ? 'Gratis' : 'Premium'
+          value: plan.popular ? 'Rekomendasi' : plan.price <= 0 ? 'Starter' : 'Lanjutan'
         })
       },
       ...this.buildFeatureRows(plans)
@@ -329,8 +302,8 @@ export const PricingSection = {
   buildFeatureRows(plans) {
     const featureMap = new Map();
 
-    plans.forEach(plan => {
-      plan.features.forEach(feature => {
+    plans.forEach((plan) => {
+      plan.features.forEach((feature) => {
         const key = feature.text.toLowerCase();
         if (!featureMap.has(key)) {
           featureMap.set(key, { label: feature.text });
@@ -338,10 +311,13 @@ export const PricingSection = {
       });
     });
 
-    return Array.from(featureMap.values()).map(item => ({
+    return Array.from(featureMap.values()).map((item) => ({
       label: item.label,
-      getValue: plan => {
-        const matched = plan.features.find(feature => feature.text.toLowerCase() === item.label.toLowerCase());
+      getValue: (plan) => {
+        const matched = plan.features.find(
+          (feature) => feature.text.toLowerCase() === item.label.toLowerCase()
+        );
+
         return {
           type: 'boolean',
           value: matched ? matched.included : false
@@ -352,9 +328,9 @@ export const PricingSection = {
 
   renderComparisonRow(row, plans) {
     return `
-      <tr class="border-b border-white/6 last:border-b-0">
-        <td class="px-6 py-4 text-sm font-medium text-white md:px-8">${row.label}</td>
-        ${plans.map(plan => this.renderComparisonCell(row.getValue(plan))).join('')}
+      <tr>
+        <td class="pricing-table__label">${row.label}</td>
+        ${plans.map((plan) => this.renderComparisonCell(row.getValue(plan))).join('')}
       </tr>
     `;
   },
@@ -362,9 +338,9 @@ export const PricingSection = {
   renderComparisonCell(cell) {
     if (cell.type === 'boolean') {
       return `
-        <td class="px-5 py-4 text-center md:px-6">
-          <span class="inline-flex h-8 w-8 items-center justify-center rounded-full ${cell.value ? 'bg-emerald-400/15 text-emerald-300' : 'bg-white/5 text-slate-500'}">
-            <i class="fas fa-${cell.value ? 'check' : 'minus'} text-xs"></i>
+        <td>
+          <span class="pricing-table__boolean ${cell.value ? 'is-yes' : 'is-no'}">
+            <i class="fas fa-${cell.value ? 'check' : 'minus'}"></i>
           </span>
         </td>
       `;
@@ -372,40 +348,46 @@ export const PricingSection = {
 
     if (cell.type === 'badge') {
       return `
-        <td class="px-5 py-4 text-center md:px-6">
-          <span class="inline-flex rounded-full border ${cell.value === 'Rekomendasi' ? 'border-emerald-400/20 bg-emerald-400/10 text-emerald-300' : 'border-white/10 bg-white/5 text-slate-300'} px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em]">
+        <td>
+          <span class="pricing-table__status ${cell.value === 'Rekomendasi' ? 'is-popular' : ''}">
             ${cell.value}
           </span>
         </td>
       `;
     }
 
-    return `
-      <td class="px-5 py-4 text-center text-sm text-slate-300 md:px-6">
-        ${cell.value}
-      </td>
-    `;
+    return `<td class="pricing-table__text">${cell.value}</td>`;
   },
 
-  initEvents(callbacks = {}) {
-    document.addEventListener('click', (e) => {
-      if (e.target.matches('.select-plan-btn, .select-plan-btn *')) {
-        const btn = e.target.closest('.select-plan-btn');
-        const planId = btn.dataset.plan;
-        console.log('Plan selected:', planId);
-        
-        // Direct modal integration - set plan + open
-        const badge = document.getElementById('selected-plan-badge');
-        const planInput = document.getElementById('selected-plan');
-        const modal = document.getElementById('register-modal');
-        
-        if (badge) {
-          const planName = PricingSection.state.data.find(p => p.id === planId)?.name || planId.toUpperCase();
-          badge.textContent = planName || 'Starter';
-        }
-        if (planInput) planInput.value = planId;
-        if (modal) modal.classList.remove('hidden');
-      }
+  openPlanModal(planId = 'starter') {
+    const fallbackPlan = this.sortPlans(this.getNormalizedPlans())[0];
+    const plan = this.findPlanById(planId) || fallbackPlan;
+    const modal = document.getElementById('register-modal');
+    const badge = document.getElementById('selected-plan-badge');
+    const planInput = document.getElementById('selected-plan');
+
+    if (!modal || !plan) return;
+
+    if (badge) {
+      badge.textContent = `${plan.name} - ${plan.fullPriceDisplay}`;
+    }
+
+    if (planInput) {
+      planInput.value = plan.id;
+    }
+
+    modal.classList.remove('hidden');
+  },
+
+  initEvents() {
+    if (this.state.eventsBound) return;
+    this.state.eventsBound = true;
+
+    document.addEventListener('click', (event) => {
+      const button = event.target.closest('.select-plan-btn');
+      if (!button) return;
+
+      this.openPlanModal(button.dataset.plan);
     });
   }
 };

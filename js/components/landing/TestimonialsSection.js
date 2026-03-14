@@ -1,246 +1,238 @@
 /**
  * Testimonials Section Component
- * Customer testimonials for landing page with carousel slider
+ * Responsive testimonial carousel with cleaner data and corrected slide behavior.
  */
 
-// Testimonial data - single source of truth
 const testimonialsData = [
   {
-    name: 'Bpk. Budi',
-    role: 'Kantin SMPN 1',
-    initials: 'B',
-    gradient: 'from-indigo-500 to-purple-500',
-    text: '"Sekarang kantin kami rame banget! Siswa-siswa pada excited sama Lucky Wheel-nya. Penjualan naik 30% dalam sebulan!"'
-  },
-  {
-    name: 'Ibu Siti',
-    role: 'Kantin SDN Jakarta',
-    initials: 'S',
-    gradient: 'from-pink-500 to-rose-500',
-    text: '"Mudah banget setup-nya. Hanya butuh 5 menit langsung jadi. Tanya jawab sama admin juga responsif banget!"'
-  },
-  {
-    name: 'Pak Agus',
-    role: 'Kantin SMAN Bandung',
-    initials: 'A',
-    gradient: 'from-blue-500 to-cyan-500',
-    text: '"Siswa-siswa jadi lebih semangat makan di kantin. Voucher-nya juga canggih, guru bisa monitoring easily."'
-  },
-  {
-    name: 'Ibu Ratna',
-    role: 'Kantin SDN Surabaya',
+    name: 'Ibu Rina',
+    role: 'Pengelola Kantin SMPN 1',
     initials: 'R',
-    gradient: 'from-green-500 to-emerald-500',
-    text: '"Aplikasi ini luar biasa! Siswa-siswa antusias sekali menunggu giliran spin. Tocong kami sekarang selalu rame!"'
+    tone: 'is-teal',
+    result: '+32% transaksi',
+    text: 'Tampilan yang lebih rapi membuat siswa cepat paham. Promo tetap menarik, tetapi alurnya tidak bikin kasir kewalahan.'
   },
   {
-    name: 'Bpk. Hadi',
-    role: 'Kantin SMKN 2',
-    initials: 'H',
-    gradient: 'from-orange-500 to-red-500',
-    text: '"Fitur vouchernya lengkap dan mudah digunakan. Siswa mudah memahami cara pakainya."'
+    name: 'Pak Adi',
+    role: 'Koordinator Operasional SMAN 8',
+    initials: 'A',
+    tone: 'is-sky',
+    result: 'Aktivasi 1 hari',
+    text: 'Kami suka karena semua komponen penting langsung terlihat. Tidak perlu menjelaskan terlalu banyak ke operator baru.'
   },
   {
-    name: 'Ibu Dewi',
-    role: 'Kantin SMA 3',
+    name: 'Ibu Sinta',
+    role: 'Bendahara Koperasi Sekolah',
+    initials: 'S',
+    tone: 'is-mint',
+    result: 'Monitoring lebih jelas',
+    text: 'Dashboard-nya terasa lebih profesional dan informasinya padat. Tim kami lebih cepat membaca performa promo harian.'
+  },
+  {
+    name: 'Pak Damar',
+    role: 'Pengelola Kantin SMKN 2',
     initials: 'D',
-    gradient: 'from-purple-500 to-pink-500',
-    text: '"Best investment untuk kantin sekolah! ROI-nya jelas terlihat dalam hitungan minggu."'
+    tone: 'is-amber',
+    result: 'Redeem stabil',
+    text: 'Proses scan sampai voucher dipakai jadi lebih tertib. Ini penting sekali saat antrian istirahat sedang ramai.'
   },
   {
-    name: 'Pak Mahmud',
-    role: 'Kantin MTSN 1',
+    name: 'Ibu Mela',
+    role: 'Admin Sekolah SDN 5',
     initials: 'M',
-    gradient: 'from-cyan-500 to-blue-500',
-    text: '"Dashboard-nya intuitif dan mudah dipahami. Tidak perlu培训 khusus untuk党组书记 menggunakan."'
+    tone: 'is-cyan',
+    result: 'Lebih mudah di mobile',
+    text: 'Versi mobile-nya jauh lebih enak. Kepala sekolah tetap bisa cek ringkasan tanpa harus membuka laptop.'
   },
   {
-    name: 'Ibu Lina',
-    role: 'Kantin SDN 5',
-    initials: 'L',
-    gradient: 'from-violet-500 to-purple-500',
-    text: '"SpinX membuat kantin sekolah kami berbeda dari yang lain. Siswa jadi lebih suka makan di sekolah!"'
+    name: 'Pak Faris',
+    role: 'Penanggung Jawab Koperasi',
+    initials: 'F',
+    tone: 'is-slate',
+    result: 'Support lebih jelas',
+    text: 'Alur aktivasi dan paket sekarang lebih mudah dibandingkan sebelumnya. Rasanya lebih siap dipresentasikan ke pihak sekolah.'
   }
 ];
 
-// Generate testimonial card HTML
-const generateTestimonialCard = (t) => `
-  <div class="testimonial-card rounded-2xl p-4 sm:p-6">
-    <div class="flex items-center gap-1 mb-3 sm:mb-4">
-      ${Array(5).fill('<i class="fas fa-star text-yellow-400 text-xs"></i>').join('')}
+const generateStars = () => Array.from({ length: 5 }, () => '<i class="fas fa-star"></i>').join('');
+
+const getInitialItemsPerSlide = () => {
+  if (typeof window === 'undefined') return 1;
+  if (window.innerWidth < 768) return 1;
+  if (window.innerWidth < 1180) return 2;
+  return 3;
+};
+
+const generateTestimonialCard = (testimonial) => `
+  <article class="testimonial-card ${testimonial.tone}">
+    <div class="testimonial-card__top">
+      <span class="testimonial-card__result">${testimonial.result}</span>
+      <span class="testimonial-card__stars">${generateStars()}</span>
     </div>
-    <p class="text-gray-300 mb-4 sm:mb-6 text-sm">${t.text}</p>
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-full bg-gradient-to-br ${t.gradient} flex items-center justify-center text-white font-bold text-sm">${t.initials}</div>
+    <p class="testimonial-card__quote">"${testimonial.text}"</p>
+    <div class="testimonial-card__footer">
+      <div class="testimonial-card__avatar">${testimonial.initials}</div>
       <div>
-        <div class="text-white font-medium text-sm">${t.name}</div>
-        <div class="text-gray-500 text-xs">${t.role}</div>
+        <strong>${testimonial.name}</strong>
+        <span>${testimonial.role}</span>
       </div>
     </div>
-  </div>
+  </article>
 `;
 
-// Carousel state management
+const generateSlides = (itemsPerSlide) => {
+  const slides = [];
+
+  for (let index = 0; index < testimonialsData.length; index += itemsPerSlide) {
+    const items = testimonialsData.slice(index, index + itemsPerSlide);
+    slides.push(`
+      <div class="testimonial-slide">
+        <div class="testimonial-grid">
+          ${items.map((item) => generateTestimonialCard(item)).join('')}
+        </div>
+      </div>
+    `);
+  }
+
+  return slides.join('');
+};
+
+const generateDots = (itemsPerSlide) => {
+  const totalSlides = Math.ceil(testimonialsData.length / itemsPerSlide);
+  let dotsHTML = '';
+
+  for (let index = 0; index < totalSlides; index += 1) {
+    dotsHTML += `
+      <button
+        class="testimonial-dot ${index === 0 ? 'active' : ''}"
+        data-index="${index}"
+        aria-label="Buka testimoni ${index + 1}"
+      ></button>
+    `;
+  }
+
+  return dotsHTML;
+};
+
 const TestimonialCarousel = {
   currentIndex: 0,
   itemsPerSlide: 1,
   autoPlayInterval: null,
-  autoPlayDelay: 5000,
+  autoPlayDelay: 5500,
   isAnimating: false,
-  
-  // Touch/Mouse drag state
   isDragging: false,
   startX: 0,
   currentX: 0,
   dragThreshold: 50,
 
-  // Initialize carousel
   init() {
     this.updateItemsPerSlide();
     this.bindEvents();
     this.bindTouchEvents();
     this.startAutoPlay();
     this.updateCarousel();
-    
-    // Update on resize
+
     window.addEventListener('resize', () => {
-      const oldItemsPerSlide = this.itemsPerSlide;
+      const previous = this.itemsPerSlide;
       this.updateItemsPerSlide();
-      
-      // Regenerate slides only if itemsPerSlide changed
-      if (oldItemsPerSlide !== this.itemsPerSlide) {
+
+      if (previous !== this.itemsPerSlide) {
         this.regenerateSlides();
       }
     });
   },
 
-  // Update items per slide based on screen width
-  // Mobile (<768px): 1 item
-  // Tablet (768px - 1024px): 2 items
-  // Desktop (>1024px): 3 items
   updateItemsPerSlide() {
     const width = window.innerWidth;
+
     if (width < 768) {
       this.itemsPerSlide = 1;
-    } else if (width < 1024) {
+    } else if (width < 1180) {
       this.itemsPerSlide = 2;
     } else {
       this.itemsPerSlide = 3;
     }
   },
 
-  // Get total number of slides
   getTotalSlides() {
     return Math.ceil(testimonialsData.length / this.itemsPerSlide);
   },
 
-  // Regenerate slides based on current itemsPerSlide
   regenerateSlides() {
     const track = document.getElementById('testimonial-track');
-    const dotsContainer = document.querySelector('#testimonials .flex.justify-center');
-    
-    if (!track) return;
+    const dotsContainer = document.getElementById('testimonial-dots');
+    if (!track || !dotsContainer) return;
 
-    // Create slides based on current itemsPerSlide
-    const slides = [];
-    for (let i = 0; i < testimonialsData.length; i += this.itemsPerSlide) {
-      const slideItems = testimonialsData.slice(i, i + this.itemsPerSlide);
-      const cardsHTML = slideItems.map(t => generateTestimonialCard(t)).join('');
-      
-      slides.push(`
-        <div class="testimonial-slide min-w-full">
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 px-2">
-            ${cardsHTML}
-          </div>
-        </div>
-      `);
-    }
-
-    track.innerHTML = slides.join('');
-
-    // Regenerate dots
-    if (dotsContainer) {
-      const totalSlides = this.getTotalSlides();
-      let dotsHTML = '';
-      for (let i = 0; i < totalSlides; i++) {
-        dotsHTML += `<button class="testimonial-dot w-3 h-3 rounded-full bg-white/30 hover:bg-white/50 transition-all ${i === 0 ? 'active bg-white' : ''}" data-index="${i}" aria-label="Go to slide ${i + 1}"></button>`;
-      }
-      dotsContainer.innerHTML = dotsHTML;
-      
-      // Rebind dot events
-      dotsContainer.querySelectorAll('.testimonial-dot').forEach(dot => {
-        dot.addEventListener('click', (e) => {
-          const index = parseInt(e.target.dataset.index);
-          TestimonialCarousel.goToSlide(index);
-        });
-      });
-    }
-    
-    // Reset current index to 0 after regeneration
-    this.currentIndex = 0;
+    track.innerHTML = generateSlides(this.itemsPerSlide);
+    dotsContainer.innerHTML = generateDots(this.itemsPerSlide);
+    this.currentIndex = Math.min(this.currentIndex, this.getTotalSlides() - 1);
+    this.bindDots();
     this.updateCarousel();
   },
 
-  // Bind click events
+  bindDots() {
+    document.querySelectorAll('.testimonial-dot').forEach((dot) => {
+      dot.addEventListener('click', (event) => {
+        const index = Number(event.currentTarget.dataset.index);
+        this.goToSlide(index);
+      });
+    });
+  },
+
   bindEvents() {
-    // Prev button
     const prevBtn = document.getElementById('testimonial-prev');
     const nextBtn = document.getElementById('testimonial-next');
-    
+    const carouselContainer = document.getElementById('testimonial-carousel');
+
     if (prevBtn) {
       prevBtn.addEventListener('click', () => this.prev());
     }
-    
+
     if (nextBtn) {
       nextBtn.addEventListener('click', () => this.next());
     }
 
-    // Pause on hover
-    const carouselContainer = document.getElementById('testimonial-carousel');
+    this.bindDots();
+
     if (carouselContainer) {
       carouselContainer.addEventListener('mouseenter', () => this.stopAutoPlay());
       carouselContainer.addEventListener('mouseleave', () => this.startAutoPlay());
     }
   },
 
-  // Bind touch and mouse drag events
   bindTouchEvents() {
     const carousel = document.getElementById('testimonial-carousel');
     const track = document.getElementById('testimonial-track');
-    
     if (!carousel || !track) return;
 
-    // Touch events
-    carousel.addEventListener('touchstart', (e) => this.handleTouchStart(e), { passive: true });
-    carousel.addEventListener('touchmove', (e) => this.handleTouchMove(e), { passive: false });
-    carousel.addEventListener('touchend', (e) => this.handleTouchEnd(e));
+    carousel.addEventListener('touchstart', (event) => this.handleTouchStart(event), { passive: true });
+    carousel.addEventListener('touchmove', (event) => this.handleTouchMove(event), { passive: false });
+    carousel.addEventListener('touchend', () => this.handleTouchEnd());
 
-    // Mouse drag events
-    carousel.addEventListener('mousedown', (e) => this.handleMouseDown(e));
-    window.addEventListener('mousemove', (e) => this.handleMouseMove(e));
-    window.addEventListener('mouseup', (e) => this.handleMouseUp(e));
-    
-    // Prevent default drag behavior
-    track.addEventListener('dragstart', (e) => e.preventDefault());
+    carousel.addEventListener('mousedown', (event) => this.handleMouseDown(event));
+    window.addEventListener('mousemove', (event) => this.handleMouseMove(event));
+    window.addEventListener('mouseup', () => this.handleMouseUp());
+
+    track.addEventListener('dragstart', (event) => event.preventDefault());
   },
 
-  // Touch handlers
-  handleTouchStart(e) {
-    this.startX = e.touches[0].clientX;
+  handleTouchStart(event) {
+    this.startX = event.touches[0].clientX;
+    this.currentX = this.startX;
     this.isDragging = true;
     this.stopAutoPlay();
   },
 
-  handleTouchMove(e) {
+  handleTouchMove(event) {
     if (!this.isDragging) return;
-    e.preventDefault();
-    this.currentX = e.touches[0].clientX;
+    event.preventDefault();
+    this.currentX = event.touches[0].clientX;
   },
 
-  handleTouchEnd(e) {
+  handleTouchEnd() {
     if (!this.isDragging) return;
     this.isDragging = false;
-    
+
     const diff = this.startX - this.currentX;
     if (Math.abs(diff) > this.dragThreshold) {
       if (diff > 0) {
@@ -249,28 +241,28 @@ const TestimonialCarousel = {
         this.prev();
       }
     }
-    
+
     this.startAutoPlay();
   },
 
-  // Mouse drag handlers
-  handleMouseDown(e) {
-    this.startX = e.clientX;
+  handleMouseDown(event) {
+    this.startX = event.clientX;
+    this.currentX = this.startX;
     this.isDragging = true;
     this.stopAutoPlay();
     document.body.style.cursor = 'grabbing';
   },
 
-  handleMouseMove(e) {
+  handleMouseMove(event) {
     if (!this.isDragging) return;
-    this.currentX = e.clientX;
+    this.currentX = event.clientX;
   },
 
-  handleMouseUp(e) {
+  handleMouseUp() {
     if (!this.isDragging) return;
     this.isDragging = false;
     document.body.style.cursor = '';
-    
+
     const diff = this.startX - this.currentX;
     if (Math.abs(diff) > this.dragThreshold) {
       if (diff > 0) {
@@ -279,25 +271,22 @@ const TestimonialCarousel = {
         this.prev();
       }
     }
-    
+
     this.startAutoPlay();
   },
 
-  // Go to previous slide
   prev() {
     const totalSlides = this.getTotalSlides();
     this.currentIndex = this.currentIndex === 0 ? totalSlides - 1 : this.currentIndex - 1;
     this.updateCarousel();
   },
 
-  // Go to next slide
   next() {
     const totalSlides = this.getTotalSlides();
     this.currentIndex = (this.currentIndex + 1) % totalSlides;
     this.updateCarousel();
   },
 
-  // Go to specific slide
   goToSlide(index) {
     if (index >= 0 && index < this.getTotalSlides() && !this.isAnimating) {
       this.currentIndex = index;
@@ -305,137 +294,88 @@ const TestimonialCarousel = {
     }
   },
 
-  // Update carousel display
   updateCarousel() {
     if (this.isAnimating) return;
     this.isAnimating = true;
 
     const track = document.getElementById('testimonial-track');
     const dots = document.querySelectorAll('.testimonial-dot');
-    
     if (!track) {
       this.isAnimating = false;
       return;
     }
 
-    const totalSlides = this.getTotalSlides();
-    const translateX = -(this.currentIndex * (100 / totalSlides));
-    
-    track.style.transform = `translateX(${translateX}%)`;
-    
-    // Update dots
+    track.style.transform = `translateX(-${this.currentIndex * 100}%)`;
+
     dots.forEach((dot, index) => {
-      dot.classList.toggle('active', index === this.currentIndex);
+      const isActive = index === this.currentIndex;
+      dot.classList.toggle('active', isActive);
+      dot.setAttribute('aria-current', isActive ? 'true' : 'false');
     });
 
-    setTimeout(() => {
+    window.setTimeout(() => {
       this.isAnimating = false;
-    }, 500);
+    }, 450);
   },
 
-  // Start auto play
   startAutoPlay() {
     this.stopAutoPlay();
-    this.autoPlayInterval = setInterval(() => this.next(), this.autoPlayDelay);
+    this.autoPlayInterval = window.setInterval(() => this.next(), this.autoPlayDelay);
   },
 
-  // Stop auto play
   stopAutoPlay() {
     if (this.autoPlayInterval) {
-      clearInterval(this.autoPlayInterval);
+      window.clearInterval(this.autoPlayInterval);
       this.autoPlayInterval = null;
     }
   }
 };
 
-// Generate initial slides based on current screen size
-const generateInitialSlides = () => {
-  // Determine initial items per slide
-  let initialItemsPerSlide = 1;
-  const width = window.innerWidth;
-  if (width >= 1024) {
-    initialItemsPerSlide = 3;
-  } else if (width >= 768) {
-    initialItemsPerSlide = 2;
-  }
-  
-  const slides = [];
-  for (let i = 0; i < testimonialsData.length; i += initialItemsPerSlide) {
-    const slideItems = testimonialsData.slice(i, i + initialItemsPerSlide);
-    const cardsHTML = slideItems.map(t => generateTestimonialCard(t)).join('');
-    
-    slides.push(`
-      <div class="testimonial-slide min-w-full">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 px-2">
-          ${cardsHTML}
+export const TestimonialsSection = {
+  render: () => `
+    <section id="testimonials" class="landing-section landing-anchor testimonials-section" data-nav-section>
+      <div class="landing-shell">
+        <div class="landing-section-head">
+          <div>
+            <span class="landing-eyebrow">
+              <span class="landing-eyebrow__dot"></span>
+              Bukti sosial yang lebih ringkas dan kredibel
+            </span>
+            <h2 class="landing-heading">
+              Testimoni yang menegaskan hasil,
+              <span class="landing-heading__accent">bukan sekadar ornamen</span>
+            </h2>
+          </div>
+
+          <p class="landing-subheading landing-section-head__copy">
+            Kami rapikan bagian ini supaya pengunjung cepat menangkap dampak operasional,
+            tanpa harus membaca blok teks yang terlalu panjang.
+          </p>
+        </div>
+
+        <div id="testimonial-carousel" class="testimonial-carousel">
+          <div id="testimonial-track" class="testimonial-track">
+            ${generateSlides(getInitialItemsPerSlide())}
+          </div>
+
+          <button id="testimonial-prev" class="testimonial-nav testimonial-nav--prev" aria-label="Testimoni sebelumnya">
+            <i class="fas fa-arrow-left"></i>
+          </button>
+          <button id="testimonial-next" class="testimonial-nav testimonial-nav--next" aria-label="Testimoni berikutnya">
+            <i class="fas fa-arrow-right"></i>
+          </button>
+        </div>
+
+        <div id="testimonial-dots" class="testimonial-dots">
+          ${generateDots(getInitialItemsPerSlide())}
         </div>
       </div>
-    `);
-  }
-  return slides.join('');
-};
+    </section>
+  `,
 
-// Generate initial dots based on current screen size
-const generateInitialDots = () => {
-  // Determine initial items per slide
-  let initialItemsPerSlide = 1;
-  const width = window.innerWidth;
-  if (width >= 1024) {
-    initialItemsPerSlide = 3;
-  } else if (width >= 768) {
-    initialItemsPerSlide = 2;
-  }
-  
-  const totalSlides = Math.ceil(testimonialsData.length / initialItemsPerSlide);
-  let dotsHTML = '';
-  for (let i = 0; i < totalSlides; i++) {
-    dotsHTML += `<button class="testimonial-dot w-3 h-3 rounded-full bg-white/30 hover:bg-white/50 transition-all ${i === 0 ? 'active bg-white' : ''}" data-index="${i}" aria-label="Go to slide ${i + 1}"></button>`;
-  }
-  return dotsHTML;
-};
-
-export const TestimonialsSection = {
-  render: () => {
-    return `
-      <section id="testimonials" class="section-padding bg-gray-900/50">
-        <div class="container mx-auto px-4">
-          <div class="text-center mb-12 sm:mb-16">
-            <span class="inline-block px-4 py-1 bg-indigo-500/20 text-indigo-400 rounded-full text-sm font-medium mb-4">TESTIMONI</span>
-            <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">Apa Kata Mereka?</h2>
-            <p class="text-gray-400 max-w-2xl mx-auto">Kepuasan pelanggan adalah prioritas utama kami</p>
-          </div>
-          
-          <!-- Carousel Container -->
-          <div id="testimonial-carousel" class="testimonial-carousel relative overflow-hidden">
-            <!-- Track -->
-            <div id="testimonial-track" class="testimonial-track flex transition-transform duration-500 ease-out">
-              ${generateInitialSlides()}
-            </div>
-            
-            <!-- Navigation Arrows - hidden on mobile (<768px), shown on tablet+ (≥768px) -->
-            <button id="testimonial-prev" class="testimonial-nav testimonial-prev absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm flex items-center justify-center text-white transition-all z-10 hidden md:flex" aria-label="Previous">
-              <i class="fas fa-chevron-left"></i>
-            </button>
-            <button id="testimonial-next" class="testimonial-nav testimonial-next absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-sm flex items-center justify-center text-white transition-all z-10 hidden md:flex" aria-label="Next">
-              <i class="fas fa-chevron-right"></i>
-            </button>
-          </div>
-          
-          <!-- Pagination Dots -->
-          <div class="flex justify-center gap-2 mt-6 sm:mt-8 flex-wrap">
-            ${generateInitialDots()}
-          </div>
-        </div>
-      </section>
-    `;
-  },
-
-  // Initialize after render
   afterRender() {
-    // Initialize carousel
     TestimonialCarousel.init();
   }
 };
 
 export default TestimonialsSection;
-

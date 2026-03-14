@@ -1,76 +1,110 @@
 /**
  * Features Section Component
- * Features showcase for landing page
+ * Highlights the operational benefits in a more compact layout.
  */
 
-// Feature data - single source of truth
 const featuresData = [
   {
     icon: 'fa-dharmachakra',
-    gradient: 'from-red-500 to-orange-500',
-    title: 'Lucky Wheel Interaktif',
-    description: 'Roda putar menarik dengan animasi halus. Siswa akan tertarik untuk mencoba lagi dan lagi!'
+    tone: 'is-teal',
+    metric: 'Interaktif',
+    title: 'Lucky Wheel yang terasa modern',
+    description: 'Visual promo lebih rapi, cukup atraktif untuk siswa, dan tetap cocok untuk lingkungan sekolah.'
   },
   {
-    icon: 'fa-ticket-alt',
-    gradient: 'from-green-500 to-teal-500',
-    title: 'Sistem Voucher Otomatis',
-    description: 'Generate voucher diskon otomatis saat siswa menang. Redeem mudah di kasir!'
+    icon: 'fa-ticket',
+    tone: 'is-amber',
+    metric: 'Otomatis',
+    title: 'Voucher langsung siap dipakai',
+    description: 'Hadiah promo dibuat otomatis sehingga kasir tidak perlu mencatat manual saat jam sibuk.'
   },
   {
-    icon: 'fa-chart-line',
-    gradient: 'from-blue-500 to-cyan-500',
-    title: 'Dashboard Lengkap',
-    description: 'Pantau performa promo, jumlah pemain, dan redemption voucher secara real-time.'
+    icon: 'fa-chart-column',
+    tone: 'is-sky',
+    metric: 'Terukur',
+    title: 'Dashboard ringkas untuk keputusan cepat',
+    description: 'Pantau performa promo, jumlah penukaran, dan waktu ramai dari tampilan yang mudah dipahami.'
   },
   {
-    icon: 'fa-users',
-    gradient: 'from-purple-500 to-pink-500',
-    title: 'Manajemen Siswa',
-    description: 'Data siswa terintegrasi dengan database sekolah. Validasi otomatis via NIS.'
+    icon: 'fa-users-gear',
+    tone: 'is-mint',
+    metric: 'Sinkron',
+    title: 'Manajemen siswa lebih tertib',
+    description: 'Data siswa, role operator, dan kontrol akses dibuat lebih jelas agar operasional tetap aman.'
   },
   {
-    icon: 'fa-mobile-alt',
-    gradient: 'from-yellow-500 to-amber-500',
-    title: 'Responsive Design',
-    description: 'Tampilan optimal di semua device - HP, tablet, maupun laptop.'
+    icon: 'fa-mobile-screen-button',
+    tone: 'is-slate',
+    metric: 'Responsif',
+    title: 'Nyaman di HP, tablet, dan desktop',
+    description: 'Setiap komponen dibuat lebih padat dan proporsional supaya tetap nyaman dibuka di perangkat kecil.'
   },
   {
     icon: 'fa-headset',
-    gradient: 'from-indigo-500 to-blue-500',
-    title: 'Bantuan 24/7',
-    description: 'Tim support siap membantu kapan saja via Telegram untuk kelancaran promo Anda.'
+    tone: 'is-cyan',
+    metric: 'Didampingi',
+    title: 'Onboarding dan support lebih jelas',
+    description: 'Tim sekolah mendapatkan alur implementasi yang singkat dengan informasi bantuan yang konsisten.'
   }
 ];
 
+const operationsData = [
+  { title: 'Aktivasi cepat', text: 'Mulai dari paket, isi data sekolah, lalu lanjut onboarding.' },
+  { title: 'Kontrol promo', text: 'Atur jam aktif dan benefit promo sesuai kebutuhan kantin.' },
+  { title: 'Pantau hasil', text: 'Lihat performa harian tanpa dashboard yang berlebihan.' }
+];
+
 export const FeaturesSection = {
-  render: () => {
-    const featuresHTML = featuresData.map(feature => `
-      <div class="card-hover bg-gray-800/50 border border-gray-700/50 rounded-2xl p-6">
-        <div class="feature-icon bg-gradient-to-br ${feature.gradient} text-white mb-4">
-          <i class="fas ${feature.icon}"></i>
+  render: () => `
+    <section id="features" class="landing-section landing-anchor" data-nav-section>
+      <div class="landing-shell">
+        <div class="landing-section-head">
+          <div>
+            <span class="landing-eyebrow">
+              <span class="landing-eyebrow__dot"></span>
+              Solusi yang lebih compact dan mudah dipakai
+            </span>
+            <h2 class="landing-heading">
+              Semua komponen penting untuk promo kantin
+              <span class="landing-heading__accent">diringkas jadi lebih jelas</span>
+            </h2>
+          </div>
+
+          <p class="landing-subheading landing-section-head__copy">
+            Fokus desain baru ini ada pada ritme layout, kepadatan informasi, dan alur yang langsung
+            mengarahkan pengguna ke tindakan yang paling penting.
+          </p>
         </div>
-        <h3 class="text-xl font-bold text-white mb-2">${feature.title}</h3>
-        <p class="text-gray-400 text-sm">${feature.description}</p>
+
+        <div class="feature-grid">
+          ${featuresData.map((feature) => `
+            <article class="feature-card ${feature.tone}">
+              <div class="feature-card__top">
+                <span class="feature-card__icon">
+                  <i class="fas ${feature.icon}"></i>
+                </span>
+                <span class="feature-card__metric">${feature.metric}</span>
+              </div>
+              <h3>${feature.title}</h3>
+              <p>${feature.description}</p>
+            </article>
+          `).join('')}
+        </div>
+
+        <div class="operations-band">
+          ${operationsData.map((item, index) => `
+            <div class="operations-band__item">
+              <span class="operations-band__index">0${index + 1}</span>
+              <div>
+                <strong>${item.title}</strong>
+                <p>${item.text}</p>
+              </div>
+            </div>
+          `).join('')}
+        </div>
       </div>
-    `).join('');
-    
-    return `
-      <section id="features" class="section-padding bg-gray-900/50">
-        <div class="container mx-auto px-4">
-          <div class="text-center mb-16">
-            <span class="inline-block px-4 py-1 bg-indigo-500/20 text-indigo-400 rounded-full text-sm font-medium mb-4">FITUR UNGGULAN</span>
-            <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">Semua yang Anda Butuhkan untuk <span class="gradient-text">Booster Kantin</span></h2>
-            <p class="text-gray-400 max-w-2xl mx-auto">Fitur lengkap untuk menjalankan promo Lucky Wheel di kantin sekolah Anda</p>
-          </div>
-          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            ${featuresHTML}
-          </div>
-        </div>
-      </section>
-    `;
-  }
+    </section>
+  `
 };
 
 export default FeaturesSection;
-
