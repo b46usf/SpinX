@@ -232,7 +232,7 @@ export const PricingSection = {
     return {
       icon: 'fa-building',
       badge: 'Kapasitas lebih besar',
-      helper: 'Cocok untuk sekolah yang butuh ruang lebih longgar',
+      helper: 'Cocok untuk sekolah yang butuh ruang lebih',
       cardClass: 'is-enterprise'
     };
   },

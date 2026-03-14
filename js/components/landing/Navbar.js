@@ -107,6 +107,7 @@ export const Navbar = {
     const mobileOverlay = document.getElementById('mobile-overlay');
     const mobileCloseBtn = document.getElementById('mobile-close-btn');
     const navbar = document.querySelector('.lp-navbar');
+    let sectionObserver = null;
 
     const toggleIcons = (isOpen) => {
       const menuIcon = mobileMenuBtn?.querySelector('.menu-icon');
@@ -144,6 +145,39 @@ export const Navbar = {
       });
     };
 
+    const observeSections = () => {
+      if (!('IntersectionObserver' in window)) {
+        setActiveLink('#home');
+        return;
+      }
+
+      if (sectionObserver) {
+        sectionObserver.disconnect();
+      }
+
+      const sections = Array.from(document.querySelectorAll('[data-nav-section]'));
+      if (!sections.length) {
+        setActiveLink('#home');
+        return;
+      }
+
+      sectionObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              setActiveLink(`#${entry.target.id}`);
+            }
+          });
+        },
+        {
+          rootMargin: '-35% 0px -50% 0px',
+          threshold: 0.1
+        }
+      );
+
+      sections.forEach((section) => sectionObserver.observe(section));
+    };
+
     if (loginBtn && callbacks.onLogin) {
       loginBtn.addEventListener('click', callbacks.onLogin);
     }
@@ -178,6 +212,8 @@ export const Navbar = {
         const hash = this.getAttribute('href');
         if (!hash || hash === '#') return;
 
+        window.LandingPage?.loadSection?.(hash.replace('#', ''));
+
         const target = document.querySelector(hash);
         if (!target) return;
 
@@ -206,26 +242,8 @@ export const Navbar = {
       }
     });
 
-    const sections = Array.from(document.querySelectorAll('[data-nav-section]'));
-    if ('IntersectionObserver' in window && sections.length) {
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              setActiveLink(`#${entry.target.id}`);
-            }
-          });
-        },
-        {
-          rootMargin: '-35% 0px -50% 0px',
-          threshold: 0.1
-        }
-      );
-
-      sections.forEach((section) => observer.observe(section));
-    } else {
-      setActiveLink('#home');
-    }
+    window.addEventListener('landing:section-loaded', observeSections);
+    observeSections();
   }
 };
 
