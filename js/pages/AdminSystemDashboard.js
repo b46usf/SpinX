@@ -717,13 +717,13 @@ class AdminSystemDashboard {
   }
 
   applySchoolFilters() {
-    const query = (this.schoolFilters.query || '').toLowerCase().trim();
+    const query = this.normalizeSearchValue(this.schoolFilters.query).trim();
     const status = this.schoolFilters.status || '';
 
     const filtered = this.data.schools.filter((school) => {
-      const name = (school.nama || school.name || school.schoolName || '').toLowerCase();
-      const email = (school.email || '').toLowerCase();
-      const phone = (school.phone || school.noWa || '').toLowerCase();
+      const name = this.normalizeSearchValue(school.nama || school.name || school.schoolName);
+      const email = this.normalizeSearchValue(school.email);
+      const phone = this.normalizeSearchValue(school.phone || school.noWa);
       const matchesQuery = !query || name.includes(query) || email.includes(query) || phone.includes(query);
 
       if (!matchesQuery) {
@@ -742,6 +742,14 @@ class AdminSystemDashboard {
     });
 
     this.renderSchools(filtered);
+  }
+
+  normalizeSearchValue(value) {
+    if (value === null || typeof value === 'undefined') {
+      return '';
+    }
+
+    return String(value).toLowerCase();
   }
 
   getSchoolStatusMeta(status) {
