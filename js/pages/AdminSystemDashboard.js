@@ -7,6 +7,7 @@
 import { authGuard } from '../core/AuthGuard.js';
 import { themeManager } from '../core/ThemeManager.js';
 import { authApi } from '../auth/AuthApi.js';
+import { showConfirm, showError, showInfo } from '../components/utils/Toast.js';
 
 class AdminSystemDashboard {
   constructor() {
@@ -220,17 +221,15 @@ class AdminSystemDashboard {
    * @param {string} action - Action name
    */
   handleMenuAction(action) {
-    const Toast = window.Toast;
-    
     switch (action) {
       case 'settings':
-        Toast?.info('Pengaturan', 'Halaman pengaturan sistem');
+        showInfo('Pengaturan', 'Halaman pengaturan sistem');
         break;
       case 'activity':
-        Toast?.info('Log Aktivitas', 'Melihat riwayat aktivitas');
+        showInfo('Log Aktivitas', 'Melihat riwayat aktivitas');
         break;
       case 'logs':
-        Toast?.info('System Logs', 'Melihat log sistem');
+        showInfo('System Logs', 'Melihat log sistem');
         break;
     }
   }
@@ -238,22 +237,18 @@ class AdminSystemDashboard {
   /**
    * Handle logout
    */
-  handleLogout() {
-    const Toast = window.Toast;
-    
-    Toast?.fire({
-      title: 'Logout?',
-      text: 'Apakah Anda yakin ingin logout?',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Ya, Logout',
-      cancelButtonText: 'Batal',
-      confirmButtonColor: '#ef4444'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        authGuard.logout();
-      }
-    });
+  async handleLogout() {
+    const confirmed = await showConfirm(
+      'Logout?',
+      'Apakah Anda yakin ingin logout?',
+      'Ya, Logout',
+      'Batal',
+      'warning'
+    );
+
+    if (confirmed) {
+      authGuard.logout();
+    }
   }
 
   /**
@@ -835,24 +830,14 @@ class AdminSystemDashboard {
       return;
     }
 
-    const Toast = window.Toast;
     const schoolName = school.nama || school.name || school.schoolName || 'Sekolah';
-
-    let confirmed = false;
-    if (Toast?.fire) {
-      const result = await Toast.fire({
-        title: 'Approve sekolah?',
-        text: `${schoolName} akan diaktifkan dan admin sekolah bisa melanjutkan registrasi.`,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Ya, Approve',
-        cancelButtonText: 'Batal',
-        confirmButtonColor: '#10b981'
-      });
-      confirmed = !!result.isConfirmed;
-    } else {
-      confirmed = window.confirm(`Approve ${schoolName}?`);
-    }
+    const confirmed = await showConfirm(
+      'Approve sekolah?',
+      `${schoolName} akan diaktifkan dan admin sekolah bisa melanjutkan registrasi.`,
+      'Ya, Approve',
+      'Batal',
+      'info'
+    );
 
     if (!confirmed) {
       return;
@@ -872,7 +857,7 @@ class AdminSystemDashboard {
       }
     } catch (error) {
       console.error('Failed to approve school:', error);
-      Toast?.error?.('Gagal', 'Tidak dapat menyetujui sekolah.');
+      showError('Gagal', 'Tidak dapat menyetujui sekolah.');
     } finally {
       this.approvingSchoolId = null;
       this.applySchoolFilters();
