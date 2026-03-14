@@ -480,12 +480,20 @@ class AdminSystemDashboard {
       const statusMeta = this.getSchoolStatusMeta(school.status);
       const schoolId = school.id || school.schoolId || '';
       const isApproving = this.approvingSchoolId === schoolId;
-      const canApprove = school.status === 'pending_school';
+      const needsSync = this.needsSchoolMetadataSync(school);
+      const canApprove = school.status === 'pending_school' || needsSync;
       const schoolName = school.nama || school.name || school.schoolName || '-';
       const schoolEmail = school.email || '-';
       const schoolPhone = school.phone || school.noWa || '-';
       const studentCount = school.currentStudents || school.students || school.siswa_count || school.siswa || 0;
       const planLabel = this.formatPlanName(school.plan);
+      const actionTitle = school.status === 'pending_school'
+        ? 'Menunggu approval admin sistem'
+        : 'Metadata subscription belum lengkap';
+      const actionDescription = school.status === 'pending_school'
+        ? 'Setelah di-approve, admin sekolah dapat melanjutkan registrasi menggunakan Google login.'
+        : 'Kolom expires_at atau approved_by masih kosong. Sinkronkan agar data sekolah dan subscription konsisten.';
+      const buttonLabel = school.status === 'pending_school' ? 'Approve' : 'Sinkronkan';
 
       return `
         <div class="glass-card p-4 hover:bg-white/5 transition-colors" data-id="${schoolId}">
@@ -519,8 +527,8 @@ class AdminSystemDashboard {
               ${canApprove ? `
                 <div class="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-xl border border-amber-400/20 bg-amber-500/10 px-3 py-3">
                   <div class="min-w-0">
-                    <div class="text-xs font-semibold text-amber-300">Menunggu approval admin sistem</div>
-                    <div class="text-[11px] text-amber-100/70">Setelah di-approve, admin sekolah dapat melanjutkan registrasi menggunakan Google login.</div>
+                    <div class="text-xs font-semibold text-amber-300">${actionTitle}</div>
+                    <div class="text-[11px] text-amber-100/70">${actionDescription}</div>
                   </div>
                   <button
                     type="button"
@@ -530,7 +538,7 @@ class AdminSystemDashboard {
                     ${isApproving ? 'disabled' : ''}
                   >
                     <i class="fas ${isApproving ? 'fa-spinner fa-spin' : 'fa-circle-check'}"></i>
-                    ${isApproving ? 'Menyetujui...' : 'Approve'}
+                    ${isApproving ? 'Memproses...' : buttonLabel}
                   </button>
                 </div>
               ` : ''}
@@ -831,10 +839,13 @@ class AdminSystemDashboard {
     }
 
     const schoolName = school.nama || school.name || school.schoolName || 'Sekolah';
+    const isSyncOnly = school.status !== 'pending_school' && this.needsSchoolMetadataSync(school);
     const confirmed = await showConfirm(
-      'Approve sekolah?',
-      `${schoolName} akan diaktifkan dan admin sekolah bisa melanjutkan registrasi.`,
-      'Ya, Approve',
+      isSyncOnly ? 'Sinkronkan metadata sekolah?' : 'Approve sekolah?',
+      isSyncOnly
+        ? `${schoolName} akan disinkronkan agar kolom expires_at, approved_by, dan subscription aktif terisi lengkap.`
+        : `${schoolName} akan diaktifkan dan admin sekolah bisa melanjutkan registrasi.`,
+      isSyncOnly ? 'Ya, Sinkronkan' : 'Ya, Approve',
       'Batal',
       'info'
     );
@@ -862,6 +873,14 @@ class AdminSystemDashboard {
       this.approvingSchoolId = null;
       this.applySchoolFilters();
     }
+  }
+
+  needsSchoolMetadataSync(school) {
+    if (!school || school.status !== 'active') {
+      return false;
+    }
+
+    return !school.expiresAt || !school.approvedBy;
   }
 }
 
