@@ -9,7 +9,7 @@
 
 import { AUTH_CONFIG } from '../auth/Config.js';
 import { authApi } from '../auth/AuthApi.js';
-import { TelegramLinkSection } from '../../components/auth/TelegramLinkSection.js';
+import { TelegramLinkSection } from '../components/auth/TelegramLinkSection.js';
 
 // Get Toast from global
 const getToast = () => window.Toast || null;
