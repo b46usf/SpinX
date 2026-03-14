@@ -4,27 +4,28 @@
  */
 
 const ctaChecklist = [
-  'Pilih paket sesuai kapasitas sekolah',
-  'Isi data admin sekolah dalam satu langkah',
-  'Lanjut onboarding tanpa alur yang memanjang'
+  'Paket langsung dipilih tanpa diskusi yang berputar',
+  'Data admin cukup diisi sekali untuk mulai aktivasi',
+  'Tim kami bantu onboarding sampai sekolah siap live'
 ];
 
 export const CTASection = {
   render: () => `
     <section id="cta" class="landing-section landing-section--tight landing-anchor" data-nav-section>
       <div class="landing-shell">
-        <div class="cta-panel">
+        <div class="cta-panel landing-fade" style="--fade-delay: 60ms;">
           <div class="cta-panel__copy">
-            <span class="landing-eyebrow">
+            <span class="landing-eyebrow landing-fade" style="--fade-delay: 100ms;">
               <span class="landing-eyebrow__dot"></span>
-              Siap dipakai tanpa proses yang rumit
+              CTA yang mendorong keputusan sekarang juga
             </span>
             <h2 class="landing-heading">
-              Butuh landing flow yang lebih rapi untuk mulai aktivasi sekolah?
+              Kalau Anda ingin kantin lebih ramai dan voucher lebih sering dipakai,
+              aktifkan sekolah Anda sekarang.
             </h2>
             <p class="landing-subheading">
-              Mulai dari paket yang paling sesuai, lalu tim sekolah bisa langsung masuk ke proses
-              pendaftaran dan pendampingan tanpa kebingungan.
+              Tidak perlu diskusi panjang. Pilih paket yang paling pas, kirim data admin,
+              dan tim kami bantu sampai program promo siap dijalankan.
             </p>
 
             <div class="cta-panel__list">
@@ -40,16 +41,16 @@ export const CTASection = {
           <div class="cta-panel__actions">
             <div class="cta-contact-card">
               <span class="cta-contact-card__label">Support onboarding</span>
-              <strong>Respon lebih cepat di jam kerja sekolah</strong>
-              <p>Gunakan tombol aktivasi untuk langsung memilih paket dan mengirim data sekolah.</p>
+              <strong>Semakin cepat aktif, semakin cepat transaksi bisa bertumbuh</strong>
+              <p>Gunakan tombol aktivasi untuk langsung memilih paket dan mengirim data sekolah hari ini.</p>
             </div>
 
             <div class="cta-panel__buttons">
               <button data-plan="pro" class="cta-start-btn landing-btn landing-btn--primary">
-                Ajukan Aktivasi
+                Aktifkan Sekolah Saya
               </button>
               <a href="#pricing" class="landing-btn landing-btn--secondary">
-                Bandingkan Paket
+                Lihat Paket yang Paling Cocok
               </a>
             </div>
 
@@ -60,7 +61,7 @@ export const CTASection = {
               </div>
               <div>
                 <span>Mode implementasi</span>
-                <strong>Remote onboarding</strong>
+                <strong>Remote onboarding cepat</strong>
               </div>
             </div>
           </div>

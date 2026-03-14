@@ -107,6 +107,8 @@ export const Navbar = {
     const mobileOverlay = document.getElementById('mobile-overlay');
     const mobileCloseBtn = document.getElementById('mobile-close-btn');
     const navbar = document.querySelector('.lp-navbar');
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let scrollAnimationFrame = null;
 
     const toggleIcons = (isOpen) => {
       const menuIcon = mobileMenuBtn?.querySelector('.menu-icon');
@@ -131,7 +133,7 @@ export const Navbar = {
       mobileMenu.classList.remove('is-open');
       window.setTimeout(() => {
         mobileMenu.classList.add('hidden');
-      }, 240);
+      }, 200);
       document.body.style.overflow = '';
       Navbar.isMobileMenuOpen = false;
       toggleIcons(false);
@@ -142,6 +144,49 @@ export const Navbar = {
         const isActive = link.getAttribute('href') === hash;
         link.classList.toggle('is-active', isActive);
       });
+    };
+
+    const stopScrollAnimation = () => {
+      if (scrollAnimationFrame) {
+        window.cancelAnimationFrame(scrollAnimationFrame);
+        scrollAnimationFrame = null;
+      }
+    };
+
+    const animateScrollToTarget = (target) => {
+      const targetY = Math.max(0, target.getBoundingClientRect().top + window.scrollY - 92);
+      const startY = window.scrollY;
+      const distance = targetY - startY;
+
+      if (prefersReducedMotion || Math.abs(distance) < 12) {
+        window.scrollTo(0, targetY);
+        return;
+      }
+
+      const duration = Math.min(420, Math.max(220, Math.abs(distance) * 0.18));
+      let startTime = null;
+
+      const easeOutCubic = (progress) => 1 - ((1 - progress) ** 3);
+
+      stopScrollAnimation();
+
+      const step = (timestamp) => {
+        if (!startTime) startTime = timestamp;
+
+        const elapsed = timestamp - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = easeOutCubic(progress);
+
+        window.scrollTo(0, startY + (distance * eased));
+
+        if (progress < 1) {
+          scrollAnimationFrame = window.requestAnimationFrame(step);
+        } else {
+          scrollAnimationFrame = null;
+        }
+      };
+
+      scrollAnimationFrame = window.requestAnimationFrame(step);
     };
 
     if (loginBtn && callbacks.onLogin) {
@@ -182,8 +227,11 @@ export const Navbar = {
         if (!target) return;
 
         event.preventDefault();
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        animateScrollToTarget(target);
         setActiveLink(hash);
+        if (window.history?.replaceState) {
+          window.history.replaceState(null, '', hash);
+        }
 
         if (Navbar.isMobileMenuOpen) {
           closeMobileMenu();
@@ -201,6 +249,9 @@ export const Navbar = {
         closeMobileMenu();
       }
     });
+
+    window.addEventListener('wheel', stopScrollAnimation, { passive: true });
+    window.addEventListener('touchstart', stopScrollAnimation, { passive: true });
 
     const sections = Array.from(document.querySelectorAll('[data-nav-section]'));
     if ('IntersectionObserver' in window && sections.length) {

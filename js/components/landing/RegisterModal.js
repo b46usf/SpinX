@@ -18,10 +18,10 @@ export const RegisterModal = {
             <div>
               <span class="landing-eyebrow">
                 <span class="landing-eyebrow__dot"></span>
-                Aktivasi sekolah
+                Tinggal satu langkah menuju aktivasi
               </span>
               <h3>Lengkapi data admin sekolah</h3>
-              <p>Form dibuat ringkas supaya proses aktivasi bisa dimulai lebih cepat.</p>
+              <p>Isi data berikut dan tim kami akan bantu sekolah Anda segera masuk ke proses onboarding.</p>
             </div>
 
             <button
@@ -72,7 +72,7 @@ export const RegisterModal = {
 
             <button type="submit" class="landing-btn landing-btn--primary landing-btn--block">
               <i class="fas fa-paper-plane"></i>
-              <span>Daftar Sekarang</span>
+              <span>Kirim Data & Aktifkan</span>
             </button>
           </form>
         </div>
@@ -99,7 +99,7 @@ export const RegisterModal = {
       try {
         if (submitBtn) {
           submitBtn.disabled = true;
-          submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Mendaftarkan...</span>';
+          submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Memproses aktivasi...</span>';
         }
 
         const response = await fetch('/api/proxy', {
@@ -125,7 +125,7 @@ export const RegisterModal = {
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
-          submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i><span>Daftar Sekarang</span>';
+          submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i><span>Kirim Data & Aktifkan</span>';
         }
       }
     });

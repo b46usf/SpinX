@@ -259,7 +259,7 @@ export function mapPlanToDisplay(plan = {}) {
       price,
       priceDisplay,
       fullPriceDisplay,
-      cta: String(plan.cta ?? plan.buttonText ?? 'Pilih Paket').trim() || 'Pilih Paket',
+      cta: String(plan.cta ?? plan.buttonText ?? 'Aktifkan Paket').trim() || 'Aktifkan Paket',
       period,
       maxStudents,
       maxStudentsDisplay: maxStudents === Number.POSITIVE_INFINITY
@@ -284,7 +284,7 @@ export function mapPlanToDisplay(plan = {}) {
       price: 0,
       priceDisplay: 'Gratis',
       fullPriceDisplay: 'Gratis',
-      cta: 'Pilih Paket',
+      cta: 'Aktifkan Paket',
       period: 'Selamanya',
       maxStudents: 0,
       maxStudentsDisplay: '0 siswa',

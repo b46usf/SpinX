@@ -7,51 +7,51 @@ const featuresData = [
   {
     icon: 'fa-dharmachakra',
     tone: 'is-teal',
-    metric: 'Interaktif',
-    title: 'Lucky Wheel yang terasa modern',
-    description: 'Visual promo lebih rapi, cukup atraktif untuk siswa, dan tetap cocok untuk lingkungan sekolah.'
+    metric: 'Attract',
+    title: 'Lucky Wheel yang bikin siswa ingin mencoba',
+    description: 'Tampilan promo terlihat modern, menarik perhatian, dan tetap terasa aman untuk konteks sekolah.'
   },
   {
     icon: 'fa-ticket',
     tone: 'is-amber',
-    metric: 'Otomatis',
-    title: 'Voucher langsung siap dipakai',
-    description: 'Hadiah promo dibuat otomatis sehingga kasir tidak perlu mencatat manual saat jam sibuk.'
+    metric: 'Convert',
+    title: 'Voucher langsung mendorong pembelian',
+    description: 'Hadiah promo dibuat otomatis supaya siswa tidak berhenti di rasa penasaran, tetapi lanjut ke transaksi.'
   },
   {
     icon: 'fa-chart-column',
     tone: 'is-sky',
-    metric: 'Terukur',
-    title: 'Dashboard ringkas untuk keputusan cepat',
-    description: 'Pantau performa promo, jumlah penukaran, dan waktu ramai dari tampilan yang mudah dipahami.'
+    metric: 'Measure',
+    title: 'Dashboard singkat untuk membaca hasil',
+    description: 'Lihat performa promo, penukaran voucher, dan jam ramai tanpa laporan panjang yang melelahkan.'
   },
   {
     icon: 'fa-users-gear',
     tone: 'is-mint',
-    metric: 'Sinkron',
-    title: 'Manajemen siswa lebih tertib',
-    description: 'Data siswa, role operator, dan kontrol akses dibuat lebih jelas agar operasional tetap aman.'
+    metric: 'Control',
+    title: 'Operasional sekolah tetap tertib',
+    description: 'Data siswa, role operator, dan kontrol akses tertata agar promo berjalan rapi tanpa bikin tim repot.'
   },
   {
     icon: 'fa-mobile-screen-button',
     tone: 'is-slate',
-    metric: 'Responsif',
-    title: 'Nyaman di HP, tablet, dan desktop',
-    description: 'Setiap komponen dibuat lebih padat dan proporsional supaya tetap nyaman dibuka di perangkat kecil.'
+    metric: 'Responsive',
+    title: 'Tetap nyaman dibuka di semua perangkat',
+    description: 'Layout yang padat dan proporsional membuat pengambil keputusan tetap nyaman membaca dari layar kecil.'
   },
   {
     icon: 'fa-headset',
     tone: 'is-cyan',
-    metric: 'Didampingi',
-    title: 'Onboarding dan support lebih jelas',
-    description: 'Tim sekolah mendapatkan alur implementasi yang singkat dengan informasi bantuan yang konsisten.'
+    metric: 'Close',
+    title: 'Onboarding jelas sampai siap live',
+    description: 'Begitu sekolah siap lanjut, alur aktivasi dan bantuan teknis sudah tersedia tanpa langkah yang membingungkan.'
   }
 ];
 
 const operationsData = [
-  { title: 'Aktivasi cepat', text: 'Mulai dari paket, isi data sekolah, lalu lanjut onboarding.' },
-  { title: 'Kontrol promo', text: 'Atur jam aktif dan benefit promo sesuai kebutuhan kantin.' },
-  { title: 'Pantau hasil', text: 'Lihat performa harian tanpa dashboard yang berlebihan.' }
+  { title: 'Tarik perhatian', text: 'Promo tampil menonjol dan langsung dipahami siswa dalam sekali lihat.' },
+  { title: 'Dorong transaksi', text: 'Voucher dan benefit diarahkan untuk membuat pembelian benar-benar terjadi.' },
+  { title: 'Lanjutkan keputusan', text: 'Tim sekolah lebih cepat yakin karena hasil dan alurnya terlihat jelas.' }
 ];
 
 export const FeaturesSection = {
@@ -59,26 +59,26 @@ export const FeaturesSection = {
     <section id="features" class="landing-section landing-anchor" data-nav-section>
       <div class="landing-shell">
         <div class="landing-section-head">
-          <div>
-            <span class="landing-eyebrow">
+          <div class="landing-fade" style="--fade-delay: 40ms;">
+            <span class="landing-eyebrow landing-fade" style="--fade-delay: 80ms;">
               <span class="landing-eyebrow__dot"></span>
-              Solusi yang lebih compact dan mudah dipakai
+              Solusi yang membantu pengunjung cepat yakin
             </span>
             <h2 class="landing-heading">
-              Semua komponen penting untuk promo kantin
-              <span class="landing-heading__accent">diringkas jadi lebih jelas</span>
+              Semua komponen penting untuk mengubah minat siswa
+              <span class="landing-heading__accent">menjadi transaksi di kantin</span>
             </h2>
           </div>
 
-          <p class="landing-subheading landing-section-head__copy">
-            Fokus desain baru ini ada pada ritme layout, kepadatan informasi, dan alur yang langsung
-            mengarahkan pengguna ke tindakan yang paling penting.
+          <p class="landing-subheading landing-section-head__copy landing-fade" style="--fade-delay: 140ms;">
+            Section ini sekarang langsung menjawab pertanyaan yang menentukan closing:
+            bagaimana promo bekerja, kenapa sekolah percaya, dan apa langkah berikutnya untuk mulai aktif.
           </p>
         </div>
 
         <div class="feature-grid">
-          ${featuresData.map((feature) => `
-            <article class="feature-card ${feature.tone}">
+          ${featuresData.map((feature, index) => `
+            <article class="feature-card ${feature.tone} landing-fade" style="--fade-delay: ${160 + (index * 60)}ms;">
               <div class="feature-card__top">
                 <span class="feature-card__icon">
                   <i class="fas ${feature.icon}"></i>
@@ -93,7 +93,7 @@ export const FeaturesSection = {
 
         <div class="operations-band">
           ${operationsData.map((item, index) => `
-            <div class="operations-band__item">
+            <div class="operations-band__item landing-fade" style="--fade-delay: ${220 + (index * 70)}ms;">
               <span class="operations-band__index">0${index + 1}</span>
               <div>
                 <strong>${item.title}</strong>

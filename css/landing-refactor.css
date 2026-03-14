@@ -20,6 +20,11 @@ body.landing-hero {
     radial-gradient(circle at 85% 12%, rgba(56, 189, 248, 0.12), transparent 28%),
     linear-gradient(180deg, #07131f 0%, #091824 42%, #06101a 100%);
   color: var(--landing-text);
+  font-family: 'Outfit', 'Inter', system-ui, sans-serif;
+  font-size: 16.2px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 body.landing-hero::before {
@@ -41,29 +46,35 @@ body.landing-hero::before {
   color: var(--landing-text);
 }
 
+.landing-page p,
+.landing-page li {
+  text-wrap: pretty;
+}
+
 .landing-page h1,
 .landing-page h2,
 .landing-page h3,
 .landing-page h4 {
   font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
   color: var(--landing-title);
+  text-wrap: balance;
 }
 
 .landing-shell {
-  width: min(1180px, calc(100% - 32px));
+  width: min(1160px, calc(100% - 40px));
   margin: 0 auto;
 }
 
 .landing-section {
-  padding: clamp(72px, 8vw, 108px) 0;
+  padding: clamp(66px, 7vw, 96px) 0;
 }
 
 .landing-section--tight {
-  padding: clamp(60px, 6vw, 88px) 0;
+  padding: clamp(52px, 5vw, 76px) 0;
 }
 
 .landing-section--hero {
-  padding-top: clamp(112px, 10vw, 148px);
+  padding-top: clamp(106px, 9vw, 136px);
 }
 
 .landing-anchor {
@@ -94,10 +105,10 @@ body.landing-hero::before {
 }
 
 .landing-heading {
-  margin-top: 18px;
-  font-size: clamp(2rem, 4.4vw, 3.35rem);
-  line-height: 1.05;
-  letter-spacing: -0.04em;
+  margin-top: 16px;
+  font-size: clamp(2rem, 4.1vw, 3.2rem);
+  line-height: 1.02;
+  letter-spacing: -0.05em;
 }
 
 .landing-heading__accent {
@@ -106,8 +117,8 @@ body.landing-hero::before {
 
 .landing-subheading {
   color: var(--landing-text-muted);
-  font-size: clamp(1rem, 1.6vw, 1.08rem);
-  line-height: 1.8;
+  font-size: clamp(1.02rem, 1.5vw, 1.12rem);
+  line-height: 1.86;
 }
 
 .landing-section-head {
@@ -128,14 +139,15 @@ body.landing-hero::before {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  min-height: 48px;
-  padding: 0 18px;
+  min-height: 50px;
+  padding: 0 20px;
   border-radius: 16px;
   border: 1px solid transparent;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   text-decoration: none;
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease, color 0.25s ease;
+  letter-spacing: 0.01em;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
 }
 
 .landing-btn:hover {
@@ -172,6 +184,22 @@ body.landing-hero::before {
   border-radius: 14px;
 }
 
+.landing-fade {
+  opacity: 0;
+  transform: translateY(22px);
+  filter: blur(8px);
+  animation: landingFadeUp 0.72s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: var(--fade-delay, 0ms);
+}
+
+@keyframes landingFadeUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
 .landing-btn--block {
   width: 100%;
 }
@@ -183,7 +211,7 @@ body.landing-hero::before {
   right: 0;
   z-index: 60;
   padding: 14px 0;
-  transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, backdrop-filter 0.25s ease;
+  transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, backdrop-filter 0.18s ease;
 }
 
 .lp-navbar.is-scrolled {
@@ -198,7 +226,7 @@ body.landing-hero::before {
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  padding: 14px 18px;
+  padding: 12px 18px;
   border-radius: 24px;
   border: 1px solid rgba(148, 163, 184, 0.08);
   background: rgba(7, 19, 31, 0.44);
@@ -257,9 +285,9 @@ body.landing-hero::before {
   border-radius: 14px;
   color: var(--landing-text-muted);
   text-decoration: none;
-  font-size: 14px;
+  font-size: 14.5px;
   font-weight: 600;
-  transition: color 0.2s ease, background 0.2s ease;
+  transition: color 0.18s ease, background 0.18s ease;
 }
 
 .lp-navbar__link:hover,
@@ -293,7 +321,7 @@ body.landing-hero::before {
   border: 0;
   background: rgba(3, 9, 16, 0.72);
   opacity: 0;
-  transition: opacity 0.24s ease;
+  transition: opacity 0.18s ease;
 }
 
 .lp-mobile-menu__panel {
@@ -309,7 +337,7 @@ body.landing-hero::before {
   background: rgba(8, 20, 31, 0.96);
   border-left: 1px solid rgba(148, 163, 184, 0.12);
   transform: translateX(100%);
-  transition: transform 0.24s ease;
+  transition: transform 0.2s ease;
   box-shadow: -24px 0 60px rgba(0, 0, 0, 0.32);
 }
 
@@ -371,12 +399,15 @@ body.landing-hero::before {
 }
 
 .hero-title {
-  font-size: clamp(2.6rem, 5.4vw, 4.6rem);
+  max-width: 11.5ch;
+  font-size: clamp(2.85rem, 5.6vw, 4.9rem);
 }
 
 .hero-description {
-  max-width: 620px;
-  margin-top: 18px;
+  max-width: 58ch;
+  margin-top: 20px;
+  font-size: clamp(1.08rem, 1.7vw, 1.22rem);
+  line-height: 1.9;
 }
 
 .hero-actions {
@@ -384,7 +415,7 @@ body.landing-hero::before {
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  margin-top: 28px;
+  margin-top: 30px;
 }
 
 .hero-signals {
@@ -431,7 +462,7 @@ body.landing-hero::before {
 }
 
 .hero-stat {
-  padding: 18px 18px 16px;
+  padding: 20px 18px 18px;
   border-radius: 22px;
   border: 1px solid var(--landing-border);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(8, 20, 31, 0.68));
@@ -452,7 +483,7 @@ body.landing-hero::before {
 }
 
 .hero-panel {
-  padding: 28px;
+  padding: 30px;
   border-radius: 30px;
   border: 1px solid rgba(148, 163, 184, 0.14);
   background: linear-gradient(180deg, rgba(13, 29, 44, 0.92), rgba(7, 19, 31, 0.96));
@@ -732,7 +763,7 @@ body.landing-hero::before {
   border-radius: 26px;
   border: 1px solid var(--landing-border);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(8, 20, 31, 0.76));
-  transition: transform 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .feature-card:hover,
@@ -788,6 +819,7 @@ body.landing-hero::before {
 .feature-card h3 {
   font-size: 1.35rem;
   line-height: 1.2;
+  margin-bottom: 10px;
 }
 
 .feature-card p,
@@ -925,7 +957,7 @@ body.landing-hero::before {
   border-radius: 28px;
   border: 1px solid var(--landing-border);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(7, 19, 31, 0.92));
-  transition: transform 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .pricing-plan.is-starter {
@@ -982,8 +1014,12 @@ body.landing-hero::before {
 }
 
 .pricing-plan__header h3 {
-  font-size: 1.75rem;
+  font-size: 1.68rem;
   line-height: 1.1;
+}
+
+.pricing-plan__description {
+  font-size: 0.98rem;
 }
 
 .pricing-plan__price {
@@ -995,7 +1031,7 @@ body.landing-hero::before {
 
 .pricing-plan__price strong {
   display: block;
-  font-size: clamp(2rem, 3vw, 2.9rem);
+  font-size: clamp(1.95rem, 2.9vw, 2.72rem);
   line-height: 1;
   letter-spacing: -0.05em;
 }
@@ -1023,6 +1059,7 @@ body.landing-hero::before {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(148, 163, 184, 0.08);
   font-size: 13px;
+  line-height: 1.65;
 }
 
 .pricing-plan__meta i {
@@ -1083,7 +1120,7 @@ body.landing-hero::before {
 
 .pricing-feature__text {
   color: var(--landing-text);
-  font-size: 14px;
+  font-size: 14.5px;
   line-height: 1.6;
 }
 
@@ -1107,7 +1144,7 @@ body.landing-hero::before {
   border-radius: 24px;
   border: 1px solid var(--landing-border);
   background: rgba(255, 255, 255, 0.04);
-  transition: transform 0.24s ease, border-color 0.24s ease;
+  transition: transform 0.18s ease, border-color 0.18s ease;
 }
 
 .pricing-highlight:hover {
@@ -1313,7 +1350,7 @@ body.landing-hero::before {
 .testimonial-track {
   display: flex;
   width: 100%;
-  transition: transform 0.45s ease;
+  transition: transform 0.32s ease;
   will-change: transform;
 }
 
@@ -1334,7 +1371,7 @@ body.landing-hero::before {
   border-radius: 26px;
   border: 1px solid var(--landing-border);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(7, 19, 31, 0.88));
-  transition: transform 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .testimonial-card:hover {
@@ -1399,6 +1436,7 @@ body.landing-hero::before {
   background: rgba(7, 19, 31, 0.7);
   color: var(--landing-text);
   backdrop-filter: blur(12px);
+  transition: transform 0.18s ease, background 0.18s ease;
 }
 
 .testimonial-nav--prev {
@@ -1423,7 +1461,7 @@ body.landing-hero::before {
   border: 0;
   border-radius: 999px;
   background: rgba(148, 163, 184, 0.32);
-  transition: width 0.22s ease, background 0.22s ease;
+  transition: width 0.18s ease, background 0.18s ease;
 }
 
 .testimonial-dot.active {
@@ -1436,7 +1474,7 @@ body.landing-hero::before {
   display: grid;
   grid-template-columns: minmax(0, 1.06fr) minmax(300px, 0.94fr);
   gap: 24px;
-  padding: 30px;
+  padding: 32px;
   border-radius: 32px;
   border: 1px solid rgba(94, 234, 212, 0.18);
   background: linear-gradient(135deg, rgba(10, 26, 39, 0.96), rgba(6, 17, 27, 0.96));
@@ -1477,7 +1515,7 @@ body.landing-hero::before {
 }
 
 .cta-contact-card {
-  padding: 22px;
+  padding: 24px;
   border-radius: 24px;
   border: 1px solid rgba(148, 163, 184, 0.12);
   background: rgba(255, 255, 255, 0.05);
@@ -1566,7 +1604,7 @@ body.landing-hero::before {
 }
 
 .landing-footer__column {
-  padding: 20px;
+  padding: 22px;
   border-radius: 22px;
   border: 1px solid rgba(148, 163, 184, 0.08);
   background: rgba(255, 255, 255, 0.03);
@@ -1630,7 +1668,7 @@ body.landing-hero::before {
 }
 
 .landing-modal__panel {
-  padding: 28px;
+  padding: 30px;
   border-radius: 30px;
   border: 1px solid rgba(148, 163, 184, 0.16);
   background: rgba(8, 20, 31, 0.96);
@@ -1684,6 +1722,7 @@ body.landing-hero::before {
   border: 1px solid rgba(148, 163, 184, 0.14);
   background: rgba(255, 255, 255, 0.04);
   color: var(--landing-text);
+  font-size: 15px;
 }
 
 .landing-field input::placeholder {
@@ -1774,7 +1813,7 @@ body.landing-hero::before {
 
 @media (max-width: 767px) {
   .landing-shell {
-    width: min(100% - 24px, 1180px);
+    width: min(1180px, calc(100% - 24px));
   }
 
   .hero-signals,
@@ -1787,6 +1826,10 @@ body.landing-hero::before {
 
   .hero-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hero-title {
+    max-width: none;
   }
 
   .testimonial-nav {
@@ -1826,5 +1869,21 @@ body.landing-hero::before {
 
   .lp-brand__copy small {
     display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.landing-hero::before,
+  .landing-fade,
+  .loading-container,
+  .testimonial-track {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .landing-fade {
+    opacity: 1;
+    transform: none;
+    filter: none;
   }
 }

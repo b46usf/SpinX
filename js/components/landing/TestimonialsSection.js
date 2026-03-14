@@ -9,48 +9,48 @@ const testimonialsData = [
     role: 'Pengelola Kantin SMPN 1',
     initials: 'R',
     tone: 'is-teal',
-    result: '+32% transaksi',
-    text: 'Tampilan yang lebih rapi membuat siswa cepat paham. Promo tetap menarik, tetapi alurnya tidak bikin kasir kewalahan.'
+    result: 'Transaksi lebih ramai',
+    text: 'Begitu tampilannya lebih jelas, siswa lebih cepat ikut dan pembelian di kantin ikut terdorong tanpa bikin kasir kewalahan.'
   },
   {
     name: 'Pak Adi',
     role: 'Koordinator Operasional SMAN 8',
     initials: 'A',
     tone: 'is-sky',
-    result: 'Aktivasi 1 hari',
-    text: 'Kami suka karena semua komponen penting langsung terlihat. Tidak perlu menjelaskan terlalu banyak ke operator baru.'
+    result: 'Aktivasi lebih cepat',
+    text: 'Semua komponen penting langsung terlihat, jadi tim kami cepat paham dan lebih yakin untuk lanjut aktivasi.'
   },
   {
     name: 'Ibu Sinta',
     role: 'Bendahara Koperasi Sekolah',
     initials: 'S',
     tone: 'is-mint',
-    result: 'Monitoring lebih jelas',
-    text: 'Dashboard-nya terasa lebih profesional dan informasinya padat. Tim kami lebih cepat membaca performa promo harian.'
+    result: 'Mudah dibaca pimpinan',
+    text: 'Dashboard terasa profesional dan informasinya padat. Tim kami bisa membaca performa promo tanpa penjelasan panjang.'
   },
   {
     name: 'Pak Damar',
     role: 'Pengelola Kantin SMKN 2',
     initials: 'D',
     tone: 'is-amber',
-    result: 'Redeem stabil',
-    text: 'Proses scan sampai voucher dipakai jadi lebih tertib. Ini penting sekali saat antrian istirahat sedang ramai.'
+    result: 'Redeem lebih tertib',
+    text: 'Proses scan sampai voucher dipakai jadi lebih tertib. Ini penting sekali saat jam istirahat dan antrian sedang ramai.'
   },
   {
     name: 'Ibu Mela',
     role: 'Admin Sekolah SDN 5',
     initials: 'M',
     tone: 'is-cyan',
-    result: 'Lebih mudah di mobile',
-    text: 'Versi mobile-nya jauh lebih enak. Kepala sekolah tetap bisa cek ringkasan tanpa harus membuka laptop.'
+    result: 'Lebih meyakinkan di mobile',
+    text: 'Versi mobile lebih nyaman, jadi kepala sekolah tetap bisa melihat ringkasan dan cepat memberi keputusan tanpa membuka laptop.'
   },
   {
     name: 'Pak Faris',
     role: 'Penanggung Jawab Koperasi',
     initials: 'F',
     tone: 'is-slate',
-    result: 'Support lebih jelas',
-    text: 'Alur aktivasi dan paket sekarang lebih mudah dibandingkan sebelumnya. Rasanya lebih siap dipresentasikan ke pihak sekolah.'
+    result: 'Lebih siap dipresentasikan',
+    text: 'Alur aktivasi dan paket sekarang jauh lebih mudah dijelaskan. Kami jadi lebih percaya diri saat membawanya ke pihak sekolah.'
   }
 ];
 
@@ -63,8 +63,8 @@ const getInitialItemsPerSlide = () => {
   return 3;
 };
 
-const generateTestimonialCard = (testimonial) => `
-  <article class="testimonial-card ${testimonial.tone}">
+const generateTestimonialCard = (testimonial, index = 0) => `
+  <article class="testimonial-card ${testimonial.tone} landing-fade" style="--fade-delay: ${160 + ((index % 3) * 70)}ms;">
     <div class="testimonial-card__top">
       <span class="testimonial-card__result">${testimonial.result}</span>
       <span class="testimonial-card__stars">${generateStars()}</span>
@@ -88,7 +88,7 @@ const generateSlides = (itemsPerSlide) => {
     slides.push(`
       <div class="testimonial-slide">
         <div class="testimonial-grid">
-          ${items.map((item) => generateTestimonialCard(item)).join('')}
+          ${items.map((item, itemIndex) => generateTestimonialCard(item, index + itemIndex)).join('')}
         </div>
       </div>
     `);
@@ -315,7 +315,7 @@ const TestimonialCarousel = {
 
     window.setTimeout(() => {
       this.isAnimating = false;
-    }, 450);
+    }, 320);
   },
 
   startAutoPlay() {
@@ -336,20 +336,20 @@ export const TestimonialsSection = {
     <section id="testimonials" class="landing-section landing-anchor testimonials-section" data-nav-section>
       <div class="landing-shell">
         <div class="landing-section-head">
-          <div>
-            <span class="landing-eyebrow">
+          <div class="landing-fade" style="--fade-delay: 40ms;">
+            <span class="landing-eyebrow landing-fade" style="--fade-delay: 80ms;">
               <span class="landing-eyebrow__dot"></span>
-              Bukti sosial yang lebih ringkas dan kredibel
+              Bukti sosial yang membuat sekolah lebih yakin
             </span>
             <h2 class="landing-heading">
-              Testimoni yang menegaskan hasil,
-              <span class="landing-heading__accent">bukan sekadar ornamen</span>
+              Testimoni yang menunjukkan alasan
+              <span class="landing-heading__accent">kenapa sekolah berani lanjut aktivasi</span>
             </h2>
           </div>
 
-          <p class="landing-subheading landing-section-head__copy">
-            Kami rapikan bagian ini supaya pengunjung cepat menangkap dampak operasional,
-            tanpa harus membaca blok teks yang terlalu panjang.
+          <p class="landing-subheading landing-section-head__copy landing-fade" style="--fade-delay: 140ms;">
+            Saat manfaatnya terbaca jelas dan hasilnya terdengar masuk akal,
+            pengunjung lebih cepat percaya lalu bergerak ke CTA berikutnya.
           </p>
         </div>
 

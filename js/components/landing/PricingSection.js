@@ -12,18 +12,18 @@ import {
 const pricingHighlights = [
   {
     icon: 'fa-bolt',
-    title: 'Aktivasi lebih singkat',
-    text: 'Mulai dari paket lalu lanjut isi data sekolah tanpa langkah berulang.'
+    title: 'Go live lebih cepat',
+    text: 'Pilih paket, isi data sekolah, lalu lanjutkan onboarding tanpa alur berputar-putar.'
   },
   {
     icon: 'fa-shield-halved',
-    title: 'Benefit lebih terbaca',
-    text: 'Kapasitas, fitur inti, dan status paket tampil lebih proporsional.'
+    title: 'Value paket langsung terbaca',
+    text: 'Harga, kapasitas, dan benefit inti tampil jelas agar keputusan lebih cepat diambil.'
   },
   {
     icon: 'fa-headset',
-    title: 'Support lebih jelas',
-    text: 'Pengunjung langsung tahu ke mana harus lanjut jika siap aktivasi.'
+    title: 'CTA siap closing',
+    text: 'Begitu sekolah siap lanjut, tombol aktivasi langsung mengarahkan ke langkah berikutnya.'
   }
 ];
 
@@ -80,21 +80,21 @@ export const PricingSection = {
       <section id="pricing" class="landing-section landing-anchor pricing-section" data-nav-section>
         <div class="landing-shell">
           <div class="landing-section-head pricing-section__head">
-            <div>
-              <span class="landing-eyebrow">
+            <div class="landing-fade" style="--fade-delay: 40ms;">
+              <span class="landing-eyebrow landing-fade" style="--fade-delay: 80ms;">
                 <span class="landing-eyebrow__dot"></span>
-                Pricing yang lebih rapi dan mudah dibandingkan
+                Paket yang memudahkan keputusan pembelian
               </span>
               <h2 class="landing-heading">
-                Paket dibuat lebih compact,
-                <span class="landing-heading__accent">tanpa menghilangkan konteks penting</span>
+                Pilih paket, aktifkan sekolah,
+                <span class="landing-heading__accent">dan mulai dorong transaksi lebih cepat</span>
               </h2>
             </div>
 
-            <div class="pricing-summary-card">
+            <div class="pricing-summary-card landing-fade" style="--fade-delay: 140ms;">
               <span class="pricing-summary-card__label">Ringkasan cepat</span>
-              <strong>Semua paket sudah siap untuk alur promo inti</strong>
-              <p>Pilih sesuai skala sekolah, lalu lanjutkan pendaftaran dari tombol paket yang paling cocok.</p>
+              <strong>Tidak ada langkah yang membingungkan sebelum aktivasi</strong>
+              <p>Pilih paket yang paling pas, isi data admin sekali, lalu tim kami bantu sampai promo siap live.</p>
             </div>
           </div>
 
@@ -103,8 +103,8 @@ export const PricingSection = {
           </div>
 
           <div class="pricing-highlights">
-            ${pricingHighlights.map((item) => `
-              <div class="pricing-highlight">
+            ${pricingHighlights.map((item, index) => `
+              <div class="pricing-highlight landing-fade" style="--fade-delay: ${180 + (index * 60)}ms;">
                 <span class="pricing-highlight__icon"><i class="fas ${item.icon}"></i></span>
                 <div>
                   <strong>${item.title}</strong>
@@ -114,14 +114,14 @@ export const PricingSection = {
             `).join('')}
           </div>
 
-          <div class="pricing-comparison">
+          <div class="pricing-comparison landing-fade" style="--fade-delay: 280ms;">
             <div class="pricing-comparison__head">
               <div>
                 <span class="landing-eyebrow">
                   <span class="landing-eyebrow__dot"></span>
                   Perbandingan fitur utama
                 </span>
-                <h3>Bandingkan paket secara cepat sebelum aktivasi</h3>
+                <h3>Bandingkan paket secara cepat lalu pilih yang paling mudah disetujui</h3>
               </div>
               <p>Geser tabel di layar kecil untuk melihat semua paket.</p>
             </div>
@@ -242,7 +242,7 @@ export const PricingSection = {
     const tone = this.getPlanTone(plan);
 
     return `
-      <article class="pricing-plan ${tone.cardClass}">
+      <article class="pricing-plan ${tone.cardClass} landing-fade" style="--fade-delay: ${plan.popular ? '140ms' : plan.price <= 0 ? '80ms' : '200ms'};">
         <div class="pricing-plan__header">
           <div>
             <span class="pricing-plan__badge">${tone.badge}</span>
@@ -272,7 +272,7 @@ export const PricingSection = {
           data-plan="${plan.id}"
           class="select-plan-btn landing-btn ${plan.popular ? 'landing-btn--primary' : 'landing-btn--secondary'}"
         >
-          ${plan.cta || 'Pilih Paket'}
+          ${plan.cta || 'Aktifkan Paket'}
         </button>
       </article>
     `;

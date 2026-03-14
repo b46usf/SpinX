@@ -5,45 +5,46 @@
 
 const heroStats = [
   { value: '500+', label: 'Sekolah aktif' },
-  { value: '50rb+', label: 'Siswa terlayani' },
-  { value: '87%', label: 'Voucher terpakai' }
+  { value: '50rb+', label: 'Siswa terjangkau' },
+  { value: '87%', label: 'Voucher digunakan' }
 ];
 
 const heroSignals = [
-  'Aktivasi cepat tanpa setup berlapis',
-  'Voucher promo langsung siap dipakai',
-  'Dashboard ringkas untuk tim sekolah'
+  'Siswa langsung tertarik mencoba promo',
+  'Voucher mendorong pembelian berulang',
+  'Tim sekolah bisa membaca hasil lebih cepat'
 ];
 
 export const HeroSection = {
   render: () => `
     <section id="home" class="landing-section landing-section--hero landing-anchor hero-section" data-nav-section>
       <div class="landing-shell hero-layout">
-        <div class="hero-copy">
-          <span class="landing-eyebrow">
+        <div class="hero-copy landing-fade" style="--fade-delay: 40ms;">
+          <span class="landing-eyebrow landing-fade" style="--fade-delay: 80ms;">
             <span class="landing-eyebrow__dot"></span>
-            Platform promo yang rapi untuk operasional kantin sekolah
+            Dirancang untuk menaikkan transaksi kantin sekolah
           </span>
 
-          <h1 class="landing-heading hero-title">
-            Promo Lucky Wheel yang terlihat menarik,
-            <span class="landing-heading__accent">tetap terasa profesional</span>
-            saat dijalankan di sekolah.
+          <h1 class="landing-heading hero-title landing-fade" style="--fade-delay: 120ms;">
+            Ubah rasa penasaran siswa jadi transaksi nyata
+            lewat Lucky Wheel yang
+            <span class="landing-heading__accent">membuat kantin lebih ramai</span>.
           </h1>
 
-          <p class="landing-subheading hero-description">
-            spinX membantu tim sekolah mengelola promo interaktif dengan alur yang lebih singkat,
-            tampilan lebih proporsional, dan monitoring yang mudah dipahami dari hari pertama.
+          <p class="landing-subheading hero-description landing-fade" style="--fade-delay: 180ms;">
+            spinX membuat promo sekolah terasa modern dan langsung menghasilkan aksi:
+            siswa tertarik bermain, voucher memicu pembelian, dan tim sekolah bisa melihat
+            dampaknya dari dashboard yang ringkas sejak hari pertama.
           </p>
 
-          <div class="hero-actions">
-            <a href="#pricing" class="landing-btn landing-btn--primary">Lihat Paket</a>
-            <a href="#features" class="landing-btn landing-btn--secondary">Pelajari Solusi</a>
+          <div class="hero-actions landing-fade" style="--fade-delay: 220ms;">
+            <a href="#pricing" class="landing-btn landing-btn--primary">Aktifkan Sekarang</a>
+            <a href="#features" class="landing-btn landing-btn--secondary">Lihat Alur Demo</a>
           </div>
 
           <div class="hero-signals">
-            ${heroSignals.map((signal) => `
-              <div class="hero-signal">
+            ${heroSignals.map((signal, index) => `
+              <div class="hero-signal landing-fade" style="--fade-delay: ${280 + (index * 60)}ms;">
                 <span class="hero-signal__icon"><i class="fas fa-check"></i></span>
                 <span>${signal}</span>
               </div>
@@ -51,8 +52,8 @@ export const HeroSection = {
           </div>
 
           <div class="hero-stats">
-            ${heroStats.map((stat) => `
-              <div class="hero-stat">
+            ${heroStats.map((stat, index) => `
+              <div class="hero-stat landing-fade" style="--fade-delay: ${420 + (index * 70)}ms;">
                 <strong>${stat.value}</strong>
                 <span>${stat.label}</span>
               </div>
@@ -60,12 +61,12 @@ export const HeroSection = {
           </div>
         </div>
 
-        <div class="hero-visual">
+        <div class="hero-visual landing-fade" style="--fade-delay: 160ms;">
           <div class="hero-panel">
             <div class="hero-panel__header">
               <div>
-                <span class="hero-panel__label">Preview operasional</span>
-                <h2>Dashboard promo harian</h2>
+                <span class="hero-panel__label">Preview closing flow</span>
+                <h2>Dashboard promo yang mendorong aksi</h2>
               </div>
               <span class="hero-panel__status">Live</span>
             </div>

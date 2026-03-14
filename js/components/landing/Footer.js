@@ -16,8 +16,8 @@ const footerColumns = [
   {
     title: 'Aksi',
     links: [
-      { text: 'Ajukan Aktivasi', href: '#cta' },
-      { text: 'Bandingkan Paket', href: '#pricing' },
+      { text: 'Aktifkan Sekolah', href: '#cta' },
+      { text: 'Pilih Paket', href: '#pricing' },
       { text: 'Lihat Testimoni', href: '#testimonials' },
       { text: 'Support', href: 'mailto:support@gameumkm.com' }
     ]
@@ -35,7 +35,7 @@ export const Footer = {
     <footer class="landing-footer">
       <div class="landing-shell">
         <div class="landing-footer__top">
-          <div class="landing-footer__brand">
+          <div class="landing-footer__brand landing-fade" style="--fade-delay: 60ms;">
             <a href="#home" class="lp-brand lp-brand--footer">
               <span class="lp-brand__mark">
                 <i class="fas fa-dharmachakra"></i>
@@ -47,8 +47,8 @@ export const Footer = {
             </a>
 
             <p>
-              Landing page ini dirapikan agar tiap komponen terasa lebih padat, mudah dipindai,
-              dan tetap konsisten dari hero sampai proses aktivasi.
+              spinX membantu sekolah mengubah minat siswa menjadi transaksi yang lebih terukur
+              lewat promo yang rapi, cepat dipahami, dan mudah dijalankan tim kantin.
             </p>
 
             <div class="landing-footer__social">
@@ -62,7 +62,7 @@ export const Footer = {
 
           <div class="landing-footer__columns">
             ${footerColumns.map((column) => `
-              <div class="landing-footer__column">
+              <div class="landing-footer__column landing-fade" style="--fade-delay: ${120 + (column.title === 'Aksi' ? 60 : 0)}ms;">
                 <h4>${column.title}</h4>
                 <ul>
                   ${column.links.map((link) => `
