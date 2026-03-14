@@ -140,7 +140,17 @@ class AuthApi {
       // Get auth header (Bearer token)
       const authHeader = this.getAuthHeader();
       
-      const payload = { action, ...data, ip: clientIP };
+      const payload = {
+        action,
+        ...data,
+        ip: clientIP
+      };
+
+      // GAS web apps often do not expose Authorization headers in doPost(e),
+      // so send the bearer token in the JSON body as a fallback.
+      if (authHeader) {
+        payload.authorization = authHeader;
+      }
       
       // Build headers
       const headers = {

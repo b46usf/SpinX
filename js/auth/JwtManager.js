@@ -157,7 +157,8 @@ class JwtManager {
       const response = await fetch(AUTH_CONFIG.API_URL, {
         method: 'POST',
         body: JSON.stringify({
-          action: 'refreshToken'
+          action: 'refreshToken',
+          authorization: this.getAuthHeader()
         }),
         headers: {
           'Content-Type': 'application/json',
