@@ -18,7 +18,7 @@ const pricingHighlights = [
   {
     icon: 'fa-shield-halved',
     title: 'Isi paket gampang dibaca',
-    text: 'Yang didapat di tiap paket bisa langsung dibandingkan tanpa harus baca ulang berkali-kali.'
+    text: 'Yang didapat di tiap paket bisa langsung dibandingkan.'
   },
   {
     icon: 'fa-headset',
@@ -123,7 +123,6 @@ export const PricingSection = {
                 </span>
                 <h3>Bandingkan isi paketnya dulu, lalu pilih yang paling masuk untuk sekolah</h3>
               </div>
-              <p>Geser tabel di layar kecil untuk melihat semua paket.</p>
             </div>
 
             <div class="pricing-comparison__table-wrap">

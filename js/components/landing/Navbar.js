@@ -15,7 +15,7 @@ export const Navbar = {
           </span>
           <span class="lp-brand__copy">
             <strong>spinX Booster</strong>
-            <small>Promo engine untuk kantin sekolah</small>
+            <small>Promo sistem untuk kantin sekolah</small>
           </span>
         </a>
 

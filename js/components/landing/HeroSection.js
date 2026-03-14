@@ -55,8 +55,8 @@ export const HeroSection = {
           <div class="hero-panel">
             <div class="hero-panel__header">
               <div>
-                <span class="hero-panel__label">Preview closing flow</span>
-                <h2>Contoh tampilan promo harian</h2>
+                <span class="hero-panel__label">Preview Flow</span>
+                <h2>Promo Harian</h2>
               </div>
               <span class="hero-panel__status">Live</span>
             </div>
@@ -98,13 +98,13 @@ export const HeroSection = {
                 <div class="hero-metric-card">
                   <span class="hero-metric-card__label">Redeem voucher</span>
                   <strong>87%</strong>
-                  <small>Voucher yang sudah dipakai siswa hari ini</small>
+                  <small>Pakai siswa hari ini</small>
                 </div>
 
                 <div class="hero-metric-card hero-metric-card--accent">
                   <span class="hero-metric-card__label">Waktu redeem rata-rata</span>
-                  <strong>14 dtk</strong>
-                  <small>Masih aman dipakai saat jam istirahat</small>
+                  <strong>14s</strong>
+                  <small>Saat jam istirahat</small>
                 </div>
 
                 <div class="hero-activity-card">
