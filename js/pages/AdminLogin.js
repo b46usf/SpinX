@@ -510,23 +510,17 @@ class AdminLogin {
         Toast.closeLoading();
       }
       
+      // Update status using component method (prevents toast refresh issue)
+      TelegramLinkSection.updateStatus(result.success ? 'success' : (result.error === 'TELEGRAM_NOT_LINKED' ? 'not_linked' : 'error'), result.message);
+      
       const statusEl = document.getElementById('telegram-status');
       
       if (result.success) {
-        if (statusEl) {
-          statusEl.innerHTML = `
-            <div class="flex items-center justify-center gap-2 text-xs text-green-400">
-              <i class="fas fa-check-circle"></i>
-              <span>Terkoneksi! Mengirim OTP...</span>
-            </div>
-          `;
-        }
-        
         if (Toast) {
           Toast.success('Telegram Terhubung!', 'Kode OTP dikirim ke Telegram Anda');
         }
         
-        // Show OTP section after 2 seconds
+        // Show OTP section after 2 seconds  
         setTimeout(() => {
           this.showOtpSection({
             userId: this.pendingUserData.userId,
@@ -536,22 +530,13 @@ class AdminLogin {
         }, 2000);
         
       } else if (result.error === 'TELEGRAM_NOT_LINKED') {
-        if (statusEl) {
-          statusEl.innerHTML = `
-            <div class="flex items-center justify-center gap-2 text-xs text-yellow-400">
-              <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
-              <span>Belum terhubung. Klik START di Telegram</span>
-            </div>
-          `;
+        if (Toast) {
+          Toast.warning('Telegram Belum Terhubung', result.message);
         }
+        // Don't clear localStorage - keep state for retry after Telegram connect
       } else {
-        if (statusEl) {
-          statusEl.innerHTML = `
-            <div class="flex items-center justify-center gap-2 text-xs text-red-400">
-              <i class="fas fa-exclamation-circle"></i>
-              <span>${result.message || 'Gagal'}</span>
-            </div>
-          `;
+        if (Toast) {
+          Toast.error('Error', result.message || 'Gagal');
         }
       }
     } catch (error) {
