@@ -10,6 +10,7 @@
 
 import { AUTH_CONFIG } from './Config.js';
 import { authApi } from './AuthApi.js';
+import AuthRouter from './utils/AuthRouter.js';
 
 // Get Toast functions from global (set by Toast.js)
 const getToast = () => window.Toast || null;
@@ -104,41 +105,39 @@ class GoogleAuth {
         Toast.closeLoading();
       }
       
+      if (authResult.needVerification) {
+        if (authResult.telegramLinked) {
+          // User has linked Telegram - generate OTP (AuthApi will show toast)
+          const otpResult = await authApi.generateOTP(authResult.userId, userInfo.email);
+          
+          if (otpResult.success) {
+            this.triggerCallbacks(null, {
+              needOTPVerification: true,
+              userId: authResult.userId,
+              email: userInfo.email,
+              otpId: otpResult.otpId,
+              googleUser: this.googleUser
+            });
+          }
+        } else {
+          // User needs to link Telegram first
+          this.triggerCallbacks(null, {
+            needTelegramLink: true,
+            userId: authResult.userId,
+            email: userInfo.email,
+            telegramLink: authResult.telegramLink,
+            googleUser: this.googleUser
+          });
+        }
+        return;
+      }
+
       // AuthApi already shows toast, check result for flow control
       if (!authResult.success) {
-        // Toast already shown by AuthApi, just return
         return;
       }
 
       if (authResult.registered) {
-        if (authResult.needVerification) {
-          // Check telegramLinked status from response
-          if (authResult.telegramLinked) {
-            // User has linked Telegram - generate OTP (AuthApi will show toast)
-            const otpResult = await authApi.generateOTP(authResult.userId, userInfo.email);
-            
-            if (otpResult.success) {
-              this.triggerCallbacks(null, {
-                needOTPVerification: true,
-                userId: authResult.userId,
-                email: userInfo.email,
-                otpId: otpResult.otpId,
-                googleUser: this.googleUser
-              });
-            }
-            // If failed, AuthApi already showed toast
-          } else {
-            // User needs to link Telegram first
-            this.triggerCallbacks(null, {
-              needTelegramLink: true,
-              userId: authResult.userId,
-              email: userInfo.email,
-              telegramLink: authResult.telegramLink,
-              googleUser: this.googleUser
-            });
-          }
-          return;
-        }
 
         // Login successful - save user data
         this.currentUser = { ...authResult.user, picture: userInfo.picture };
@@ -149,7 +148,14 @@ class GoogleAuth {
         this.routeToDashboard(this.role);
       } else {
         // Need to register
-        this.triggerCallbacks(null, { needRegister: true, googleUser: this.googleUser });
+        this.triggerCallbacks(null, {
+          needRegister: true,
+          googleUser: this.googleUser,
+          registerContext: {
+            role: authResult.registerRole || '',
+            school: authResult.school || null
+          }
+        });
       }
     } catch (error) {
       // Close loading toast
@@ -253,20 +259,7 @@ class GoogleAuth {
   }
 
   routeToDashboard(role) {
-    const dashboards = { 
-      'admin-system': 'dashboard-admin.html', 
-      'admin-sekolah': 'dashboard-admin-sekolah.html',
-      'siswa': 'dashboard-siswa.html', 
-      'mitra': 'dashboard-mitra.html', 
-      'guru': 'dashboard-guru.html' 
-    };
-    const dashboard = dashboards[role];
-    if (dashboard) window.location.href = dashboard;
-    else { 
-      const Toast = getToast();
-      if (Toast) Toast.error('Role Tidak Valid', 'Role pengguna tidak dikenali'); 
-      window.location.href = 'index.html'; 
-    }
+    AuthRouter.routeToDashboard(role);
   }
 
   getScriptUrl() { return AUTH_CONFIG.API_URL; }

@@ -14,6 +14,7 @@ import {
   RegisterModal,
   ToastContainer
 } from '../components/landing/index.js';
+import AuthRouter from '../auth/utils/AuthRouter.js';
 
 class LandingPage {
   constructor() {
@@ -316,14 +317,8 @@ class LandingPage {
     PricingSection.openPlanModal(planId);
   }
 
-  handleLogin() {
-    if (window.App && window.App.showLoginSection) {
-      window.App.showLoginSection();
-    } else if (window.showLoginSection) {
-      window.showLoginSection();
-    } else {
-      window.location.href = 'dashboard-admin.html';
-    }
+  handleLogin(role = '') {
+    AuthRouter.routeToLogin(role);
   }
 
   closeRegisterModal() {

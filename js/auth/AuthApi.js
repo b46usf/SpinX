@@ -61,12 +61,20 @@ class AuthApi {
     const Toast = getToast();
     if (!Toast) return;
 
+    if (action === 'login' && result.registered === false) {
+      if (result.registerRole === 'admin-sekolah') {
+        Toast.info('Lengkapi Data Admin Sekolah', result.message || 'Lanjutkan registrasi admin sekolah.');
+      }
+      return;
+    }
+
     // Determine which message to show
     if (result.success === true) {
       // Success - show success toast for important actions
       const successMessages = {
         'login': 'Login berhasil!',
         'register': 'Registrasi berhasil!',
+        'registerschoolpending': result.message || 'Data sekolah berhasil dikirim.',
         'generateOTP': 'OTP telah dikirim!',
         'verifyOTP': 'Verifikasi berhasil!',
         'spin': 'Berhasil!'
@@ -89,6 +97,12 @@ class AuthApi {
       // Special handling for specific errors
       if (result.error === 'TELEGRAM_NOT_LINKED') {
         Toast.warning('Telegram Belum Terhubung', message);
+      } else if (result.error === 'USER_PENDING') {
+        Toast.warning('Verifikasi Diperlukan', message);
+      } else if (result.error === 'SCHOOL_PENDING_APPROVAL') {
+        Toast.info('Akun Belum Approved', message);
+      } else if (result.error === 'SCHOOL_INACTIVE') {
+        Toast.warning('Status Sekolah Belum Aktif', message);
       } else if (result.error === 'OTP_EXPIRED') {
         Toast.warning('OTP Expired', message);
       } else if (result.error === 'OTP_INVALID') {
@@ -331,8 +345,8 @@ class AuthApi {
   /**
    * Register new school (pending approval)
    */
-  async registerSchoolPending(payload) {
-    return this.call('registerschoolpending', payload);
+  async registerSchoolPending(payload, showToast = true) {
+    return this.call('registerschoolpending', payload, showToast);
   }
 
   /**

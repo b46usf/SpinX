@@ -179,13 +179,15 @@ export const Navbar = {
     };
 
     if (loginBtn && callbacks.onLogin) {
-      loginBtn.addEventListener('click', callbacks.onLogin);
+      loginBtn.addEventListener('click', () => {
+        callbacks.onLogin(loginBtn.dataset.loginRole || '');
+      });
     }
 
     if (mobileLoginBtn && callbacks.onLogin) {
       mobileLoginBtn.addEventListener('click', () => {
         closeMobileMenu();
-        callbacks.onLogin();
+        callbacks.onLogin(mobileLoginBtn.dataset.loginRole || '');
       });
     }
 

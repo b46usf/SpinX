@@ -5,6 +5,8 @@
  * Now uses JWT for authentication validation
  */
 
+import AuthRouter from '../auth/utils/AuthRouter.js';
+
 // Lazy load JwtManager to avoid circular dependencies
 let jwtManager = null;
 const getJwtManager = () => {
@@ -132,19 +134,13 @@ class AuthGuard {
    */
   redirectToDashboard() {
     const role = this.getRole();
-const dashboards = {
-      'admin-system': 'dashboard-admin-system.html',
-      'admin-sekolah': 'dashboard-admin.html',
-      'siswa': 'dashboard-siswa.html',
-      'mitra': 'dashboard-mitra.html',
-      'guru': 'dashboard-guru.html'
-    };
-    
-    if (role && dashboards[role]) {
-      window.location.href = dashboards[role];
-    } else {
-      this.redirectToLogin();
+
+    if (role && AuthRouter.getDashboardUrl(role) !== 'index.html') {
+      AuthRouter.routeToDashboard(role);
+      return;
     }
+
+    this.redirectToLogin();
   }
 
   /**

@@ -33,6 +33,16 @@ export const RegisterTemplates = {
       </div>`;
   },
 
+  adminSchoolRoleField() {
+    return `
+      <input type="hidden" id="role" name="role" value="admin-sekolah">
+      <div class="p-3 bg-cyan-500/10 border border-cyan-500/30 rounded-xl mb-3">
+        <p class="text-xs text-cyan-400 text-center">
+          <i class="fas fa-school mr-1"></i>Admin Sekolah
+        </p>
+      </div>`;
+  },
+
   whatsappField() {
     return `
       <div class="input-group">
@@ -76,6 +86,18 @@ export const RegisterTemplates = {
         </label>
         <input type="text" id="nama" name="nama" required placeholder="Masukkan nama lengkap" 
           class="w-full px-3 py-2.5 bg-gray-800/50 border border-gray-600 rounded-xl text-white text-sm focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20">
+      </div>`;
+  },
+
+  adminSchoolField() {
+    return `
+      <div class="input-group">
+        <label class="block text-xs font-medium mb-2 text-left text-gray-400">
+          <i class="fas fa-building mr-1 text-cyan-400"></i>Sekolah *
+        </label>
+        <input type="hidden" id="school-id" name="schoolId">
+        <input type="text" id="school-name-display" readonly placeholder="Sekolah terhubung akan muncul di sini"
+          class="w-full px-3 py-2.5 bg-gray-800/30 border border-gray-700 rounded-xl text-gray-400 text-sm cursor-not-allowed">
       </div>`;
   },
 
@@ -304,6 +326,52 @@ export const RegisterTemplates = {
               
               <button type="submit" class="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg text-sm">
                 <i class="fas fa-rocket mr-2"></i>Daftar Sekarang
+              </button>
+              
+              <button type="button" id="cancel-register" class="w-full py-2.5 bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 rounded-xl transition-colors text-sm">
+                <i class="fas fa-arrow-left mr-2"></i>Batal
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>`;
+  },
+
+  registerSectionAdminSchool() {
+    return `
+      <div class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-cyan-900 via-slate-900 to-blue-900 opacity-50"></div>
+        <div class="absolute top-1/4 right-1/4 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl animate-pulse"></div>
+        <div class="absolute bottom-1/4 left-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
+        
+        <div class="relative w-full max-w-sm">
+          <div class="bg-gray-900/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-700/50 p-5 animate-scale-in">
+            <div class="text-center mb-4">
+              <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-cyan-500 via-blue-500 to-indigo-500 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+                <i class="fas fa-school text-xl text-white"></i>
+              </div>
+              <h2 class="text-lg font-bold text-white">Lengkapi Admin Sekolah</h2>
+              <p class="text-gray-400 text-xs mt-1">Email sekolah sudah aktif. Tinggal selesaikan data admin.</p>
+            </div>
+
+            <div class="flex items-center gap-3 p-3 bg-gray-800/50 rounded-xl mb-4">
+              <img id="register-avatar" src="" alt="Avatar" class="w-10 h-10 rounded-full object-cover">
+              <div class="text-left min-w-0">
+                <div id="register-name" class="font-semibold text-white text-sm truncate"></div>
+                <div id="register-email" class="text-gray-400 text-xs truncate"></div>
+              </div>
+            </div>
+
+            <form id="register-form" class="space-y-3">
+              ${this.adminSchoolRoleField()}
+              ${this.namaAdminField()}
+              ${this.whatsappField()}
+              ${this.adminSchoolField()}
+              
+              <div id="register-error" class="hidden p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs text-center"></div>
+              
+              <button type="submit" class="w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white font-semibold rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg text-sm">
+                <i class="fas fa-rocket mr-2"></i>Lanjutkan Registrasi
               </button>
               
               <button type="button" id="cancel-register" class="w-full py-2.5 bg-gray-700/50 hover:bg-gray-600/50 text-gray-300 rounded-xl transition-colors text-sm">

@@ -12,12 +12,14 @@ const getToast = () => window.Toast || null;
 const AuthRouter = {
   // Dashboard mapping by role
   dashboards: {
-    'admin-system': 'dashboard-admin.html',
-    'admin-sekolah': 'dashboard-admin-sekolah.html',
+    'admin-system': 'dashboard-admin-system.html',
+    'admin-sekolah': 'dashboard-admin-school.html',
     'siswa': 'dashboard-siswa.html',
     'mitra': 'dashboard-mitra.html',
     'guru': 'dashboard-guru.html'
   },
+
+  userLoginRoles: ['admin-sekolah', 'siswa', 'guru', 'mitra'],
 
   /**
    * Get dashboard URL for a role
@@ -43,8 +45,38 @@ const AuthRouter = {
   /**
    * Route to login page
    */
-  routeToLogin() {
-    window.location.href = 'index.html';
+  routeToLogin(role = '') {
+    const normalizedRole = role ? role.trim().toLowerCase() : '';
+
+    if (normalizedRole && !this.userLoginRoles.includes(normalizedRole)) {
+      this.showError('Role login tidak valid');
+      return;
+    }
+
+    const params = new URLSearchParams();
+    params.set('view', 'login');
+
+    if (normalizedRole) {
+      params.set('role', normalizedRole);
+    }
+
+    const loginUrl = `index.html?${params.toString()}`;
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    const openInlineLogin = (window.App && typeof window.App.showLoginSection === 'function')
+      || typeof window.showLoginSection === 'function';
+
+    if ((currentPage === 'index.html' || currentPage === '') && openInlineLogin) {
+      window.history.pushState({}, '', loginUrl);
+
+      if (window.App?.showLoginSection) {
+        window.App.showLoginSection({ role: normalizedRole, updateHistory: false });
+      } else {
+        window.showLoginSection({ role: normalizedRole, updateHistory: false });
+      }
+      return;
+    }
+
+    window.location.href = loginUrl;
   },
 
   /**
@@ -88,4 +120,6 @@ const AuthRouter = {
 
 // Export for global use
 window.AuthRouter = AuthRouter;
+
+export default AuthRouter;
 

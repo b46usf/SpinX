@@ -5,6 +5,7 @@
  */
 
 import { authApi } from '../auth/AuthApi.js';
+import AuthRouter from '../auth/utils/AuthRouter.js';
 
 class SubscriptionRegister {
   constructor(options = {}) {
@@ -155,12 +156,13 @@ class SubscriptionRegister {
     submitBtn.disabled = true;
 
     try {
-      const result = await authApi.registerSchoolPending(data);
+      const result = await authApi.registerSchoolPending(data, false);
       
       if (result.success) {
         const Toast = window.Toast;
         Toast?.success('Pendaftaran Berhasil', result.message || 'Sekolah Anda sedang menunggu persetujuan admin');
         this.hide();
+        window.setTimeout(() => AuthRouter.routeToLogin('admin-sekolah'), 300);
       }
     } catch (error) {
       console.error('Registration failed:', error);

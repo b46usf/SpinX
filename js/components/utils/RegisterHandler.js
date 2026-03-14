@@ -178,8 +178,9 @@ export class RegisterHandler {
     const kelasGuru = role === 'guru' ? get('kelas-guru') : '';
     const sekolahGuru = role === 'guru' ? get('sekolah-guru') : '';
     
-    // For admin-system, kelas and sekolah are always "-"
+    // For admin roles, kelas and sekolah are handled specially
     const isAdminSystem = role === 'admin-system';
+    const isAdminSchool = role === 'admin-sekolah';
     
     return {
       role: role,
@@ -187,8 +188,12 @@ export class RegisterHandler {
       nis: get('nis'),
       kodeGuru: get('kode-guru'),
       name: get('nama'),
-      kelas: isAdminSystem ? '-' : (role === 'guru' ? kelasGuru : get('kelas')),
-      sekolah: isAdminSystem ? '-' : (role === 'guru' ? sekolahGuru : (get('sekolah-siswa') || get('sekolah'))),
+      kelas: (isAdminSystem || isAdminSchool) ? '-' : (role === 'guru' ? kelasGuru : get('kelas')),
+      sekolah: isAdminSystem
+        ? '-'
+        : (isAdminSchool
+          ? get('school-id')
+          : (role === 'guru' ? sekolahGuru : (get('sekolah-siswa') || get('sekolah')))),
       namaMitra: get('namaMitra'),
       kategori: get('kategori'),
       alamat: get('alamat')
@@ -199,6 +204,8 @@ export class RegisterHandler {
     if (!data.role || !data.noWa) return { valid: false, message: 'Mohon lengkapi semua data wajib' };
     // Admin system requires name
     if (data.role === 'admin-system' && !data.name) return { valid: false, message: 'Masukkan nama lengkap' };
+    if (data.role === 'admin-sekolah' && !data.name) return { valid: false, message: 'Masukkan nama lengkap admin sekolah' };
+    if (data.role === 'admin-sekolah' && !data.sekolah) return { valid: false, message: 'Data sekolah tidak ditemukan. Silakan login ulang.' };
     if (data.role === 'siswa' && !data.nis) return { valid: false, message: 'Masukkan NIS untuk verifikasi' };
     if (data.role === 'guru' && !data.kodeGuru) return { valid: false, message: 'Masukkan Kode Guru untuk verifikasi' };
     if (data.role === 'guru' && !data.kelas) return { valid: false, message: 'Pilih kelas (Wali Kelas) atau "Bukan Walas"' };

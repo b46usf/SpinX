@@ -3,6 +3,9 @@
  * Updated to match the refreshed landing page design.
  */
 
+import { authApi } from '../../auth/AuthApi.js';
+import AuthRouter from '../../auth/utils/AuthRouter.js';
+
 export const RegisterModal = {
   render: (planName = 'Starter - Gratis') => `
     <div id="register-modal" class="landing-modal hidden">
@@ -89,7 +92,6 @@ export const RegisterModal = {
 
       const submitBtn = form.querySelector('button[type="submit"]');
       const data = {
-        action: 'createschool',
         schoolName: document.getElementById('school-name').value,
         email: document.getElementById('school-email').value,
         noWa: document.getElementById('school-phone').value,
@@ -102,19 +104,15 @@ export const RegisterModal = {
           submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Mengirim data...</span>';
         }
 
-        const response = await fetch('/api/proxy', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-        const result = await response.json();
+        const result = await authApi.registerSchoolPending(data, false);
 
         if (result.success) {
           if (callbacks.onSuccess) {
-            callbacks.onSuccess('Berhasil', 'Pendaftaran berhasil. Silakan cek email untuk aktivasi.');
+            callbacks.onSuccess('Berhasil', result.message || 'Pendaftaran berhasil.');
           }
           window.LandingPage.closeRegisterModal();
           form.reset();
+          window.setTimeout(() => AuthRouter.routeToLogin('admin-sekolah'), 300);
         } else if (callbacks.onError) {
           callbacks.onError('Gagal', result.message || 'Terjadi kesalahan saat mengirim data.');
         }

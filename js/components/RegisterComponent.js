@@ -12,7 +12,7 @@ export class RegisterComponent {
     this._onSubmit = options.onSubmit || (() => {});
     this._onCancel = options.onCancel || (() => {});
     this.registerHandler = new RegisterHandler({ googleAuth: this.googleAuth });
-    this.isAdminSystem = false;
+    this.mode = 'standard';
   }
 
   /**
@@ -47,6 +47,7 @@ export class RegisterComponent {
    * Render standard register section (siswa, guru, mitra)
    */
   render() {
+    this.mode = 'standard';
     return RegisterTemplates.registerSection();
   }
 
@@ -54,15 +55,23 @@ export class RegisterComponent {
    * Render admin system register section (simplified form)
    */
   renderAdmin() {
-    this.isAdminSystem = true;
+    this.mode = 'admin-system';
     return RegisterTemplates.registerSectionAdmin();
+  }
+
+  /**
+   * Render admin school register section
+   */
+  renderAdminSchool() {
+    this.mode = 'admin-school';
+    return RegisterTemplates.registerSectionAdminSchool();
   }
 
   /**
    * Check if current registration is for admin system
    */
   isAdmin() {
-    return this.isAdminSystem;
+    return this.mode === 'admin-system';
   }
 
   initEvents() {
@@ -76,10 +85,14 @@ export class RegisterComponent {
   /**
    * Show register section with Google user data
    * @param {Object} googleUser - Google user info
-   * @param {boolean} isAdminSystem - Flag for admin system registration
+   * @param {Object|boolean} options - Display options
    */
-  show(googleUser, isAdminSystem = false) {
-    this.isAdminSystem = isAdminSystem;
+  show(googleUser, options = {}) {
+    const config = typeof options === 'boolean'
+      ? { mode: options ? 'admin-system' : 'standard' }
+      : options;
+
+    this.mode = config.mode || this.mode || 'standard';
     
     const section = document.getElementById('register-section');
     if (section) section.classList.remove('hidden');
@@ -92,15 +105,24 @@ export class RegisterComponent {
     if (nameEl) nameEl.textContent = googleUser.name;
     if (emailEl) emailEl.textContent = googleUser.email;
     
-    // For admin system, pre-fill nama from Google
-    if (isAdminSystem) {
+    this.registerHandler.reset();
+
+    if (this.mode === 'admin-system' || this.mode === 'admin-school') {
       const namaInput = document.getElementById('nama');
       if (namaInput && googleUser.name) {
         namaInput.value = googleUser.name;
       }
     }
-    
-    this.registerHandler.reset();
+
+    if (this.mode === 'admin-school' && config.school) {
+      const schoolIdInput = document.getElementById('school-id');
+      const schoolNameInput = document.getElementById('school-name-display');
+      const phoneInput = document.getElementById('noWa');
+
+      if (schoolIdInput) schoolIdInput.value = config.school.schoolId || config.school.id || '';
+      if (schoolNameInput) schoolNameInput.value = config.school.schoolName || config.school.name || '';
+      if (phoneInput && config.school.noWa) phoneInput.value = config.school.noWa;
+    }
   }
 
   hide() {
