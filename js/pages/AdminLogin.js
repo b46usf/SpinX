@@ -9,6 +9,7 @@
 
 import { AUTH_CONFIG } from '../auth/Config.js';
 import { authApi } from '../auth/AuthApi.js';
+import { TelegramLinkSection } from '../../components/auth/TelegramLinkSection.js';
 
 // Get Toast from global
 const getToast = () => window.Toast || null;
@@ -50,6 +51,55 @@ class AdminLogin {
     this.setupLoginButton();
 
     this.initialized = true;
+
+    // Step 2: Restore pending Telegram state on page load/refresh
+    this.restorePendingTelegramState();
+  }
+
+  /**
+   * Restore pending Telegram section if exists from localStorage
+   */
+  restorePendingTelegramState() {
+    try {
+      const pendingData = localStorage.getItem('pendingTelegramData');
+      if (pendingData) {
+        const data = JSON.parse(pendingData);
+        console.log('Restoring pending Telegram state:', data);
+        
+        // Hide login UI and show Telegram section
+        const loginCard = document.querySelector('.relative.max-w-sm');
+        if (loginCard) {
+          loginCard.classList.add('hidden');
+        }
+        
+        const appContainer = document.getElementById('app');
+        if (appContainer) {
+          appContainer.innerHTML = TelegramLinkSection.render({
+            telegramLink: data.telegramLink
+          });
+          
+          // Store for checkTelegramStatus
+          this.pendingUserData = data;
+          
+          // Init events with callback
+          TelegramLinkSection.initEvents({
+            onRefresh: () => this.checkTelegramStatus(),
+            onBack: () => {
+              // Go back to login
+              loginCard?.classList.remove('hidden');
+              appContainer.innerHTML = '';
+              localStorage.removeItem('pendingTelegramData');
+            }
+          });
+          
+          // Auto check after 1s
+          setTimeout(() => this.checkTelegramStatus(), 1000);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to restore Telegram state:', e);
+      localStorage.removeItem('pendingTelegramData');
+    }
   }
 
   /**
@@ -375,54 +425,50 @@ class AdminLogin {
    * Show Telegram link section after successful registration
    * @param {Object} result - Registration result from backend
    */
+  /**
+   * Show Telegram link section after successful registration (Step 3: Use component)
+   * @param {Object} result - Registration result from backend
+   */
   showTelegramLink(result) {
     const Toast = getToast();
     
-    // Store pending user data
+    // Store pending user data  
     this.pendingUserData = {
       userId: result.user.userId,
       email: result.user.email,
+      telegramLink: result.user.telegramLink,
       googleUser: this.googleUser
     };
     
-    // Clear app container and show Telegram link section
+    // Persist for refresh survival
+    localStorage.setItem('pendingTelegramData', JSON.stringify({
+      userId: this.pendingUserData.userId,
+      email: this.pendingUserData.email,
+      telegramLink: this.pendingUserData.telegramLink
+    }));
+    
+    // Hide login/register UI
+    const loginCard = document.querySelector('.relative.max-w-sm');
+    loginCard?.classList.add('hidden');
+    
+    // Show using reusable component (Step 3: DRY)
     const appContainer = document.getElementById('app');
     if (appContainer) {
-      appContainer.innerHTML = `
-        <div class="max-w-sm mx-auto p-5 bg-gray-800/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-700/50 animate-scale-in">
-          <div class="text-center mb-4">
-            <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg">
-              <i class="fab fa-telegram text-2xl text-white"></i>
-            </div>
-            <h2 class="text-lg font-bold text-white">Hubungkan Telegram</h2>
-            <p class="text-gray-400 text-xs mt-1">Verifikasi akun Anda via Telegram</p>
-          </div>
-          <a 
-            id="open-telegram"
-            href="${result.user.telegramLink}" 
-            target="_blank"
-            class="flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg text-sm"
-          >
-            <i class="fab fa-telegram"></i>
-            <span>Buka Telegram</span>
-          </a>
-          <div id="telegram-status" class="mt-3 p-3 bg-gray-700/30 rounded-lg">
-            <div class="flex items-center justify-center gap-2 text-xs text-gray-400">
-              <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
-              <span>Klik tombol di atas</span>
-            </div>
-          </div>
-          <button 
-            id="refresh-telegram-status"
-            class="w-full mt-2 py-2 bg-gray-700/50 hover:bg-gray-600/50 text-gray-400 rounded-lg transition-colors text-xs font-medium"
-          >
-            <i class="fas fa-sync-alt mr-1"></i>Periksa Status
-          </button>
-        </div>
-      `;
+      appContainer.innerHTML = TelegramLinkSection.render({
+        telegramLink: result.user.telegramLink
+      });
       
-      // Add event listeners
-      document.getElementById('refresh-telegram-status')?.addEventListener('click', () => this.checkTelegramStatus());
+      // Step 4: Init events with proper callbacks
+      TelegramLinkSection.initEvents({
+        onRefresh: () => this.checkTelegramStatus(),
+        onBack: () => {
+          loginCard?.classList.remove('hidden');
+          appContainer.innerHTML = '';
+          localStorage.removeItem('pendingTelegramData');
+        }
+      });
+      
+      // Auto-check status
       setTimeout(() => this.checkTelegramStatus(), 1000);
     }
     
@@ -631,6 +677,7 @@ class AdminLogin {
         
         // Clear admin_google_user since registration is complete
         localStorage.removeItem('admin_google_user');
+        localStorage.removeItem('pendingTelegramData'); // Step 5: Clear on success
         
         // Show success UI with button to go back to login (NO auto-redirect)
         const appContainer = document.getElementById('app');
