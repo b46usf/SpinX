@@ -75,6 +75,7 @@ class AuthApi {
         'login': 'Login berhasil!',
         'register': 'Registrasi berhasil!',
         'registerschoolpending': result.message || 'Data sekolah berhasil dikirim.',
+        'approveschool': result.message || 'Sekolah berhasil di-approve.',
         'generateOTP': 'OTP telah dikirim!',
         'verifyOTP': 'Verifikasi berhasil!',
         'spin': 'Berhasil!'

@@ -11,6 +11,11 @@ import { authApi } from '../auth/AuthApi.js';
 class AdminSystemDashboard {
   constructor() {
     this.currentSection = 'dashboard';
+    this.approvingSchoolId = null;
+    this.schoolFilters = {
+      query: '',
+      status: ''
+    };
     this.data = {
       stats: {},
       schools: [],
@@ -161,6 +166,11 @@ class AdminSystemDashboard {
     if (sekolahFilter) {
       sekolahFilter.addEventListener('change', (e) => this.filterSchoolsByStatus(e.target.value));
     }
+
+    const sekolahList = document.getElementById('sekolah-list');
+    if (sekolahList) {
+      sekolahList.addEventListener('click', (event) => this.handleSchoolListClick(event));
+    }
   }
 
   /**
@@ -276,6 +286,7 @@ class AdminSystemDashboard {
       const result = await authApi.call('getAdminStats', {}, false);
       
       if (result.success) {
+        this.data.stats = result.data || {};
         this.updateDashboardStats(result.data);
       }
     } catch (error) {
@@ -283,7 +294,7 @@ class AdminSystemDashboard {
     }
 
     // Load recent activity
-    this.loadRecentActivity();
+    await this.loadRecentActivity();
   }
 
   /**
@@ -329,12 +340,15 @@ class AdminSystemDashboard {
       const result = await authApi.getRecentActivity();
       
       if (result.success && result.data?.length > 0) {
+        this.data.activities = result.data;
         this.renderActivityList(result.data);
       } else {
+        this.data.activities = [];
         this.renderEmptyActivity();
       }
     } catch (error) {
       console.error('Failed to load activity:', error);
+      this.data.activities = [];
       this.renderEmptyActivity();
     }
   }
@@ -443,7 +457,7 @@ class AdminSystemDashboard {
       
       if (result.success) {
         this.data.schools = result.data || [];
-        this.renderSchools(this.data.schools);
+        this.applySchoolFilters();
         this.updateSchoolStats();
       } else {
         this.renderEmptySchools();
@@ -467,32 +481,69 @@ class AdminSystemDashboard {
       return;
     }
 
-    container.innerHTML = schools.map(school => `
-      <div class="glass-card p-4 hover:bg-white/5 transition-colors cursor-pointer" data-id="${school.id}">
-        <div class="flex items-start gap-3">
-          <div class="w-12 h-12 rounded-xl ${school.status === 'active' ? 'bg-green-500/20' : 'bg-red-500/20'} flex items-center justify-center">
-            <i class="fas fa-school ${school.status === 'active' ? 'text-green-400' : 'text-red-400'}"></i>
-          </div>
-          <div class="flex-1 min-w-0">
-            <div class="font-medium text-sm">${school.nama || school.name}</div>
-            <div class="text-xs text-gray-500">${school.alamat || school.address || '-'}</div>
-            <div class="flex items-center gap-3 mt-2">
-              <span class="text-xs text-gray-400">
-                <i class="fas fa-users mr-1"></i>${school.siswa_count || school.siswa || 0} siswa
-              </span>
-              <span class="text-xs text-gray-400">
-                <i class="fas fa-tag mr-1"></i>${school.plan || 'Starter'}
-              </span>
+    container.innerHTML = schools.map((school) => {
+      const statusMeta = this.getSchoolStatusMeta(school.status);
+      const schoolId = school.id || school.schoolId || '';
+      const isApproving = this.approvingSchoolId === schoolId;
+      const canApprove = school.status === 'pending_school';
+      const schoolName = school.nama || school.name || school.schoolName || '-';
+      const schoolEmail = school.email || '-';
+      const schoolPhone = school.phone || school.noWa || '-';
+      const studentCount = school.currentStudents || school.students || school.siswa_count || school.siswa || 0;
+      const planLabel = this.formatPlanName(school.plan);
+
+      return `
+        <div class="glass-card p-4 hover:bg-white/5 transition-colors" data-id="${schoolId}">
+          <div class="flex items-start gap-3">
+            <div class="w-12 h-12 rounded-xl ${statusMeta.iconBg} flex items-center justify-center shrink-0">
+              <i class="fas ${statusMeta.icon} ${statusMeta.iconColor}"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <div class="font-medium text-sm truncate">${schoolName}</div>
+                  <div class="text-xs text-gray-500 truncate">${schoolEmail}</div>
+                </div>
+                <span class="badge badge-${statusMeta.badge} text-xs whitespace-nowrap">
+                  ${statusMeta.label}
+                </span>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-3 mt-3 text-xs text-gray-400">
+                <span>
+                  <i class="fas fa-users mr-1"></i>${studentCount} siswa
+                </span>
+                <span>
+                  <i class="fas fa-tag mr-1"></i>${planLabel}
+                </span>
+                <span class="truncate">
+                  <i class="fas fa-phone mr-1"></i>${schoolPhone}
+                </span>
+              </div>
+
+              ${canApprove ? `
+                <div class="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-xl border border-amber-400/20 bg-amber-500/10 px-3 py-3">
+                  <div class="min-w-0">
+                    <div class="text-xs font-semibold text-amber-300">Menunggu approval admin sistem</div>
+                    <div class="text-[11px] text-amber-100/70">Setelah di-approve, admin sekolah dapat melanjutkan registrasi menggunakan Google login.</div>
+                  </div>
+                  <button
+                    type="button"
+                    data-action="approve-school"
+                    data-school-id="${schoolId}"
+                    class="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-500/20 px-3 py-2 text-xs font-semibold text-emerald-300 transition-colors hover:bg-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-60"
+                    ${isApproving ? 'disabled' : ''}
+                  >
+                    <i class="fas ${isApproving ? 'fa-spinner fa-spin' : 'fa-circle-check'}"></i>
+                    ${isApproving ? 'Menyetujui...' : 'Approve'}
+                  </button>
+                </div>
+              ` : ''}
             </div>
           </div>
-          <div class="text-right">
-            <span class="badge badge-${school.status === 'active' ? 'success' : 'danger'} text-xs">
-              ${school.status === 'active' ? 'Aktif' : 'Nonaktif'}
-            </span>
-          </div>
         </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
 
   /**
@@ -536,12 +587,8 @@ class AdminSystemDashboard {
    * @param {string} query - Search query
    */
   filterSchools(query) {
-    const filtered = this.data.schools.filter(school => {
-      const name = (school.nama || school.name || '').toLowerCase();
-      const address = (school.alamat || school.address || '').toLowerCase();
-      return name.includes(query.toLowerCase()) || address.includes(query.toLowerCase());
-    });
-    this.renderSchools(filtered);
+    this.schoolFilters.query = query || '';
+    this.applySchoolFilters();
   }
 
   /**
@@ -549,12 +596,8 @@ class AdminSystemDashboard {
    * @param {string} status - Status filter
    */
   filterSchoolsByStatus(status) {
-    if (!status) {
-      this.renderSchools(this.data.schools);
-      return;
-    }
-    const filtered = this.data.schools.filter(s => s.status === status);
-    this.renderSchools(filtered);
+    this.schoolFilters.status = status || '';
+    this.applySchoolFilters();
   }
 
   /**
@@ -566,8 +609,9 @@ class AdminSystemDashboard {
       
       if (result.success) {
         this.data.subscriptions = result.data || {};
+        this.data.invoices = result.invoices || [];
         this.updateSubscriptionStats();
-        this.renderInvoices(result.invoices || []);
+        this.renderInvoices(this.data.invoices);
       }
     } catch (error) {
       console.error('Failed to load subscriptions:', error);
@@ -629,8 +673,11 @@ class AdminSystemDashboard {
   getInvoiceStatusBg(status) {
     const bgs = {
       'paid': 'bg-green-500/20 text-green-400',
+      'active': 'bg-green-500/20 text-green-400',
       'pending': 'bg-yellow-500/20 text-yellow-400',
-      'overdue': 'bg-red-500/20 text-red-400'
+      'pending_school': 'bg-yellow-500/20 text-yellow-400',
+      'overdue': 'bg-red-500/20 text-red-400',
+      'expired': 'bg-red-500/20 text-red-400'
     };
     return bgs[status] || 'bg-gray-500/20 text-gray-400';
   }
@@ -643,8 +690,11 @@ class AdminSystemDashboard {
   getInvoiceIcon(status) {
     const icons = {
       'paid': 'fas fa-check',
+      'active': 'fas fa-check-circle',
       'pending': 'fas fa-clock',
-      'overdue': 'fas fa-exclamation'
+      'pending_school': 'fas fa-hourglass-half',
+      'overdue': 'fas fa-exclamation',
+      'expired': 'fas fa-calendar-xmark'
     };
     return icons[status] || 'fas fa-file';
   }
@@ -657,10 +707,168 @@ class AdminSystemDashboard {
   getInvoiceStatusBadge(status) {
     const badges = {
       'paid': 'success',
+      'active': 'success',
       'pending': 'warning',
-      'overdue': 'danger'
+      'pending_school': 'warning',
+      'overdue': 'danger',
+      'expired': 'danger'
     };
     return badges[status] || 'secondary';
+  }
+
+  applySchoolFilters() {
+    const query = (this.schoolFilters.query || '').toLowerCase().trim();
+    const status = this.schoolFilters.status || '';
+
+    const filtered = this.data.schools.filter((school) => {
+      const name = (school.nama || school.name || school.schoolName || '').toLowerCase();
+      const email = (school.email || '').toLowerCase();
+      const phone = (school.phone || school.noWa || '').toLowerCase();
+      const matchesQuery = !query || name.includes(query) || email.includes(query) || phone.includes(query);
+
+      if (!matchesQuery) {
+        return false;
+      }
+
+      if (!status) {
+        return true;
+      }
+
+      if (status === 'inactive') {
+        return school.status !== 'active';
+      }
+
+      return school.status === status;
+    });
+
+    this.renderSchools(filtered);
+  }
+
+  getSchoolStatusMeta(status) {
+    const statusMap = {
+      active: {
+        label: 'Aktif',
+        badge: 'success',
+        icon: 'fa-circle-check',
+        iconBg: 'bg-green-500/20',
+        iconColor: 'text-green-400'
+      },
+      pending_school: {
+        label: 'Pending Approval',
+        badge: 'warning',
+        icon: 'fa-hourglass-half',
+        iconBg: 'bg-amber-500/20',
+        iconColor: 'text-amber-300'
+      },
+      pending: {
+        label: 'Pending',
+        badge: 'warning',
+        icon: 'fa-clock',
+        iconBg: 'bg-yellow-500/20',
+        iconColor: 'text-yellow-300'
+      },
+      expired: {
+        label: 'Expired',
+        badge: 'danger',
+        icon: 'fa-calendar-xmark',
+        iconBg: 'bg-red-500/20',
+        iconColor: 'text-red-400'
+      },
+      cancelled: {
+        label: 'Dibatalkan',
+        badge: 'danger',
+        icon: 'fa-ban',
+        iconBg: 'bg-red-500/20',
+        iconColor: 'text-red-400'
+      }
+    };
+
+    return statusMap[status] || {
+      label: status || 'Unknown',
+      badge: 'warning',
+      icon: 'fa-circle-info',
+      iconBg: 'bg-slate-500/20',
+      iconColor: 'text-slate-300'
+    };
+  }
+
+  formatPlanName(plan) {
+    if (!plan) return 'Starter';
+
+    const labels = {
+      starter: 'Starter',
+      pro: 'Pro',
+      enterprise: 'Enterprise'
+    };
+
+    return labels[plan] || plan;
+  }
+
+  async handleSchoolListClick(event) {
+    const approveButton = event.target.closest('[data-action="approve-school"]');
+    if (!approveButton) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const schoolId = approveButton.dataset.schoolId;
+    if (!schoolId || this.approvingSchoolId === schoolId) {
+      return;
+    }
+
+    await this.handleApproveSchool(schoolId);
+  }
+
+  async handleApproveSchool(schoolId) {
+    const school = this.data.schools.find((item) => (item.id || item.schoolId) === schoolId);
+    if (!school) {
+      return;
+    }
+
+    const Toast = window.Toast;
+    const schoolName = school.nama || school.name || school.schoolName || 'Sekolah';
+
+    let confirmed = false;
+    if (Toast?.fire) {
+      const result = await Toast.fire({
+        title: 'Approve sekolah?',
+        text: `${schoolName} akan diaktifkan dan admin sekolah bisa melanjutkan registrasi.`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Approve',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#10b981'
+      });
+      confirmed = !!result.isConfirmed;
+    } else {
+      confirmed = window.confirm(`Approve ${schoolName}?`);
+    }
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      this.approvingSchoolId = schoolId;
+      this.applySchoolFilters();
+
+      const result = await authApi.approveSchool(schoolId);
+      if (result.success) {
+        await Promise.all([
+          this.loadDashboardData(),
+          this.loadSchools(),
+          this.loadSubscriptions()
+        ]);
+      }
+    } catch (error) {
+      console.error('Failed to approve school:', error);
+      Toast?.error?.('Gagal', 'Tidak dapat menyetujui sekolah.');
+    } finally {
+      this.approvingSchoolId = null;
+      this.applySchoolFilters();
+    }
   }
 }
 
