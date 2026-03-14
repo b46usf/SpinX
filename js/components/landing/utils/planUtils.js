@@ -270,8 +270,8 @@ export function mapPlanToDisplay(plan = {}) {
         plan.description ??
         plan.subtitle ??
         (price <= 0
-          ? 'Mulai dari alur inti untuk validasi kebutuhan sekolah.'
-          : 'Dirancang untuk sekolah yang butuh operasional promo lebih stabil.')
+          ? 'Cocok untuk mulai mencoba alur promo di sekolah.'
+          : 'Cocok untuk sekolah yang ingin menjalankan promo dengan lebih rutin.')
       ).trim(),
       features
     };

@@ -12,18 +12,18 @@ import {
 const pricingHighlights = [
   {
     icon: 'fa-bolt',
-    title: 'Go live lebih cepat',
-    text: 'Pilih paket, isi data sekolah, lalu lanjutkan onboarding tanpa alur berputar-putar.'
+    title: 'Mulainya lebih cepat',
+    text: 'Dari pilih paket ke isi data sekolah alurnya singkat dan jelas.'
   },
   {
     icon: 'fa-shield-halved',
-    title: 'Value paket langsung terbaca',
-    text: 'Harga, kapasitas, dan benefit inti tampil jelas agar keputusan lebih cepat diambil.'
+    title: 'Isi paket gampang dibaca',
+    text: 'Yang didapat di tiap paket bisa langsung dibandingkan tanpa harus baca ulang berkali-kali.'
   },
   {
     icon: 'fa-headset',
-    title: 'CTA siap closing',
-    text: 'Begitu sekolah siap lanjut, tombol aktivasi langsung mengarahkan ke langkah berikutnya.'
+    title: 'Kalau cocok, langsung lanjut',
+    text: 'Begitu sekolah yakin, tinggal klik paket lalu isi data aktivasi.'
   }
 ];
 
@@ -83,18 +83,18 @@ export const PricingSection = {
             <div class="landing-fade" style="--fade-delay: 40ms;">
               <span class="landing-eyebrow landing-fade" style="--fade-delay: 80ms;">
                 <span class="landing-eyebrow__dot"></span>
-                Paket yang memudahkan keputusan pembelian
+                Paket yang gampang dipilih sesuai kebutuhan sekolah
               </span>
               <h2 class="landing-heading">
-                Pilih paket, aktifkan sekolah,
-                <span class="landing-heading__accent">dan mulai dorong transaksi lebih cepat</span>
+                Pilih paket yang paling pas,
+                <span class="landing-heading__accent">lalu lanjut aktivasi tanpa langkah yang bikin bingung</span>
               </h2>
             </div>
 
             <div class="pricing-summary-card landing-fade" style="--fade-delay: 140ms;">
               <span class="pricing-summary-card__label">Ringkasan cepat</span>
-              <strong>Tidak ada langkah yang membingungkan sebelum aktivasi</strong>
-              <p>Pilih paket yang paling pas, isi data admin sekali, lalu tim kami bantu sampai promo siap live.</p>
+              <strong>Dari sini sekolah sudah bisa langsung lanjut daftar</strong>
+              <p>Pilih paket yang dirasa cocok, isi data admin sekali, lalu tim kami bantu sampai siap dipakai.</p>
             </div>
           </div>
 
@@ -121,7 +121,7 @@ export const PricingSection = {
                   <span class="landing-eyebrow__dot"></span>
                   Perbandingan fitur utama
                 </span>
-                <h3>Bandingkan paket secara cepat lalu pilih yang paling mudah disetujui</h3>
+                <h3>Bandingkan isi paketnya dulu, lalu pilih yang paling masuk untuk sekolah</h3>
               </div>
               <p>Geser tabel di layar kecil untuk melihat semua paket.</p>
             </div>
@@ -214,8 +214,8 @@ export const PricingSection = {
     if (plan.popular) {
       return {
         icon: 'fa-crown',
-        badge: 'Paling seimbang',
-        helper: 'Untuk promo rutin sekolah',
+        badge: 'Paling sering dipilih',
+        helper: 'Cocok untuk promo yang sudah rutin dipakai',
         cardClass: 'is-popular'
       };
     }
@@ -223,16 +223,16 @@ export const PricingSection = {
     if (plan.price <= 0) {
       return {
         icon: 'fa-seedling',
-        badge: 'Mulai ringan',
-        helper: 'Untuk validasi kebutuhan awal',
+        badge: 'Mulai dulu',
+        helper: 'Cocok untuk coba alurnya lebih dulu',
         cardClass: 'is-starter'
       };
     }
 
     return {
       icon: 'fa-building',
-      badge: 'Untuk skala lanjut',
-      helper: 'Untuk sekolah dengan skala lebih besar',
+      badge: 'Kapasitas lebih besar',
+      helper: 'Cocok untuk sekolah yang butuh ruang lebih longgar',
       cardClass: 'is-enterprise'
     };
   },

@@ -47,8 +47,8 @@ export const Footer = {
             </a>
 
             <p>
-              spinX membantu sekolah mengubah minat siswa menjadi transaksi yang lebih terukur
-              lewat promo yang rapi, cepat dipahami, dan mudah dijalankan tim kantin.
+              spinX membantu sekolah menjalankan promo kantin yang lebih rapi,
+              gampang dipahami siswa, dan tetap nyaman dipakai tim operasional sehari-hari.
             </p>
 
             <div class="landing-footer__social">

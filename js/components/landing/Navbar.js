@@ -107,8 +107,6 @@ export const Navbar = {
     const mobileOverlay = document.getElementById('mobile-overlay');
     const mobileCloseBtn = document.getElementById('mobile-close-btn');
     const navbar = document.querySelector('.lp-navbar');
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    let scrollAnimationFrame = null;
 
     const toggleIcons = (isOpen) => {
       const menuIcon = mobileMenuBtn?.querySelector('.menu-icon');
@@ -144,49 +142,6 @@ export const Navbar = {
         const isActive = link.getAttribute('href') === hash;
         link.classList.toggle('is-active', isActive);
       });
-    };
-
-    const stopScrollAnimation = () => {
-      if (scrollAnimationFrame) {
-        window.cancelAnimationFrame(scrollAnimationFrame);
-        scrollAnimationFrame = null;
-      }
-    };
-
-    const animateScrollToTarget = (target) => {
-      const targetY = Math.max(0, target.getBoundingClientRect().top + window.scrollY - 92);
-      const startY = window.scrollY;
-      const distance = targetY - startY;
-
-      if (prefersReducedMotion || Math.abs(distance) < 12) {
-        window.scrollTo(0, targetY);
-        return;
-      }
-
-      const duration = Math.min(240, Math.max(120, Math.abs(distance) * 0.08));
-      let startTime = null;
-
-      const easeOutCubic = (progress) => 1 - ((1 - progress) ** 3);
-
-      stopScrollAnimation();
-
-      const step = (timestamp) => {
-        if (!startTime) startTime = timestamp;
-
-        const elapsed = timestamp - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const eased = easeOutCubic(progress);
-
-        window.scrollTo(0, startY + (distance * eased));
-
-        if (progress < 1) {
-          scrollAnimationFrame = window.requestAnimationFrame(step);
-        } else {
-          scrollAnimationFrame = null;
-        }
-      };
-
-      scrollAnimationFrame = window.requestAnimationFrame(step);
     };
 
     if (loginBtn && callbacks.onLogin) {
@@ -227,7 +182,8 @@ export const Navbar = {
         if (!target) return;
 
         event.preventDefault();
-        animateScrollToTarget(target);
+        const targetY = Math.max(0, target.getBoundingClientRect().top + window.scrollY - 92);
+        window.scrollTo(0, targetY);
         setActiveLink(hash);
         if (window.history?.replaceState) {
           window.history.replaceState(null, '', hash);
@@ -249,9 +205,6 @@ export const Navbar = {
         closeMobileMenu();
       }
     });
-
-    window.addEventListener('wheel', stopScrollAnimation, { passive: true });
-    window.addEventListener('touchstart', stopScrollAnimation, { passive: true });
 
     const sections = Array.from(document.querySelectorAll('[data-nav-section]'));
     if ('IntersectionObserver' in window && sections.length) {

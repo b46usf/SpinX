@@ -7,51 +7,51 @@ const featuresData = [
   {
     icon: 'fa-dharmachakra',
     tone: 'is-teal',
-    metric: 'Attract',
-    title: 'Lucky Wheel yang bikin siswa ingin mencoba',
-    description: 'Tampilan promo terlihat modern, menarik perhatian, dan tetap terasa aman untuk konteks sekolah.'
+    metric: 'Seru',
+    title: 'Lucky Wheel yang langsung dipahami siswa',
+    description: 'Tampilannya cukup menarik untuk mengundang coba, tapi tidak berlebihan untuk lingkungan sekolah.'
   },
   {
     icon: 'fa-ticket',
     tone: 'is-amber',
-    metric: 'Convert',
-    title: 'Voucher langsung mendorong pembelian',
-    description: 'Hadiah promo dibuat otomatis supaya siswa tidak berhenti di rasa penasaran, tetapi lanjut ke transaksi.'
+    metric: 'Praktis',
+    title: 'Voucher keluar otomatis setelah siswa menang',
+    description: 'Kasir tidak perlu mencatat manual karena hadiah langsung muncul dan bisa dipakai saat itu juga.'
   },
   {
     icon: 'fa-chart-column',
     tone: 'is-sky',
-    metric: 'Measure',
-    title: 'Dashboard singkat untuk membaca hasil',
-    description: 'Lihat performa promo, penukaran voucher, dan jam ramai tanpa laporan panjang yang melelahkan.'
+    metric: 'Jelas',
+    title: 'Laporan harian yang mudah dibaca',
+    description: 'Tim sekolah bisa melihat promo yang jalan, voucher yang terpakai, dan jam ramai tanpa membuka banyak menu.'
   },
   {
     icon: 'fa-users-gear',
     tone: 'is-mint',
-    metric: 'Control',
-    title: 'Operasional sekolah tetap tertib',
-    description: 'Data siswa, role operator, dan kontrol akses tertata agar promo berjalan rapi tanpa bikin tim repot.'
+    metric: 'Tertib',
+    title: 'Akses operator lebih mudah diatur',
+    description: 'Role dan data pengguna ditata supaya operasional tetap aman saat dipakai beberapa orang.'
   },
   {
     icon: 'fa-mobile-screen-button',
     tone: 'is-slate',
-    metric: 'Responsive',
-    title: 'Tetap nyaman dibuka di semua perangkat',
-    description: 'Layout yang padat dan proporsional membuat pengambil keputusan tetap nyaman membaca dari layar kecil.'
+    metric: 'Nyaman',
+    title: 'Tetap enak dibuka dari HP',
+    description: 'Layout dibuat ringkas jadi kepala sekolah, admin, atau operator tetap nyaman membaca dari layar kecil.'
   },
   {
     icon: 'fa-headset',
     tone: 'is-cyan',
-    metric: 'Close',
-    title: 'Onboarding jelas sampai siap live',
-    description: 'Begitu sekolah siap lanjut, alur aktivasi dan bantuan teknis sudah tersedia tanpa langkah yang membingungkan.'
+    metric: 'Dibantu',
+    title: 'Onboarding tidak dilepas begitu saja',
+    description: 'Kalau sekolah sudah siap, tim Anda tinggal lanjut karena bantuan aktivasi sudah ada alurnya.'
   }
 ];
 
 const operationsData = [
-  { title: 'Tarik perhatian', text: 'Promo tampil menonjol dan langsung dipahami siswa dalam sekali lihat.' },
-  { title: 'Dorong transaksi', text: 'Voucher dan benefit diarahkan untuk membuat pembelian benar-benar terjadi.' },
-  { title: 'Lanjutkan keputusan', text: 'Tim sekolah lebih cepat yakin karena hasil dan alurnya terlihat jelas.' }
+  { title: 'Dilihat siswa', text: 'Promo langsung terlihat dan cara mainnya cepat dipahami.' },
+  { title: 'Dipakai di kasir', text: 'Hadiah tidak berhenti di tampilan, tapi benar-benar bisa dipakai saat transaksi.' },
+  { title: 'Mudah dijelaskan', text: 'Tim sekolah lebih enak menjelaskan manfaatnya saat minta persetujuan.' }
 ];
 
 export const FeaturesSection = {
@@ -62,11 +62,11 @@ export const FeaturesSection = {
           <div class="landing-fade" style="--fade-delay: 40ms;">
             <span class="landing-eyebrow landing-fade" style="--fade-delay: 80ms;">
               <span class="landing-eyebrow__dot"></span>
-              Solusi yang membantu pengunjung cepat yakin
+              Alur promo yang enak dilihat dan gampang dipahami
             </span>
             <h2 class="landing-heading">
-              Semua komponen penting untuk mengubah minat siswa
-              <span class="landing-heading__accent">menjadi transaksi di kantin</span>
+              Semua komponen penting untuk menjalankan promo kantin
+              <span class="landing-heading__accent">tanpa bikin operasional jadi ribet</span>
             </h2>
           </div>
         </div>

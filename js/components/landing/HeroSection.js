@@ -10,9 +10,9 @@ const heroStats = [
 ];
 
 const heroSignals = [
-  'Siswa langsung tertarik mencoba promo',
-  'Voucher mendorong pembelian berulang',
-  'Tim sekolah bisa membaca hasil lebih cepat'
+  'Siswa cepat paham cara ikut promonya',
+  'Voucher bisa langsung dipakai di kasir',
+  'Tim sekolah bisa memantau hasil tanpa ribet'
 ];
 
 export const HeroSection = {
@@ -22,24 +22,23 @@ export const HeroSection = {
         <div class="hero-copy landing-fade" style="--fade-delay: 40ms;">
           <span class="landing-eyebrow landing-fade" style="--fade-delay: 80ms;">
             <span class="landing-eyebrow__dot"></span>
-            Dirancang untuk menaikkan transaksi kantin sekolah
+            Cocok untuk promosi kantin sekolah yang ingin lebih rapi
           </span>
 
           <h1 class="landing-heading hero-title landing-fade" style="--fade-delay: 120ms;">
-            Ubah rasa penasaran siswa jadi transaksi nyata
-            lewat Lucky Wheel yang
-            <span class="landing-heading__accent">membuat kantin lebih ramai</span>.
+            Lucky Wheel yang bikin siswa tertarik,
+            tapi tetap
+            <span class="landing-heading__accent">mudah dijalankan tim sekolah</span>.
           </h1>
 
           <p class="landing-subheading hero-description landing-fade" style="--fade-delay: 180ms;">
-            spinX membuat promo sekolah terasa modern dan langsung menghasilkan aksi:
-            siswa tertarik bermain, voucher memicu pembelian, dan tim sekolah bisa melihat
-            dampaknya dari dashboard yang ringkas sejak hari pertama.
+            spinX membantu sekolah menjalankan promo Lucky Wheel dengan tampilan yang rapi,
+            alur yang mudah dipahami siswa, dan laporan yang enak dibaca tim sekolah.
           </p>
 
           <div class="hero-actions landing-fade" style="--fade-delay: 220ms;">
-            <a href="#pricing" class="landing-btn landing-btn--primary">Aktifkan Sekarang</a>
-            <a href="#features" class="landing-btn landing-btn--secondary">Lihat Alur Demo</a>
+            <a href="#pricing" class="landing-btn landing-btn--primary">Lihat Paket</a>
+            <a href="#features" class="landing-btn landing-btn--secondary">Lihat Cara Kerja</a>
           </div>
 
           <div class="hero-stats">
@@ -57,7 +56,7 @@ export const HeroSection = {
             <div class="hero-panel__header">
               <div>
                 <span class="hero-panel__label">Preview closing flow</span>
-                <h2>Dashboard promo yang mendorong aksi</h2>
+                <h2>Contoh tampilan promo harian</h2>
               </div>
               <span class="hero-panel__status">Live</span>
             </div>
@@ -99,13 +98,13 @@ export const HeroSection = {
                 <div class="hero-metric-card">
                   <span class="hero-metric-card__label">Redeem voucher</span>
                   <strong>87%</strong>
-                  <small>Naik 18% dibanding minggu lalu</small>
+                  <small>Voucher yang sudah dipakai siswa hari ini</small>
                 </div>
 
                 <div class="hero-metric-card hero-metric-card--accent">
-                  <span class="hero-metric-card__label">Antrian tetap lancar</span>
+                  <span class="hero-metric-card__label">Waktu redeem rata-rata</span>
                   <strong>14 dtk</strong>
-                  <small>Rata-rata proses redeem di kasir</small>
+                  <small>Masih aman dipakai saat jam istirahat</small>
                 </div>
 
                 <div class="hero-activity-card">
