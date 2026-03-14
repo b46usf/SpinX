@@ -76,6 +76,7 @@ class AuthApi {
         'register': 'Registrasi berhasil!',
         'registerschoolpending': result.message || 'Data sekolah berhasil dikirim.',
         'approveschool': result.message || 'Sekolah berhasil di-approve.',
+        'upgradeplan': result.message || 'Subscription sekolah berhasil diperbarui.',
         'generateOTP': 'OTP telah dikirim!',
         'verifyOTP': 'Verifikasi berhasil!',
         'spin': 'Berhasil!'
@@ -367,6 +368,13 @@ class AuthApi {
     return this.call('approveschool', { schoolId: schoolId });
   }
 
+  /**
+   * Reactivate or extend school subscription using current/new plan
+   */
+  async upgradeSchoolPlan(schoolId, plan) {
+    return this.call('upgradeplan', { schoolId, plan });
+  }
+
   // ==================== Admin Actions ====================
 
   /**
@@ -402,6 +410,13 @@ class AuthApi {
    */
   async getSubscriptionStats() {
     return this.call('getSubscriptionStats', {}, false);
+  }
+
+  /**
+   * Get subscription status config from backend source-of-truth
+   */
+  async getSubscriptionStatusConfig() {
+    return this.call('getSubscriptionStatusConfig', {}, false);
   }
 
   /**

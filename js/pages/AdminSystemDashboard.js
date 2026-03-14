@@ -7,12 +7,23 @@
 import { authGuard } from '../core/AuthGuard.js';
 import { themeManager } from '../core/ThemeManager.js';
 import { authApi } from '../auth/AuthApi.js';
-import { showConfirm, showError, showInfo } from '../components/utils/Toast.js';
+import {
+  showConfirm,
+  showError,
+  showInfo,
+  showLoading,
+  closeLoading,
+  showSuccess,
+  SwalExport
+} from '../components/utils/Toast.js';
 
 class AdminSystemDashboard {
   constructor() {
     this.currentSection = 'dashboard';
     this.approvingSchoolId = null;
+    this.driveFolderUrl = 'https://drive.google.com/drive/folders/1KpR4CoefAn1_Wq6rk3jhXWhBwvE_-cZj?usp=sharing';
+    this.subscriptionStatusConfig = this.getDefaultSubscriptionStatusConfig();
+    this.subscriptionStatusMap = this.buildSubscriptionStatusMap(this.subscriptionStatusConfig.statuses);
     this.schoolFilters = {
       query: '',
       status: ''
@@ -45,11 +56,13 @@ class AdminSystemDashboard {
 
     // Setup UI
     this.setupProfile();
+    this.renderSchoolFilterOptions();
     this.setupNavigation();
     this.setupEventListeners();
     this.setCurrentDate();
 
     // Load initial data
+    this.loadSubscriptionStatusConfig();
     this.loadDashboardData();
   }
 
@@ -168,10 +181,156 @@ class AdminSystemDashboard {
       sekolahFilter.addEventListener('change', (e) => this.filterSchoolsByStatus(e.target.value));
     }
 
+    const addSekolahBtn = document.getElementById('add-sekolah-btn');
+    if (addSekolahBtn) {
+      addSekolahBtn.addEventListener('click', () => this.openAddCustomSchoolModal());
+    }
+
     const sekolahList = document.getElementById('sekolah-list');
     if (sekolahList) {
       sekolahList.addEventListener('click', (event) => this.handleSchoolListClick(event));
     }
+  }
+
+  getDefaultSubscriptionStatusConfig() {
+    return {
+      values: {
+        ACTIVE: 'active',
+        EXPIRED: 'expired',
+        CANCELLED: 'cancelled',
+        PENDING: 'pending',
+        PENDING_SCHOOL: 'pending_school'
+      },
+      statuses: [
+        {
+          key: 'PENDING_SCHOOL',
+          value: 'pending_school',
+          label: 'Pending Approval',
+          badge: 'warning',
+          icon: 'fa-hourglass-half',
+          iconBg: 'bg-amber-500/20',
+          iconColor: 'text-amber-300',
+          filterLabel: 'Pending Approval',
+          primaryAction: {
+            type: 'approve',
+            label: 'Approve',
+            title: 'Menunggu approval admin sistem',
+            description: 'Setelah di-approve, admin sekolah dapat melanjutkan registrasi menggunakan Google login.'
+          }
+        },
+        {
+          key: 'PENDING',
+          value: 'pending',
+          label: 'Pending',
+          badge: 'warning',
+          icon: 'fa-clock',
+          iconBg: 'bg-yellow-500/20',
+          iconColor: 'text-yellow-300',
+          filterLabel: 'Pending',
+          primaryAction: {
+            type: 'activate',
+            label: 'Aktifkan',
+            title: 'Subscription masih pending',
+            description: 'Aktifkan subscription sekolah agar status berubah menjadi aktif untuk periode bulanan berjalan.'
+          }
+        },
+        {
+          key: 'ACTIVE',
+          value: 'active',
+          label: 'Aktif',
+          badge: 'success',
+          icon: 'fa-circle-check',
+          iconBg: 'bg-green-500/20',
+          iconColor: 'text-green-400',
+          filterLabel: 'Aktif'
+        },
+        {
+          key: 'EXPIRED',
+          value: 'expired',
+          label: 'Expired',
+          badge: 'danger',
+          icon: 'fa-calendar-xmark',
+          iconBg: 'bg-red-500/20',
+          iconColor: 'text-red-400',
+          filterLabel: 'Expired',
+          primaryAction: {
+            type: 'reactivate',
+            label: 'Perpanjang',
+            title: 'Subscription expired',
+            description: 'Perpanjang masa aktif sekolah dengan mengaktifkan kembali plan yang sedang dipakai.'
+          }
+        },
+        {
+          key: 'CANCELLED',
+          value: 'cancelled',
+          label: 'Cancelled',
+          badge: 'danger',
+          icon: 'fa-ban',
+          iconBg: 'bg-red-500/20',
+          iconColor: 'text-red-400',
+          filterLabel: 'Cancelled',
+          primaryAction: {
+            type: 'reactivate',
+            label: 'Aktifkan Ulang',
+            title: 'Subscription dibatalkan',
+            description: 'Aktifkan kembali sekolah dengan plan yang sama untuk memulai periode layanan baru.'
+          }
+        }
+      ]
+    };
+  }
+
+  buildSubscriptionStatusMap(statuses) {
+    return (statuses || []).reduce((map, statusMeta) => {
+      map[statusMeta.value] = statusMeta;
+      return map;
+    }, {});
+  }
+
+  setSubscriptionStatusConfig(configData) {
+    const fallbackConfig = this.getDefaultSubscriptionStatusConfig();
+    const statuses = Array.isArray(configData?.statuses) && configData.statuses.length > 0
+      ? configData.statuses
+      : fallbackConfig.statuses;
+
+    this.subscriptionStatusConfig = {
+      values: configData?.values || fallbackConfig.values,
+      statuses
+    };
+    this.subscriptionStatusMap = this.buildSubscriptionStatusMap(statuses);
+    this.renderSchoolFilterOptions();
+
+    if (this.data.schools.length > 0) {
+      this.applySchoolFilters();
+    }
+  }
+
+  async loadSubscriptionStatusConfig() {
+    try {
+      const result = await authApi.getSubscriptionStatusConfig();
+      if (result.success && result.data) {
+        this.setSubscriptionStatusConfig(result.data);
+      }
+    } catch (error) {
+      console.error('Failed to load subscription status config:', error);
+    }
+  }
+
+  renderSchoolFilterOptions() {
+    const select = document.getElementById('sekolah-filter');
+    if (!select) return;
+
+    const currentValue = this.schoolFilters.status || select.value || '';
+    const availableValues = this.subscriptionStatusConfig.statuses.map((statusMeta) => statusMeta.value);
+    const options = ['<option value="">Semua Status</option>']
+      .concat(
+        this.subscriptionStatusConfig.statuses.map((statusMeta) => (
+          `<option value="${statusMeta.value}">${statusMeta.filterLabel || statusMeta.label}</option>`
+        ))
+      );
+
+    select.innerHTML = options.join('');
+    select.value = availableValues.includes(currentValue) ? currentValue : '';
   }
 
   /**
@@ -480,20 +639,13 @@ class AdminSystemDashboard {
       const statusMeta = this.getSchoolStatusMeta(school.status);
       const schoolId = school.id || school.schoolId || '';
       const isApproving = this.approvingSchoolId === schoolId;
-      const needsSync = this.needsSchoolMetadataSync(school);
-      const canApprove = school.status === 'pending_school' || needsSync;
+      const primaryAction = this.getSchoolPrimaryAction(school);
+      const showAction = !!primaryAction;
       const schoolName = school.nama || school.name || school.schoolName || '-';
       const schoolEmail = school.email || '-';
       const schoolPhone = school.phone || school.noWa || '-';
       const studentCount = school.currentStudents || school.students || school.siswa_count || school.siswa || 0;
       const planLabel = this.formatPlanName(school.plan);
-      const actionTitle = school.status === 'pending_school'
-        ? 'Menunggu approval admin sistem'
-        : 'Metadata subscription belum lengkap';
-      const actionDescription = school.status === 'pending_school'
-        ? 'Setelah di-approve, admin sekolah dapat melanjutkan registrasi menggunakan Google login.'
-        : 'Kolom expires_at atau approved_by masih kosong. Sinkronkan agar data sekolah dan subscription konsisten.';
-      const buttonLabel = school.status === 'pending_school' ? 'Approve' : 'Sinkronkan';
 
       return `
         <div class="glass-card p-4 hover:bg-white/5 transition-colors" data-id="${schoolId}">
@@ -524,21 +676,21 @@ class AdminSystemDashboard {
                 </span>
               </div>
 
-              ${canApprove ? `
+              ${showAction ? `
                 <div class="mt-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-xl border border-amber-400/20 bg-amber-500/10 px-3 py-3">
                   <div class="min-w-0">
-                    <div class="text-xs font-semibold text-amber-300">${actionTitle}</div>
-                    <div class="text-[11px] text-amber-100/70">${actionDescription}</div>
+                    <div class="text-xs font-semibold text-amber-300">${primaryAction.title}</div>
+                    <div class="text-[11px] text-amber-100/70">${primaryAction.description}</div>
                   </div>
                   <button
                     type="button"
-                    data-action="approve-school"
+                    data-action="school-status-action"
                     data-school-id="${schoolId}"
                     class="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-500/20 px-3 py-2 text-xs font-semibold text-emerald-300 transition-colors hover:bg-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-60"
                     ${isApproving ? 'disabled' : ''}
                   >
                     <i class="fas ${isApproving ? 'fa-spinner fa-spin' : 'fa-circle-check'}"></i>
-                    ${isApproving ? 'Memproses...' : buttonLabel}
+                    ${isApproving ? 'Memproses...' : primaryAction.label}
                   </button>
                 </div>
               ` : ''}
@@ -560,11 +712,236 @@ class AdminSystemDashboard {
       <div class="glass-card p-8 text-center">
         <i class="fas fa-school text-4xl text-gray-600 mb-3"></i>
         <p class="text-gray-400">Belum ada sekolah</p>
-        <button class="btn btn-primary mt-4 text-sm">
-          <i class="fas fa-plus"></i> Tambah Sekolah
+        <button type="button" data-action="open-add-school-modal" class="btn btn-primary mt-4 text-sm">
+          <i class="fas fa-plus"></i> Tambah Sekolah Custom
         </button>
       </div>
     `;
+  }
+
+  getCustomSchoolModalHtml() {
+    return `
+      <div class="space-y-4 text-left">
+        <div class="rounded-2xl border border-cyan-400/20 bg-cyan-500/10 px-4 py-3">
+          <div class="flex items-start gap-3">
+            <div class="mt-0.5 flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-500/20 text-cyan-300">
+              <i class="fas fa-layer-group"></i>
+            </div>
+            <div class="min-w-0">
+              <div class="text-sm font-semibold text-cyan-200">Tambah Sekolah Custom</div>
+              <div class="mt-1 text-xs leading-5 text-slate-300">
+                Form ini khusus untuk paket custom di luar Starter, Pro, dan Enterprise.
+                Status awal tetap <span class="font-semibold text-amber-300">pending approval</span> agar data sekolah, bukti transfer,
+                dan subscription tetap konsisten sebelum diaktifkan.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid gap-3 md:grid-cols-2">
+          <label class="block">
+            <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-300">Nama Sekolah</span>
+            <input id="custom-school-name" type="text" class="input w-full text-sm" placeholder="Contoh: SMA Hang Tuah 2 Sidoarjo">
+          </label>
+          <label class="block">
+            <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-300">Email Admin Sekolah</span>
+            <input id="custom-school-email" type="email" class="input w-full text-sm" placeholder="admin@sekolah.sch.id">
+          </label>
+          <label class="block">
+            <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-300">No. WhatsApp</span>
+            <input id="custom-school-phone" type="tel" inputmode="numeric" class="input w-full text-sm" placeholder="08xxxxxxxxxx">
+          </label>
+          <label class="block">
+            <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-300">Plan Subscription</span>
+            <div class="input flex items-center justify-between gap-3 text-sm">
+              <span class="font-semibold text-slate-100">Custom</span>
+              <span class="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-cyan-200">
+                Manual
+              </span>
+            </div>
+          </label>
+          <label class="block">
+            <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-300">Nominal Tagihan</span>
+            <input id="custom-school-amount" type="text" inputmode="numeric" class="input w-full text-sm" placeholder="1500000">
+            <span id="custom-school-amount-preview" class="mt-1 block text-[11px] text-slate-400">Masukkan nominal custom bulanan.</span>
+          </label>
+          <label class="block">
+            <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-300">Kuota Maksimal Siswa</span>
+            <input id="custom-school-max-students" type="number" min="1" step="1" class="input w-full text-sm" placeholder="500">
+          </label>
+        </div>
+
+        <label class="block">
+          <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-300">Link Bukti Transfer</span>
+          <input id="custom-school-proof" type="url" class="input w-full text-sm" placeholder="https://drive.google.com/...">
+          <div class="mt-2 flex flex-col gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-3 text-xs text-slate-300 sm:flex-row sm:items-center sm:justify-between">
+            <span>Upload file bukti transfer ke folder Drive tim billing, lalu tempel link file atau folder di atas.</span>
+            <button type="button" data-action="open-drive-upload" class="btn btn-secondary shrink-0 text-xs py-2 px-3">
+              <i class="fas fa-cloud-upload-alt"></i>
+              Buka Folder Upload
+            </button>
+          </div>
+        </label>
+      </div>
+    `;
+  }
+
+  bindCustomSchoolModalEvents() {
+    if (!SwalExport) {
+      return;
+    }
+
+    const popup = SwalExport.getPopup();
+    if (!popup) {
+      return;
+    }
+
+    const uploadButton = popup.querySelector('[data-action="open-drive-upload"]');
+    uploadButton?.addEventListener('click', (event) => {
+      event.preventDefault();
+      window.open(this.driveFolderUrl, '_blank', 'noopener,noreferrer');
+    });
+
+    const amountInput = popup.querySelector('#custom-school-amount');
+    const amountPreview = popup.querySelector('#custom-school-amount-preview');
+    amountInput?.addEventListener('input', () => {
+      amountInput.value = amountInput.value.replace(/[^0-9]/g, '');
+      if (amountPreview) {
+        amountPreview.textContent = amountInput.value
+          ? `${this.formatCurrency(Number(amountInput.value))} per bulan`
+          : 'Masukkan nominal custom bulanan.';
+      }
+    });
+
+    const phoneInput = popup.querySelector('#custom-school-phone');
+    phoneInput?.addEventListener('input', () => {
+      phoneInput.value = phoneInput.value.replace(/[^0-9]/g, '');
+    });
+  }
+
+  getCustomSchoolFormData() {
+    if (!SwalExport) {
+      return null;
+    }
+
+    const popup = SwalExport.getPopup();
+    if (!popup) {
+      return null;
+    }
+
+    return {
+      schoolName: popup.querySelector('#custom-school-name')?.value.trim() || '',
+      email: popup.querySelector('#custom-school-email')?.value.trim().toLowerCase() || '',
+      noWa: popup.querySelector('#custom-school-phone')?.value.trim() || '',
+      amount: popup.querySelector('#custom-school-amount')?.value.trim() || '',
+      maxStudents: popup.querySelector('#custom-school-max-students')?.value.trim() || '',
+      buktiTF_link: popup.querySelector('#custom-school-proof')?.value.trim() || '',
+      plan: 'custom'
+    };
+  }
+
+  validateCustomSchoolForm(data) {
+    if (!data) {
+      return 'Form custom tidak dapat dibaca.';
+    }
+
+    if (!data.schoolName) {
+      return 'Nama sekolah wajib diisi.';
+    }
+
+    if (!data.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+      return 'Email admin sekolah tidak valid.';
+    }
+
+    const sanitizedPhone = data.noWa.replace(/[^0-9]/g, '');
+    if (!sanitizedPhone || !/^\d{10,15}$/.test(sanitizedPhone)) {
+      return 'No. WhatsApp harus berisi 10-15 digit angka.';
+    }
+
+    const amount = Number(data.amount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return 'Nominal tagihan custom wajib diisi dengan angka lebih dari 0.';
+    }
+
+    const maxStudents = Number(data.maxStudents);
+    if (!Number.isFinite(maxStudents) || maxStudents <= 0) {
+      return 'Kuota maksimal siswa wajib diisi dengan angka lebih dari 0.';
+    }
+
+    if (!data.buktiTF_link) {
+      return 'Link bukti transfer wajib diisi untuk plan custom.';
+    }
+
+    return '';
+  }
+
+  async openAddCustomSchoolModal() {
+    if (!SwalExport) {
+      showError('Popup Tidak Tersedia', 'Komponen popup belum termuat. Muat ulang halaman lalu coba lagi.');
+      return;
+    }
+
+    const result = await SwalExport.fire({
+      title: 'Tambah Sekolah Custom',
+      html: this.getCustomSchoolModalHtml(),
+      width: 760,
+      padding: '1.5rem',
+      background: '#0f172a',
+      color: '#e2e8f0',
+      showCancelButton: true,
+      focusConfirm: false,
+      confirmButtonText: 'Simpan Pengajuan',
+      cancelButtonText: 'Batal',
+      reverseButtons: true,
+      didOpen: () => this.bindCustomSchoolModalEvents(),
+      preConfirm: () => {
+        const formData = this.getCustomSchoolFormData();
+        const validationMessage = this.validateCustomSchoolForm(formData);
+
+        if (validationMessage) {
+          SwalExport.showValidationMessage(validationMessage);
+          return false;
+        }
+
+        return {
+          ...formData,
+          noWa: formData.noWa.replace(/[^0-9]/g, ''),
+          amount: Number(formData.amount),
+          maxStudents: Number(formData.maxStudents)
+        };
+      }
+    });
+
+    if (!result.isConfirmed || !result.value) {
+      return;
+    }
+
+    showLoading('Menyimpan sekolah custom...');
+
+    try {
+      const response = await authApi.registerSchoolPending(result.value, false);
+      closeLoading();
+
+      if (!response.success) {
+        showError('Gagal Menyimpan', response.message || 'Data sekolah custom belum berhasil disimpan.');
+        return;
+      }
+
+      await Promise.all([
+        this.loadDashboardData(),
+        this.loadSchools(),
+        this.loadSubscriptions()
+      ]);
+
+      showSuccess(
+        'Sekolah Custom Ditambahkan',
+        response.message || 'Pengajuan sekolah custom berhasil disimpan dan menunggu approval admin sistem.'
+      );
+    } catch (error) {
+      closeLoading();
+      console.error('Failed to create custom school:', error);
+      showError('Gagal Menyimpan', 'Terjadi kendala saat menambahkan sekolah custom.');
+    }
   }
 
   /**
@@ -663,7 +1040,7 @@ class AdminSystemDashboard {
           <div class="font-medium text-sm">${inv.sekolah || inv.name}</div>
           <div class="text-xs text-gray-500">${inv.plan} - ${this.formatCurrency(inv.amount)}</div>
         </div>
-        <span class="badge badge-${this.getInvoiceStatusBadge(inv.status)} text-xs">${inv.status}</span>
+        <span class="badge badge-${this.getInvoiceStatusBadge(inv.status)} text-xs">${this.getInvoiceStatusLabel(inv.status)}</span>
       </div>
     `).join('');
   }
@@ -674,13 +1051,14 @@ class AdminSystemDashboard {
    * @returns {string}
    */
   getInvoiceStatusBg(status) {
+    if (this.subscriptionStatusMap[status]) {
+      const statusMeta = this.getSchoolStatusMeta(status);
+      return `${statusMeta.iconBg} ${statusMeta.iconColor}`;
+    }
+
     const bgs = {
       'paid': 'bg-green-500/20 text-green-400',
-      'active': 'bg-green-500/20 text-green-400',
-      'pending': 'bg-yellow-500/20 text-yellow-400',
-      'pending_school': 'bg-yellow-500/20 text-yellow-400',
-      'overdue': 'bg-red-500/20 text-red-400',
-      'expired': 'bg-red-500/20 text-red-400'
+      'overdue': 'bg-red-500/20 text-red-400'
     };
     return bgs[status] || 'bg-gray-500/20 text-gray-400';
   }
@@ -691,13 +1069,13 @@ class AdminSystemDashboard {
    * @returns {string}
    */
   getInvoiceIcon(status) {
+    if (this.subscriptionStatusMap[status]) {
+      return `fas ${this.getSchoolStatusMeta(status).icon}`;
+    }
+
     const icons = {
       'paid': 'fas fa-check',
-      'active': 'fas fa-check-circle',
-      'pending': 'fas fa-clock',
-      'pending_school': 'fas fa-hourglass-half',
-      'overdue': 'fas fa-exclamation',
-      'expired': 'fas fa-calendar-xmark'
+      'overdue': 'fas fa-exclamation'
     };
     return icons[status] || 'fas fa-file';
   }
@@ -708,15 +1086,28 @@ class AdminSystemDashboard {
    * @returns {string}
    */
   getInvoiceStatusBadge(status) {
+    if (this.subscriptionStatusMap[status]) {
+      return this.getSchoolStatusMeta(status).badge;
+    }
+
     const badges = {
       'paid': 'success',
-      'active': 'success',
-      'pending': 'warning',
-      'pending_school': 'warning',
-      'overdue': 'danger',
-      'expired': 'danger'
+      'overdue': 'danger'
     };
     return badges[status] || 'secondary';
+  }
+
+  getInvoiceStatusLabel(status) {
+    if (this.subscriptionStatusMap[status]) {
+      return this.getSchoolStatusMeta(status).label;
+    }
+
+    const labels = {
+      paid: 'Paid',
+      overdue: 'Overdue'
+    };
+
+    return labels[status] || status;
   }
 
   applySchoolFilters() {
@@ -737,10 +1128,6 @@ class AdminSystemDashboard {
         return true;
       }
 
-      if (status === 'inactive') {
-        return school.status !== 'active';
-      }
-
       return school.status === status;
     });
 
@@ -756,45 +1143,7 @@ class AdminSystemDashboard {
   }
 
   getSchoolStatusMeta(status) {
-    const statusMap = {
-      active: {
-        label: 'Aktif',
-        badge: 'success',
-        icon: 'fa-circle-check',
-        iconBg: 'bg-green-500/20',
-        iconColor: 'text-green-400'
-      },
-      pending_school: {
-        label: 'Pending Approval',
-        badge: 'warning',
-        icon: 'fa-hourglass-half',
-        iconBg: 'bg-amber-500/20',
-        iconColor: 'text-amber-300'
-      },
-      pending: {
-        label: 'Pending',
-        badge: 'warning',
-        icon: 'fa-clock',
-        iconBg: 'bg-yellow-500/20',
-        iconColor: 'text-yellow-300'
-      },
-      expired: {
-        label: 'Expired',
-        badge: 'danger',
-        icon: 'fa-calendar-xmark',
-        iconBg: 'bg-red-500/20',
-        iconColor: 'text-red-400'
-      },
-      cancelled: {
-        label: 'Dibatalkan',
-        badge: 'danger',
-        icon: 'fa-ban',
-        iconBg: 'bg-red-500/20',
-        iconColor: 'text-red-400'
-      }
-    };
-
-    return statusMap[status] || {
+    return this.subscriptionStatusMap[status] || {
       label: status || 'Unknown',
       badge: 'warning',
       icon: 'fa-circle-info',
@@ -809,14 +1158,23 @@ class AdminSystemDashboard {
     const labels = {
       starter: 'Starter',
       pro: 'Pro',
-      enterprise: 'Enterprise'
+      enterprise: 'Enterprise',
+      custom: 'Custom'
     };
 
     return labels[plan] || plan;
   }
 
   async handleSchoolListClick(event) {
-    const approveButton = event.target.closest('[data-action="approve-school"]');
+    const openAddButton = event.target.closest('[data-action="open-add-school-modal"]');
+    if (openAddButton) {
+      event.preventDefault();
+      event.stopPropagation();
+      await this.openAddCustomSchoolModal();
+      return;
+    }
+
+    const approveButton = event.target.closest('[data-action="school-status-action"]');
     if (!approveButton) {
       return;
     }
@@ -829,23 +1187,43 @@ class AdminSystemDashboard {
       return;
     }
 
-    await this.handleApproveSchool(schoolId);
+    await this.handleSchoolStatusAction(schoolId);
   }
 
-  async handleApproveSchool(schoolId) {
+  getSchoolPrimaryAction(school) {
+    if (!school) {
+      return null;
+    }
+
+    if (this.needsSchoolMetadataSync(school)) {
+      return {
+        type: 'sync',
+        label: 'Sinkronkan',
+        title: 'Metadata subscription belum lengkap',
+        description: 'Kolom expires_at atau approved_by masih kosong. Sinkronkan agar data sekolah dan subscription konsisten.'
+      };
+    }
+
+    const statusMeta = this.subscriptionStatusMap[school.status];
+    return statusMeta?.primaryAction || null;
+  }
+
+  async handleSchoolStatusAction(schoolId) {
     const school = this.data.schools.find((item) => (item.id || item.schoolId) === schoolId);
     if (!school) {
       return;
     }
 
+    const primaryAction = this.getSchoolPrimaryAction(school);
+    if (!primaryAction) {
+      return;
+    }
+
     const schoolName = school.nama || school.name || school.schoolName || 'Sekolah';
-    const isSyncOnly = school.status !== 'pending_school' && this.needsSchoolMetadataSync(school);
     const confirmed = await showConfirm(
-      isSyncOnly ? 'Sinkronkan metadata sekolah?' : 'Approve sekolah?',
-      isSyncOnly
-        ? `${schoolName} akan disinkronkan agar kolom expires_at, approved_by, dan subscription aktif terisi lengkap.`
-        : `${schoolName} akan diaktifkan dan admin sekolah bisa melanjutkan registrasi.`,
-      isSyncOnly ? 'Ya, Sinkronkan' : 'Ya, Approve',
+      this.getSchoolActionDialogTitle(primaryAction),
+      this.getSchoolActionDialogMessage(primaryAction, schoolName, school.plan),
+      this.getSchoolActionConfirmLabel(primaryAction),
       'Batal',
       'info'
     );
@@ -858,7 +1236,7 @@ class AdminSystemDashboard {
       this.approvingSchoolId = schoolId;
       this.applySchoolFilters();
 
-      const result = await authApi.approveSchool(schoolId);
+      const result = await this.executeSchoolPrimaryAction(primaryAction, school);
       if (result.success) {
         await Promise.all([
           this.loadDashboardData(),
@@ -867,11 +1245,70 @@ class AdminSystemDashboard {
         ]);
       }
     } catch (error) {
-      console.error('Failed to approve school:', error);
-      showError('Gagal', 'Tidak dapat menyetujui sekolah.');
+      console.error('Failed to process school action:', error);
+      showError('Gagal', this.getSchoolActionErrorMessage(primaryAction));
     } finally {
       this.approvingSchoolId = null;
       this.applySchoolFilters();
+    }
+  }
+
+  getSchoolActionDialogTitle(action) {
+    const titles = {
+      approve: 'Approve sekolah?',
+      sync: 'Sinkronkan metadata sekolah?',
+      activate: 'Aktifkan sekolah?',
+      reactivate: 'Aktifkan ulang subscription?'
+    };
+
+    return titles[action.type] || 'Proses sekolah?';
+  }
+
+  getSchoolActionDialogMessage(action, schoolName, plan) {
+    const planLabel = this.formatPlanName(plan);
+
+    const messages = {
+      approve: `${schoolName} akan diaktifkan dan admin sekolah bisa melanjutkan registrasi.`,
+      sync: `${schoolName} akan disinkronkan agar kolom expires_at, approved_by, dan subscription aktif terisi lengkap.`,
+      activate: `${schoolName} akan diaktifkan menggunakan plan ${planLabel} untuk periode layanan bulanan baru.`,
+      reactivate: `${schoolName} akan diaktifkan kembali menggunakan plan ${planLabel} dan masa layanan akan diperpanjang untuk periode bulanan baru.`
+    };
+
+    return messages[action.type] || `${schoolName} akan diproses.`;
+  }
+
+  getSchoolActionConfirmLabel(action) {
+    const labels = {
+      approve: 'Ya, Approve',
+      sync: 'Ya, Sinkronkan',
+      activate: 'Ya, Aktifkan',
+      reactivate: 'Ya, Aktifkan Ulang'
+    };
+
+    return labels[action.type] || 'Ya, Lanjutkan';
+  }
+
+  getSchoolActionErrorMessage(action) {
+    const messages = {
+      approve: 'Tidak dapat menyetujui sekolah.',
+      sync: 'Tidak dapat menyinkronkan metadata sekolah.',
+      activate: 'Tidak dapat mengaktifkan sekolah.',
+      reactivate: 'Tidak dapat mengaktifkan ulang subscription sekolah.'
+    };
+
+    return messages[action.type] || 'Tidak dapat memproses sekolah.';
+  }
+
+  executeSchoolPrimaryAction(action, school) {
+    switch (action.type) {
+      case 'approve':
+      case 'sync':
+        return authApi.approveSchool(school.id || school.schoolId);
+      case 'activate':
+      case 'reactivate':
+        return authApi.upgradeSchoolPlan(school.id || school.schoolId, school.plan);
+      default:
+        return Promise.resolve({ success: false, message: 'Aksi status tidak didukung.' });
     }
   }
 
