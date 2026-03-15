@@ -154,7 +154,14 @@ class AdminSchoolDashboard {
     const importBtn = document.getElementById('import-user-btn');
     if (importBtn) {
       importBtn.dataset.role = 'siswa'; // default
-      importBtn.addEventListener('click', () => window.dashboard.handleImportUser(importBtn.dataset.role));
+      importBtn.addEventListener('click', (e) => {
+        console.log('🚀 Import XLS button clicked!', importBtn.dataset.role);
+        try {
+          window.dashboard.handleImportUser(importBtn.dataset.role);
+        } catch (err) {
+          console.error('Import button error:', err);
+        }
+      });
     }
     
     // Import modal events
