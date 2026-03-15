@@ -493,8 +493,11 @@ class AdminLogin {
     console.log('[DEBUG-TELEGRAM] ⚡ checkTelegramStatus() called');
     const Toast = getToast();
     
+    const btn = document.getElementById('refresh-telegram-status');
+    btn?.classList.add('loading');
+
     if (!this.pendingUserData) return;
-    
+
     // Show loading
     if (Toast) {
       Toast.loading('Memeriksa status Telegram...');
@@ -519,6 +522,7 @@ class AdminLogin {
       });
       
       const result = await res.json();
+      btn?.classList.remove('loading');
       console.log('[DEBUG-TELEGRAM] 📥 Response:', result);
       
       // Close loading toast
@@ -555,6 +559,7 @@ class AdminLogin {
         }
       }
     } catch (error) {
+      btn?.classList.remove('loading');
       // Close loading toast
       if (Toast) {
         Toast.closeLoading();
