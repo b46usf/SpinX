@@ -235,7 +235,13 @@ class AdminSchoolDashboard {
    */
   showImportModal(role = 'siswa') {
     this.currentImportRole = role;
-    document.getElementById('import-modal').classList.remove('hidden');
+    const modal = document.getElementById('import-modal');
+    if (!modal) {
+      console.error('❌ Import modal not found!');
+      return;
+    }
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
     document.getElementById('import-title').textContent = `Import ${role === 'siswa' ? 'Siswa' : role.toUpperCase()} XLS`;
     document.getElementById('import-file-input').value = '';
     document.getElementById('file-preview').classList.add('hidden');
@@ -246,7 +252,11 @@ class AdminSchoolDashboard {
    * Close import modal
    */
   closeImportModal() {
-    document.getElementById('import-modal').classList.add('hidden');
+    const modal = document.getElementById('import-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
+    }
   }
 
   /**
