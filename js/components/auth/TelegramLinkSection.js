@@ -27,6 +27,7 @@ export const TelegramLinkSection = {
           <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
           <span>Klik tombol di atas</span>
         </div>
+      </div>  
       <button 
         id="refresh-telegram-status"
         class="w-full mt-2 py-2 bg-gray-700/50 hover:bg-gray-600/50 text-gray-400 rounded-lg transition-colors text-xs font-medium"
