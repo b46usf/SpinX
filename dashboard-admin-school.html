@@ -13,8 +13,10 @@
   <!-- Custom Styles -->
   <link rel="stylesheet" href="css/style.css">
   
-  <!-- Font Awesome -->
+    <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- jsPDF for PDF template generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   
   <!-- SweetAlert2 -->
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.all.min.js"></script>
@@ -403,9 +405,9 @@
               <i class="fas fa-download text-blue-400"></i>
               <span class="font-medium text-sm">Download Template</span>
             </div>
-            <p class="text-xs text-gray-400 mb-3">Gunakan format XLS ini sebagai template</p>
-            <button id="download-template-btn" class="w-full btn btn-blue text-xs py-2">
-              <i class="fas fa-file-excel mr-1"></i>Download Template XLS
+            <p class="text-xs text-gray-400 mb-3">Gunakan format PDF ini sebagai template</p>
+            <button id="download-template-btn" class="w-full btn btn-red text-xs py-2">
+              <i class="fas fa-file-pdf mr-1 text-red-400"></i>Download Template PDF
             </button>
           </div>
           
@@ -416,7 +418,7 @@
               <i class="fas fa-cloud-upload-alt text-2xl text-gray-400"></i>
               <div>
                 <p class="text-sm font-medium">Pilih atau drop XLS file</p>
-                <p class="text-xs text-gray-500">Max 5MB, format TSV</p>
+          <p class="text-xs text-gray-500">Max 5MB (format import tetap TSV)</p>
               </div>
             </label>
             <div id="file-preview" class="mt-3 hidden">
