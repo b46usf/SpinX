@@ -370,10 +370,10 @@ class SiswaDashboard {
   /**
    * Load dashboard data
    */
-  async loadDashboardData() {
+async loadDashboardData() {
     try {
       showLoading('Memuat dashboard...');
-      const result = await authApi.call('getsiswadata', { userId: this.currentUser.id });
+      const result = await authApi.call('getsiswadata', { userId: this.currentUser.id }, false);
       if (result.success) {
         // Update quick info
         document.getElementById('spin-available').textContent = result.spinAvailable || 0;
@@ -432,9 +432,9 @@ class SiswaDashboard {
   /**
    * Load mitra list
    */
-  async loadMitra() {
+async loadMitra() {
     try {
-      const result = await authApi.call('getmitra', { role: 'siswa' });
+      const result = await authApi.call('getmitra', { role: 'siswa' }, false);
       if (result.success) {
         this.data.mitra = result.mitra || [];
         this.renderMitra();
@@ -478,9 +478,9 @@ class SiswaDashboard {
   /**
    * Load pesanan
    */
-  async loadPesanan() {
+async loadPesanan() {
     try {
-      const result = await authApi.call('getpesanan', { userId: this.currentUser.id });
+      const result = await authApi.call('getpesanan', { userId: this.currentUser.id }, false);
       if (result.success) {
         this.data.pesanan = result.pesanan || [];
         this.renderPesanan('aktif');

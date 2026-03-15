@@ -130,9 +130,9 @@ class GuruDashboard {
     }
   }
 
-  async loadDashboardData() {
+async loadDashboardData() {
     try {
-      const result = await authApi.call('getgurudashboard', { kelasId: this.kelasId });
+      const result = await authApi.call('getgurudashboard', { kelasId: this.kelasId }, false);
       if (result.success) {
         this.data.stats = result.stats;
         this.updateDashboardStats();
@@ -192,9 +192,9 @@ window.Toast?.error('Error', 'Gagal memuat dashboard');
     `).join('');
   }
 
-  async loadSiswa() {
+async loadSiswa() {
     try {
-      const result = await authApi.call('getsiswakelas', { kelasId: this.kelasId });
+      const result = await authApi.call('getsiswakelas', { kelasId: this.kelasId }, false);
       if (result.success) {
         this.data.siswa = result.siswa;
         this.renderSiswaList(result.siswa);
