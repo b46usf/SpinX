@@ -111,7 +111,7 @@ class AdminSchoolDashboard {
 
     // Update section visibility
     document.querySelectorAll('.section-content').forEach(sec => {
-      sec.classList.toggle('hidden', sec.id !== `section-${section}`);
+      sec.classList.toggle('hidden', sec.id !== `section-${section}`); 
     });
 
     // Load section data
@@ -267,23 +267,42 @@ class AdminSchoolDashboard {
   }
 
   /**
-   * Download template XLS
+   * Download Template - PDF Format with single row
    */
   downloadTemplate() {
-    const header = 'nis\tnama\tjenis_kelamin\tkelas\ttahun_ajaran\tasal_sekolah';
-    const sampleData = [
-      '12345\tJohn Doe\tLaki-laki\tX IPA 1\t2024/2025\tSMAN 1',
-      '67890\tJane Smith\tPerempuan\tX IPS 2\t2024/2025\tSMAN 1'
-    ];
-    const tsvContent = [header, ...sampleData].join('\\n');
-    const blob = new Blob([tsvContent], { type: 'application/vnd.ms-excel' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `template_import_${this.currentImportRole}_${new Date().toISOString().slice(0,10)}.xls`;
-    a.click();
-    URL.revokeObjectURL(url);
-    Toast.success('Template Diunduh', 'Gunakan format ini untuk import');
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // Title
+    doc.setFontSize(20);
+    doc.text('TEMPLATE IMPORT SISWA', 105, 30, { align: 'center' });
+
+    // Instructions
+    doc.setFontSize(12);
+    doc.text('Format: TSV (Tab Separated)', 20, 50);
+    doc.text('Gunakan 1 baris contoh ini:', 20, 65);
+
+    // Single line format (tabs will be visible as spaces)
+    const schoolId = this.schoolId || 'SCHOOL_ID';
+    const line1 = 'nis	nama	jenis_kelamin	kelas	tahun_ajaran	asal_sekolah';
+    const line2 = `13925	AGHASA ZEYNA PUTRI MUGIONO	P	x-1	2025/2026	${schoolId}`;
+
+    doc.setFont('monospace');
+    doc.setFontSize(11);
+    doc.text(line1, 20, 85);
+    doc.text(line2, 20, 95);
+
+    // Note
+    doc.setFontSize(10);
+    doc.text('Catatan:', 20, 110);
+    doc.text('- Copy format di atas ke TSV file', 25, 118);
+    doc.text('- asal_sekolah otomatis School ID Anda', 25, 126);
+    doc.text('- Import tetap format TSV, template PDF panduan', 25, 134);
+
+    const filename = `template_import_${this.currentImportRole}_${new Date().toISOString().slice(0,10)}.pdf`;
+    doc.save(filename);
+
+    Toast.success('PDF Template Downloaded', `Format 1 baris - School ID: ${schoolId}`);
   }
 
   /**
@@ -565,94 +584,7 @@ async loadUsers() {
   /**
    * Load rewards data (placeholder for now)
    */
-  /**
-   * Export siswa data as TSV .xls file
-   */
-  async exportSiswaXLS() {
-    Toast.loading('Mengekstrak data siswa...');
-    try {
-      const result = await authApi.call('getstudentsexport', { schoolId: this.schoolId });
-      if (!result.success || !result.data || result.data.length === 0) {
-        Toast.warning('Data Kosong', 'Belum ada data siswa untuk diekspor');
-        return;
-      }
-
-      // Create TSV content
-      const header = 'nis\tnama\tjenis_kelamin\tkelas\ttahun_ajaran\tasal_sekolah';
-      const rows = result.data.map(s => 
-        `${s.nis || ''}\t${s.nama || ''}\t${s.jenis_kelamin || ''}\t${s.kelas || ''}\t${s.tahun_ajaran || ''}\t${s.asal_sekolah || ''}`
-      );
-      const tsvContent = [header, ...rows].join('\\n');
-
-      // Download blob as .xls
-      const blob = new Blob([tsvContent], { type: 'application/vnd.ms-excel' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `siswa_${this.schoolId}_${new Date().toISOString().slice(0,10)}.xls`;
-      a.click();
-      URL.revokeObjectURL(url);
-
-      Toast.success('Ekspor Berhasil', `${result.count} siswa diekspor`);
-    } catch (error) {
-      console.error('Export error:', error);
-      Toast.error('Gagal Ekspor', 'Cek koneksi dan coba lagi');
-    }
-  }
-
-  /**
-   * Handle siswa XLS import
-   */
-  handleImportSiswa() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.xls,.xlsx,.csv,application/vnd.ms-excel';
-    input.onchange = async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      Toast.loading('Memproses file import...');
-      try {
-        const text = await file.text();
-        const rows = text.split('\\n').slice(1).map(row => {
-          const cols = row.split('\\t');
-          return {
-            nis: cols[0]?.trim(),
-            nama: cols[1]?.trim(),
-            jenis_kelamin: cols[2]?.trim(),
-            kelas: cols[3]?.trim(),
-            tahun_ajaran: cols[4]?.trim(),
-            asal_sekolah: cols[5]?.trim()
-          };
-        }).filter(s => s.nis); // Filter valid rows
-
-        if (rows.length === 0) {
-          Toast.warning('File Kosong', 'Tidak ada data siswa valid');
-          return;
-        }
-
-        const result = await authApi.call('importstudentsmaster', { 
-          schoolId: this.schoolId, 
-          students: rows 
-        });
-
-        if (result.success) {
-          Toast.success('Import Berhasil', result.message);
-          // Reload users
-          await this.loadUsers();
-        } else {
-          Toast.error('Import Gagal', result.error || 'Server error');
-        }
-      } catch (error) {
-        console.error('Import error:', error);
-        Toast.error('Gagal Baca File', 'Format file tidak didukung');
-      }
-    };
-    input.click();
-  }
-
   async loadRewards() {
-    // Placeholder - implement wheel/voucher endpoints later
     document.getElementById('wheel-slices').innerHTML = '<div class="text-center py-4 text-gray-500"><i class="fas fa-cog fa-spin text-lg mb-2"></i><p class="text-xs">Wheel config loading...</p></div>';
     document.getElementById('voucher-list').innerHTML = '<div class="text-center py-4 text-gray-500"><i class="fas fa-ticket-alt text-lg mb-2"></i><p class="text-xs">Vouchers loading...</p></div>';
     document.getElementById('voucher-history').innerHTML = '<div class="text-center py-4 text-gray-500"><i class="fas fa-history text-lg mb-2"></i><p class="text-xs">History loading...</p></div>';
@@ -732,7 +664,5 @@ document.addEventListener('DOMContentLoaded', () => {
   window.spinWheel = () => Toast.info('Wheel', 'Configure wheel first');
 });
 
-
 // Make Toast available globally if needed
 window.Toast = Toast;
-
