@@ -60,11 +60,13 @@ class AdminLogin {
    * Restore pending Telegram section if exists from localStorage
    */
   restorePendingTelegramState() {
+    console.log('[DEBUG-TELEGRAM] 🔍 restorePendingTelegramState() called');
     try {
       const pendingData = localStorage.getItem('pendingTelegramData');
+      console.log('[DEBUG-TELEGRAM] 📦 localStorage:', pendingData);
       if (pendingData) {
         const data = JSON.parse(pendingData);
-        console.log('Restoring pending Telegram state:', data);
+        console.log('[DEBUG-TELEGRAM] ✅ Restoring data:', data);
         
         // Hide login UI and show Telegram section
         const loginCard = document.querySelector('.relative.max-w-sm');
@@ -73,13 +75,19 @@ class AdminLogin {
         }
         
         const appContainer = document.getElementById('app');
+        if (!appContainer) {
+          console.error('[DEBUG-TELEGRAM] ❌ #app container missing!');
+          return;
+        }
         if (appContainer) {
           appContainer.innerHTML = TelegramLinkSection.render({
             telegramLink: data.telegramLink
           });
+          console.log('[DEBUG-TELEGRAM] 🎨 Telegram section rendered');
           
           // Store for checkTelegramStatus
           this.pendingUserData = data;
+          console.log('[DEBUG-TELEGRAM] 💾 pendingUserData stored:', data);
           
           // Init events with callback
           TelegramLinkSection.initEvents({
@@ -430,6 +438,7 @@ class AdminLogin {
    * @param {Object} result - Registration result from backend
    */
   showTelegramLink(result) {
+    console.log('[DEBUG-TELEGRAM] 🚀 showTelegramLink() called');
     const Toast = getToast();
     
     // Store pending user data  
@@ -481,6 +490,7 @@ class AdminLogin {
    * Check Telegram verification status
    */
   async checkTelegramStatus() {
+    console.log('[DEBUG-TELEGRAM] ⚡ checkTelegramStatus() called');
     const Toast = getToast();
     
     if (!this.pendingUserData) return;
@@ -491,6 +501,11 @@ class AdminLogin {
     }
     
     try {
+      console.log('[DEBUG-TELEGRAM] 📤 Payload:', {
+        action: 'generateOTP', 
+        userId: this.pendingUserData.userId, 
+        email: this.pendingUserData.email
+      });
       const payload = { 
         action: 'generateOTP', 
         userId: this.pendingUserData.userId, 
@@ -504,6 +519,7 @@ class AdminLogin {
       });
       
       const result = await res.json();
+      console.log('[DEBUG-TELEGRAM] 📥 Response:', result);
       
       // Close loading toast
       if (Toast) {

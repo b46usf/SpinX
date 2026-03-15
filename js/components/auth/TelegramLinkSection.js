@@ -41,13 +41,18 @@ export const TelegramLinkSection = {
   `,
   
   initEvents: (callbacks = {}) => {
+    console.log('[DEBUG-TELEGRAM] 🔗 Binding events, callbacks:', callbacks);
+    const refreshBtn = document.getElementById('refresh-telegram-status');
+    console.log('[DEBUG-TELEGRAM] 🔘 Refresh button:', refreshBtn);
     document.getElementById('back-to-login')?.addEventListener('click', callbacks.onBack);
-    document.getElementById('refresh-telegram-status')?.addEventListener('click', callbacks.onRefresh);
+    refreshBtn?.addEventListener('click', callbacks.onRefresh);
     setTimeout(callbacks.onRefresh, 1000);
   },
   
   updateStatus: (status, message) => {
+    console.log('[DEBUG-TELEGRAM] 📊 updateStatus:', {status, message});
     const statusEl = document.getElementById('telegram-status');
+    console.log('[DEBUG-TELEGRAM] 📍 statusEl:', statusEl);
     if (!statusEl) return;
     
     const statusConfig = {
