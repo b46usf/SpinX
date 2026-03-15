@@ -146,9 +146,15 @@ class AdminSchoolDashboard {
       item.addEventListener('click', () => this.handleMenuAction(item.dataset.action));
     });
 
-    // Action buttons (add user, etc.) - placeholders
+    // Action buttons (add user, etc.)
     document.getElementById('add-user-btn')?.addEventListener('click', () => Toast.info('Add User', 'Feature coming soon'));
-    document.getElementById('import-user-btn')?.addEventListener('click', () => Toast.info('Import', 'Feature coming soon'));
+    
+    // XLS Import/Export for siswa tab
+    const importBtn = document.getElementById('import-user-btn');
+    const exportBtn = document.getElementById('export-siswa-btn');
+    if (importBtn) importBtn.addEventListener('click', () => this.handleImportSiswa());
+    if (exportBtn) exportBtn.addEventListener('click', () => this.exportSiswaXLS());
+    
     document.getElementById('add-slice-btn')?.addEventListener('click', () => Toast.info('Add Slice', 'Feature coming soon'));
     document.getElementById('add-voucher-btn')?.addEventListener('click', () => Toast.info('Add Voucher', 'Feature coming soon'));
   }
@@ -407,6 +413,92 @@ async loadUsers() {
   /**
    * Load rewards data (placeholder for now)
    */
+  /**
+   * Export siswa data as TSV .xls file
+   */
+  async exportSiswaXLS() {
+    Toast.loading('Mengekstrak data siswa...');
+    try {
+      const result = await authApi.call('getstudentsexport', { schoolId: this.schoolId });
+      if (!result.success || !result.data || result.data.length === 0) {
+        Toast.warning('Data Kosong', 'Belum ada data siswa untuk diekspor');
+        return;
+      }
+
+      // Create TSV content
+      const header = 'nis\tnama\tjenis_kelamin\tkelas\ttahun_ajaran\tasal_sekolah';
+      const rows = result.data.map(s => 
+        `${s.nis || ''}\t${s.nama || ''}\t${s.jenis_kelamin || ''}\t${s.kelas || ''}\t${s.tahun_ajaran || ''}\t${s.asal_sekolah || ''}`
+      );
+      const tsvContent = [header, ...rows].join('\\n');
+
+      // Download blob as .xls
+      const blob = new Blob([tsvContent], { type: 'application/vnd.ms-excel' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `siswa_${this.schoolId}_${new Date().toISOString().slice(0,10)}.xls`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      Toast.success('Ekspor Berhasil', `${result.count} siswa diekspor`);
+    } catch (error) {
+      console.error('Export error:', error);
+      Toast.error('Gagal Ekspor', 'Cek koneksi dan coba lagi');
+    }
+  }
+
+  /**
+   * Handle siswa XLS import
+   */
+  handleImportSiswa() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.xls,.xlsx,.csv,application/vnd.ms-excel';
+    input.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      Toast.loading('Memproses file import...');
+      try {
+        const text = await file.text();
+        const rows = text.split('\\n').slice(1).map(row => {
+          const cols = row.split('\\t');
+          return {
+            nis: cols[0]?.trim(),
+            nama: cols[1]?.trim(),
+            jenis_kelamin: cols[2]?.trim(),
+            kelas: cols[3]?.trim(),
+            tahun_ajaran: cols[4]?.trim(),
+            asal_sekolah: cols[5]?.trim()
+          };
+        }).filter(s => s.nis); // Filter valid rows
+
+        if (rows.length === 0) {
+          Toast.warning('File Kosong', 'Tidak ada data siswa valid');
+          return;
+        }
+
+        const result = await authApi.call('importstudentsmaster', { 
+          schoolId: this.schoolId, 
+          students: rows 
+        });
+
+        if (result.success) {
+          Toast.success('Import Berhasil', result.message);
+          // Reload users
+          await this.loadUsers();
+        } else {
+          Toast.error('Import Gagal', result.error || 'Server error');
+        }
+      } catch (error) {
+        console.error('Import error:', error);
+        Toast.error('Gagal Baca File', 'Format file tidak didukung');
+      }
+    };
+    input.click();
+  }
+
   async loadRewards() {
     // Placeholder - implement wheel/voucher endpoints later
     document.getElementById('wheel-slices').innerHTML = '<div class="text-center py-4 text-gray-500"><i class="fas fa-cog fa-spin text-lg mb-2"></i><p class="text-xs">Wheel config loading...</p></div>';
