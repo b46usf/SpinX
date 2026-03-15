@@ -319,7 +319,16 @@ body::before {
 
 /* Background utilities */
 .bg-gray-700\/40 { background: rgba(55, 65, 81, 0.4); }
-.bg-gray-700\/50 { background: rgba(55, 65, 81, 0.5); }
+.bg-gray-700\/50 { background: rgba(55, 65, 81, 0.5) !important; }
+#refresh-telegram-status {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  min-height: 44px !important;
+  background: rgba(75, 85, 99, 0.3) !important;
+  color: #e5e7eb !important;
+  border: 1px solid rgba(156, 163, 175, 0.3) !important;
+}
 .bg-gray-800\/50 { background: rgba(31, 41, 55, 0.5); }
 .bg-gray-800\/80 { background: rgba(31, 41, 55, 0.8); }
 .bg-gray-900\/80 { background: rgba(17, 24, 39, 0.8); }
