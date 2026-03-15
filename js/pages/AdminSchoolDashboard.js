@@ -152,7 +152,10 @@ class AdminSchoolDashboard {
     
     // Import XLS button (dynamic per tab)
     const importBtn = document.getElementById('import-user-btn');
-    if (importBtn) importBtn.addEventListener('click', () => window.dashboard.handleImportUser());
+    if (importBtn) {
+      importBtn.dataset.role = 'siswa'; // default
+      importBtn.addEventListener('click', () => window.dashboard.handleImportUser(importBtn.dataset.role));
+    }
     
     // Import modal events
     document.getElementById('close-import-modal')?.addEventListener('click', () => window.dashboard.closeImportModal());
@@ -225,6 +228,132 @@ class AdminSchoolDashboard {
       user.email?.toLowerCase().includes(query.toLowerCase())
     );
     this.renderUserList(currentTab, filtered);
+  }
+
+  /**
+   * Show/hide import modal
+   */
+  showImportModal(role = 'siswa') {
+    this.currentImportRole = role;
+    document.getElementById('import-modal').classList.remove('hidden');
+    document.getElementById('import-title').textContent = `Import ${role === 'siswa' ? 'Siswa' : role.toUpperCase()} XLS`;
+    document.getElementById('import-file-input').value = '';
+    document.getElementById('file-preview').classList.add('hidden');
+    document.getElementById('confirm-import-btn').disabled = true;
+  }
+
+  /**
+   * Close import modal
+   */
+  closeImportModal() {
+    document.getElementById('import-modal').classList.add('hidden');
+  }
+
+  /**
+   * Download template XLS
+   */
+  downloadTemplate() {
+    const header = 'nis\tnama\tjenis_kelamin\tkelas\ttahun_ajaran\tasal_sekolah';
+    const sampleData = [
+      '12345\tJohn Doe\tLaki-laki\tX IPA 1\t2024/2025\tSMAN 1',
+      '67890\tJane Smith\tPerempuan\tX IPS 2\t2024/2025\tSMAN 1'
+    ];
+    const tsvContent = [header, ...sampleData].join('\\n');
+    const blob = new Blob([tsvContent], { type: 'application/vnd.ms-excel' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `template_import_${this.currentImportRole}_${new Date().toISOString().slice(0,10)}.xls`;
+    a.click();
+    URL.revokeObjectURL(url);
+    Toast.success('Template Diunduh', 'Gunakan format ini untuk import');
+  }
+
+  /**
+   * Handle file preview
+   * @param {File} file
+   */
+  async handleFilePreview(file) {
+    if (!file || file.size > 5 * 1024 * 1024) {
+      Toast.warning('File Invalid', 'Max 5MB');
+      return;
+    }
+
+    try {
+      const text = await file.text();
+      const rows = text.split('\\n').slice(1).slice(0, 5); // First 5 data rows
+      const previewHtml = rows.map(row => {
+        const cols = row.split('\\t').slice(0, 6);
+        return `<div class="grid grid-cols-6 gap-1 p-1 bg-white/10 rounded mb-1">
+          ${cols.map(col => `<div class="text-xs truncate">${col || ''}</div>`).join('')}
+        </div>`;
+      }).join('');
+      
+      document.getElementById('preview-table').innerHTML = previewHtml;
+      document.getElementById('file-preview').classList.remove('hidden');
+      document.getElementById('confirm-import-btn').disabled = false;
+      document.getElementById('import-info').classList.remove('hidden');
+    } catch (error) {
+      Toast.error('Gagal Baca File', 'Format tidak didukung');
+    }
+  }
+
+  /**
+   * Handle import user confirmation
+   */
+  async confirmImport() {
+    const fileInput = document.getElementById('import-file-input');
+    const file = fileInput.files[0];
+    if (!file) {
+      Toast.warning('Pilih File', 'Silakan pilih file XLS');
+      return;
+    }
+
+    Toast.loading('Mengimpor data...');
+    try {
+      const text = await file.text();
+      const rows = text.split('\\n').slice(1).map(row => {
+        const cols = row.split('\\t');
+        return {
+          nis: cols[0]?.trim(),
+          nama: cols[1]?.trim(),
+          jenis_kelamin: cols[2]?.trim(),
+          kelas: cols[3]?.trim(),
+          tahun_ajaran: cols[4]?.trim(),
+          asal_sekolah: cols[5]?.trim()
+        };
+      }).filter(s => s.nis); // Filter valid rows
+
+      if (rows.length === 0) {
+        Toast.warning('File Kosong', 'Tidak ada data valid');
+        return;
+      }
+
+      const result = await authApi.call('importstudentsmaster', { 
+        schoolId: this.schoolId, 
+        students: rows 
+      });
+
+      if (result.success) {
+        Toast.success('Import Berhasil', `${rows.length} siswa diimpor`);
+        this.closeImportModal();
+        await this.loadUsers();
+        await this.loadDashboardData();
+      } else {
+        Toast.error('Import Gagal', result.error || 'Server error');
+      }
+    } catch (error) {
+      console.error('Import error:', error);
+      Toast.error('Gagal Proses File', 'Cek format file');
+    }
+  }
+
+  /**
+   * Handle import user (entry point)
+   * @param {string} role
+   */
+  handleImportUser(role) {
+    this.showImportModal(role);
   }
 
   /**
@@ -577,10 +706,15 @@ export { AdminSchoolDashboard };
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new AdminSchoolDashboard();
   
-  // Expose functions for HTML onclicks
+// Expose dashboard instance methods globally
+  ['handleImportUser', 'closeImportModal', 'downloadTemplate', 'handleFilePreview', 'confirmImport'].forEach(method => {
+    window.dashboard[method] = window.dashboard[method].bind(window.dashboard);
+  });
+
   window.startGame = () => Toast.info('Game', 'Student game interface');
   window.spinWheel = () => Toast.info('Wheel', 'Configure wheel first');
 });
+
 
 // Make Toast available globally if needed
 window.Toast = Toast;
