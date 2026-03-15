@@ -528,8 +528,7 @@ class AdminLogin {
       
       // Update status using component method (prevents toast refresh issue)
       TelegramLinkSection.updateStatus(result.success ? 'success' : (result.error === 'TELEGRAM_NOT_LINKED' ? 'not_linked' : 'error'), result.message);
-      
-      const statusEl = document.getElementById('telegram-status');
+      // const statusEl = document.getElementById('telegram-status'); // UNUSED - updateStatus handles DOM
       
       if (result.success) {
         if (Toast) {
