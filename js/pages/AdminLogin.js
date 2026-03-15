@@ -60,10 +60,8 @@ class AdminLogin {
    * Restore pending Telegram section if exists from localStorage
    */
   restorePendingTelegramState() {
-    console.log('[DEBUG-TELEGRAM] 🔍 restorePendingTelegramState() called');
     try {
       const pendingData = localStorage.getItem('pendingTelegramData');
-      console.log('[DEBUG-TELEGRAM] 📦 localStorage:', pendingData);
       if (pendingData) {
         const data = JSON.parse(pendingData);
         console.log('[DEBUG-TELEGRAM] ✅ Restoring data:', data);

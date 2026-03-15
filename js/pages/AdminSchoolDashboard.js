@@ -262,10 +262,10 @@ class AdminSchoolDashboard {
   /**
    * Load dashboard stats
    */
-  async loadDashboardData() {
+async loadDashboardData() {
     try {
       const payload = { schoolId: this.schoolId, action: 'getschoolstats' };
-      const result = await authApi.call('getschoolstats', payload);
+      const result = await authApi.call('getschoolstats', payload, false);
 
       if (result.success) {
         this.data.stats = result.data;
@@ -356,9 +356,9 @@ class AdminSchoolDashboard {
   /**
    * Load users for school (siswa/guru/mitra)
    */
-  async loadUsers() {
+async loadUsers() {
     try {
-      const result = await authApi.call('getschoolusers', { schoolId: this.schoolId, role: '' });
+      const result = await authApi.call('getschoolusers', { schoolId: this.schoolId, role: '' }, false);
 
       if (result.success) {
         // Group by role
@@ -417,9 +417,9 @@ class AdminSchoolDashboard {
   /**
    * Load account/school info
    */
-  async loadAccountData() {
+async loadAccountData() {
     try {
-      const result = await authApi.call('checksubscription', { schoolId: this.schoolId });
+      const result = await authApi.call('checksubscription', { schoolId: this.schoolId }, false);
 
       if (result.success && result.school) {
         this.data.schoolInfo = result.school;
