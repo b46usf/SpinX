@@ -149,11 +149,16 @@ class AdminSchoolDashboard {
     // Action buttons (add user, etc.)
     document.getElementById('add-user-btn')?.addEventListener('click', () => Toast.info('Add User', 'Feature coming soon'));
     
-    // XLS Import/Export for siswa tab
+    // Import XLS button (dynamic per tab)
     const importBtn = document.getElementById('import-user-btn');
-    const exportBtn = document.getElementById('export-siswa-btn');
-    if (importBtn) importBtn.addEventListener('click', () => this.handleImportSiswa());
-    if (exportBtn) exportBtn.addEventListener('click', () => this.exportSiswaXLS());
+    if (importBtn) importBtn.addEventListener('click', () => this.handleImportUser());
+    
+    // Import modal events
+    document.getElementById('close-import-modal')?.addEventListener('click', () => this.closeImportModal());
+    document.getElementById('cancel-import-btn')?.addEventListener('click', () => this.closeImportModal());
+    document.getElementById('download-template-btn')?.addEventListener('click', () => this.downloadTemplate());
+    document.getElementById('import-file-input')?.addEventListener('change', (e) => this.handleFilePreview(e.target.files[0]));
+    document.getElementById('confirm-import-btn')?.addEventListener('click', () => this.confirmImport());
     
     document.getElementById('add-slice-btn')?.addEventListener('click', () => Toast.info('Add Slice', 'Feature coming soon'));
     document.getElementById('add-voucher-btn')?.addEventListener('click', () => Toast.info('Add Voucher', 'Feature coming soon'));
