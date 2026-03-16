@@ -217,8 +217,8 @@ class AdminSchoolDashboard {
       let attempts = 0;
       const check = () => {
         attempts++;
-        const jsPDF = window.jsPDF;
-        const hasAutoTable = jsPDF && typeof jsPDF.prototype.autoTable === 'function';
+        const jsPDF = window.jsPDF || (window.jspdf && window.jspdf.jsPDF);
+        const hasAutoTable = jsPDF && (typeof jsPDF.prototype.autoTable === 'function' || typeof jsPDF.prototype.html === 'function');
         
         console.log(`PDF check #${attempts}: jsPDF=${!!jsPDF}, autoTable=${!!hasAutoTable}`);
         
@@ -261,7 +261,7 @@ class AdminSchoolDashboard {
     try {
       await this.checkPDFReady(10); // Quick recheck
       
-      const { jsPDF } = window;
+      const jsPDF = window.jsPDF || (window.jspdf && window.jspdf.jsPDF);
       if (!jsPDF) throw new Error('jsPDF not found');
       
       const doc = new jsPDF();
