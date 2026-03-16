@@ -270,58 +270,47 @@ class AdminSchoolDashboard {
    * Download Template - PDF Format with single row
    */
   downloadTemplate() {
+    if (!window.jspdf || !window.jspdf.jsPDF.prototype.autoTable) {
+      Toast.error('PDF Plugin Missing', 'Refresh page');
+      return;
+    }
+
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
-    // Title
-    doc.setFontSize(18);
-    doc.text('TEMPLATE IMPORT SISWA', 105, 25, { align: 'center' });
+    doc.setFontSize(16);
+    doc.text('SPINX IMPORT TEMPLATE', 105, 25, { align: 'center' });
 
-    // Instructions
     doc.setFontSize(11);
-    doc.text('Format: TSV (Tab Separated Values)', 20, 45);
-    doc.text('Gunakan format satu baris ini:', 20, 55);
+    doc.text('TSV Format (Tab Separated)', 20, 42);
+    doc.text('Example:', 20, 52);
 
-    // Headers table - smaller font, fit page
     const headers = [['nis', 'nama', 'jenis_kelamin', 'kelas', 'tahun_ajaran', 'asal_sekolah']];
-    const exampleRow = ['13925', 'AGHASA ZEYNA PUTRI MUGIONO', 'P', 'x-1', '2025/2026', this.schoolId || 'SCHOOL_ID'];
+    const schoolId = this.schoolId || 'SCHOOL_ID';
+    const exampleRow = ['13925', 'AGHASA ZEYNA PUTRI MUGIONO', 'P', 'x-1', '2025/2026', schoolId];
 
     doc.autoTable({
-      startY: 65,
+      startY: 60,
       head: headers,
       body: [exampleRow],
-      theme: 'grid',
-      styles: { 
-        fontSize: 8, 
-        cellPadding: 2,
-        overflow: 'linebreak',
-        halign: 'center',
-        valign: 'middle'
-      },
-      headStyles: { 
-        fillColor: [59, 130, 246],
-        fontSize: 9,
-        fontStyle: 'bold'
-      },
-      columnStyles: {
-        1: { cellWidth: 45, halign: 'left' } // nama column wider
-      },
-      margin: { left: 15, right: 15 }
+      styles: { fontSize: 8, cellPadding: 3, halign: 'left', valign: 'middle' },
+      headStyles: { fillColor: [54, 162, 235], fontSize: 9, fontStyle: 'bold' },
+      columnStyles: { 1: { cellWidth: 50 } },
+      margin: { left: 15, right: 15 },
+      tableWidth: 'auto'
     });
 
-    // Notes
     const finalY = doc.lastAutoTable.finalY + 10;
     doc.setFontSize(9);
-    doc.text('Panduan:', 20, finalY);
+    doc.text('Notes:', 20, finalY);
     doc.setFontSize(8);
-    doc.text('• Copy format tabel ke Excel/TSV', 25, finalY + 8);
-    doc.text('• asal_sekolah = School ID otomatis', 25, finalY + 16);
-    doc.text('• Import tetap TSV, PDF hanya template', 25, finalY + 24);
+    doc.text('• Use this exact table format in TSV', 25, finalY + 8);
+    doc.text('• asal_sekolah auto-filled', 25, finalY + 16);
 
-    const filename = `template_${this.currentImportRole}_${new Date().toISOString().slice(0,10)}.pdf`;
+    const filename = `siswa_template_${new Date().toISOString().slice(0,10)}.pdf`;
     doc.save(filename);
 
-    Toast.success('PDF Template Fixed', 'Tabel fit page, no cut-off');
+    Toast.success('PDF Template Complete', `Ready with schoolId: ${schoolId}`);
   }
 
   /**
