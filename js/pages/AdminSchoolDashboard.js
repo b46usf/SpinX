@@ -201,6 +201,7 @@ class AdminSchoolDashboard {
     document.getElementById('import-file-input').value = '';
     document.getElementById('file-preview').classList.add('hidden');
     document.getElementById('confirm-import-btn').disabled = true;
+    this.initPDFCheck();
   }
 
   closeImportModal() {
@@ -211,50 +212,111 @@ class AdminSchoolDashboard {
     }
   }
 
-  async downloadTemplate() {
-    if (!window.jspdf || !window.jspdf.jsPDF.prototype.autoTable) {
-      // Retry with delay for CDN
-      setTimeout(() => this.downloadTemplate(), 800);
-      Toast.warning('PDF Plugin Loading...', 'Please wait 1s and try again');
-      return;
-    }
-
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-
-    doc.setFontSize(16);
-    doc.text('SPINX IMPORT TEMPLATE', 105, 25, { align: 'center' });
-
-    doc.setFontSize(11);
-    doc.text('TSV Format (Tab Separated)', 20, 42);
-    doc.text('Example:', 20, 52);
-
-    const headers = [['nis', 'nama', 'jenis_kelamin', 'kelas', 'tahun_ajaran', 'asal_sekolah']];
-    const schoolId = this.schoolId || 'SCHOOL_ID';
-    const exampleRow = ['13925', 'AGHASA ZEYNA PUTRI MUGIONO', 'P', 'x-1', '2025/2026', schoolId];
-
-    doc.autoTable({
-      startY: 60,
-      head: headers,
-      body: [exampleRow],
-      styles: { fontSize: 8, cellPadding: 3, halign: 'left', valign: 'middle' },
-      headStyles: { fillColor: [54, 162, 235], fontSize: 9, fontStyle: 'bold' },
-      columnStyles: { 1: { cellWidth: 50 } },
-      margin: { left: 15, right: 15 },
-      tableWidth: 'auto'
+  async checkPDFReady(maxAttempts = 50) {
+    return new Promise((resolve, reject) => {
+      let attempts = 0;
+      const check = () => {
+        attempts++;
+        const jsPDF = window.jsPDF;
+        const hasAutoTable = jsPDF && typeof jsPDF.prototype.autoTable === 'function';
+        
+        console.log(`PDF check #${attempts}: jsPDF=${!!jsPDF}, autoTable=${!!hasAutoTable}`);
+        
+        if (hasAutoTable) {
+          resolve(true);
+        } else if (attempts >= maxAttempts) {
+          reject(new Error('PDF plugins failed to load after 10s'));
+        } else {
+          setTimeout(check, 200);
+        }
+      };
+      check();
     });
+  }
 
-    const finalY = doc.lastAutoTable.finalY + 10;
-    doc.setFontSize(9);
-    doc.text('Notes:', 20, finalY);
-    doc.setFontSize(8);
-    doc.text('• Use this exact table format in TSV', 25, finalY + 8);
-    doc.text('• asal_sekolah auto-filled', 25, finalY + 16);
+  initPDFCheck() {
+    const btn = document.getElementById('download-template-btn');
+    if (!btn) return;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Loading PDF...';
+    
+    this.checkPDFReady().then(() => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-file-pdf mr-1 text-red-400"></i>Download Template PDF';
+      console.log('✅ PDF plugins ready');
+    }).catch((err) => {
+      console.error('❌ PDF init failed:', err);
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-exclamation-triangle mr-1 text-yellow-400"></i>PDF Error - Reload';
+      btn.onclick = () => window.location.reload();
+    });
+  }
 
-    const filename = `siswa_template_${new Date().toISOString().slice(0,10)}.pdf`;
-    doc.save(filename);
+  async downloadTemplate() {
+    const btn = document.getElementById('download-template-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Generating...';
 
-    Toast.success('PDF Template Downloaded', `siswa_template_${schoolId}.pdf ready`);
+    try {
+      await this.checkPDFReady(10); // Quick recheck
+      
+      const { jsPDF } = window;
+      if (!jsPDF) throw new Error('jsPDF not found');
+      
+      const doc = new jsPDF();
+
+      doc.setFontSize(16);
+      doc.text('SPINX IMPORT TEMPLATE', 105, 25, { align: 'center' });
+
+      doc.setFontSize(11);
+      doc.text('TSV Format (Tab Separated)', 20, 42);
+      doc.text('Example:', 20, 52);
+
+      const headers = [['nis', 'nama', 'jenis_kelamin', 'kelas', 'tahun_ajaran', 'asal_sekolah']];
+      const schoolId = this.schoolId || 'SCHOOL_ID';
+      const exampleRow = ['13925', 'AGHASA ZEYNA PUTRI MUGIONO', 'P', 'x-1', '2025/2026', schoolId];
+
+      doc.autoTable({
+        startY: 60,
+        head: headers,
+        body: [exampleRow],
+        styles: { fontSize: 8, cellPadding: 3, halign: 'left', valign: 'middle' },
+        headStyles: { fillColor: [54, 162, 235], fontSize: 9, fontStyle: 'bold' },
+        columnStyles: { 1: { cellWidth: 50 } },
+        margin: { left: 15, right: 15 },
+        tableWidth: 'auto'
+      });
+
+      const finalY = doc.lastAutoTable.finalY + 10;
+      doc.setFontSize(9);
+      doc.text('Notes:', 20, finalY);
+      doc.setFontSize(8);
+      doc.text('• Use this exact table format in TSV', 25, finalY + 8);
+      doc.text('• asal_sekolah auto-filled', 25, finalY + 16);
+
+      const filename = `siswa_template_${new Date().toISOString().slice(0,10)}.pdf`;
+      doc.save(filename);
+
+      Toast.success('PDF Template Downloaded', `siswa_template_${schoolId}.pdf ready`);
+    } catch (error) {
+      console.error('PDF generation failed:', error);
+      Toast.error('PDF Error', 'Plugin failed to load. Try refresh (F5) or check console.');
+      // Fallback: offer JSON template download
+      const fallbackData = {
+        headers: ['nis', 'nama', 'jenis_kelamin', 'kelas', 'tahun_ajaran', 'asal_sekolah'],
+        example: ['13925', 'AGHASA ZEYNA PUTRI MUGIONO', 'P', 'x-1', '2025/2026', schoolId]
+      };
+      const blob = new Blob([JSON.stringify(fallbackData, null, 2)], {type: 'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'siswa_template_fallback.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setTimeout(() => this.initPDFCheck(), 1000);
+    }
   }
 
   async handleFilePreview(file) {
