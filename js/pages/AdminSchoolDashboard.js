@@ -267,16 +267,31 @@ class AdminSchoolDashboard {
   }
 
   /**
+   * Ensure PDF libraries are loaded with retry
+   */
+  ensurePDFLibs(attempt = 0) {
+    const maxAttempts = 5;
+    if (window.jspdf && window.jspdf.jsPDF && window.jspdf.jsPDF.prototype.autoTable) {
+      return Promise.resolve(true);
+    }
+    if (attempt >= maxAttempts) {
+      return Promise.reject('PDF libs failed to load');
+    }
+    return new Promise(resolve => {
+      setTimeout(() => {
+        this.ensurePDFLibs(attempt + 1).then(resolve).catch(resolve);
+      }, 300);
+    });
+  }
+
+  /**
    * Download Template - PDF Format with single row
    */
-  downloadTemplate() {
-    if (!window.jspdf || !window.jspdf.jsPDF.prototype.autoTable) {
-      Toast.error('PDF Plugin Missing', 'Refresh page');
-      return;
-    }
-
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+  async downloadTemplate() {
+    try {
+      await this.ensurePDFLibs();
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
 
     doc.setFontSize(16);
     doc.text('SPINX IMPORT TEMPLATE', 105, 25, { align: 'center' });
