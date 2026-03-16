@@ -25,11 +25,7 @@ class AdminSchoolDashboard {
     this.init();
   }
 
-  /**
-   * Initialize dashboard
-   */
   async init() {
-    // Auth protection - admin-sekolah role only
     const authResult = authGuard.init('admin-sekolah', {
       avatarId: 'user-avatar',
       welcomeId: 'welcome-name'
@@ -38,42 +34,33 @@ class AdminSchoolDashboard {
 
     this.currentUser = authGuard.getUser();
     
-    // Get schoolId from user data (assuming stored in user profile)
     this.schoolId = this.currentUser.schoolId || this.currentUser.sekolah;
     if (!this.schoolId) {
       Toast.error('School ID not found', 'Please contact system admin');
       return;
     }
 
-    // Initialize theme
     themeManager.init();
 
-    // Setup UI
     this.setupProfile();
     this.setupNavigation();
     this.setupEventListeners();
     this.setCurrentDate();
     document.getElementById('school-name').textContent = this.currentUser.schoolName || 'Sekolah';
 
-    // Load initial data
     await this.loadDashboardData();
-    await this.loadAccountData(); // Load school info immediately
+    await this.loadAccountData();
   }
 
-  /**
-   * Setup profile avatar/name
-   */
   setupProfile() {
     if (!this.currentUser) return;
 
-    // Header avatar
     const avatar = document.getElementById('user-avatar');
     if (avatar) {
       avatar.src = this.currentUser.picture || this.currentUser.foto || 
         `https://ui-avatars.com/api/?name=${encodeURIComponent(this.currentUser.name || 'A')}&background=random`;
     }
 
-    // Profile section
     const profileAvatar = document.getElementById('profile-avatar');
     if (profileAvatar) profileAvatar.src = avatar.src;
 
@@ -84,9 +71,6 @@ class AdminSchoolDashboard {
     if (profileEmail) profileEmail.textContent = this.currentUser.email || '-';
   }
 
-  /**
-   * Setup bottom navigation
-   */
   setupNavigation() {
     document.querySelectorAll('.bottom-nav-item').forEach(item => {
       item.addEventListener('click', () => {
@@ -95,65 +79,48 @@ class AdminSchoolDashboard {
     });
   }
 
-  /**
-   * Switch section visibility
-   * @param {string} section
-   */
   switchSection(section) {
     this.currentSection = section;
 
-    // Update nav active state
     document.querySelectorAll('.bottom-nav-item').forEach(item => {
       item.classList.toggle('active', item.dataset.section === section);
       item.classList.toggle('text-indigo-400', item.dataset.section === section);
       item.classList.toggle('text-gray-400', item.dataset.section !== section);
     });
 
-    // Update section visibility
     document.querySelectorAll('.section-content').forEach(sec => {
       sec.classList.toggle('hidden', sec.id !== `section-${section}`); 
     });
 
-    // Load section data
     this.loadSectionData(section);
   }
 
-  /**
-   * Setup event listeners
-   */
   setupEventListeners() {
-    // Logout
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
       logoutBtn.addEventListener('click', () => this.handleLogout());
     }
 
-    // User tabs
     document.querySelectorAll('.user-tab-btn').forEach(btn => {
       btn.addEventListener('click', () => this.switchUserTab(btn.dataset.tab));
     });
 
-    // Reward tabs
     document.querySelectorAll('.reward-tab-btn').forEach(buttonEl => {
       buttonEl.addEventListener('click', () => this.switchRewardTab(buttonEl.dataset.tab));
     });
 
-    // Search
     const userSearch = document.getElementById('user-search');
     if (userSearch) userSearch.addEventListener('input', (e) => this.filterUsers(e.target.value));
 
-    // Menu items
     document.querySelectorAll('.menu-item').forEach(item => {
       item.addEventListener('click', () => this.handleMenuAction(item.dataset.action));
     });
 
-    // Action buttons (add user, etc.)
     document.getElementById('add-user-btn')?.addEventListener('click', () => Toast.info('Add User', 'Feature coming soon'));
     
-    // Import XLS button (dynamic per tab)
     const importBtn = document.getElementById('import-user-btn');
     if (importBtn) {
-      importBtn.dataset.role = 'siswa'; // default
+      importBtn.dataset.role = 'siswa';
       importBtn.addEventListener('click', (e) => {
         console.log('🚀 Import XLS button clicked!', importBtn.dataset.role);
         try {
@@ -164,7 +131,6 @@ class AdminSchoolDashboard {
       });
     }
     
-    // Import modal events
     document.getElementById('close-import-modal')?.addEventListener('click', () => window.dashboard.closeImportModal());
     document.getElementById('cancel-import-btn')?.addEventListener('click', () => window.dashboard.closeImportModal());
     document.getElementById('download-template-btn')?.addEventListener('click', () => window.dashboard.downloadTemplate());
@@ -175,9 +141,6 @@ class AdminSchoolDashboard {
     document.getElementById('add-voucher-btn')?.addEventListener('click', () => Toast.info('Add Voucher', 'Feature coming soon'));
   }
 
-  /**
-   * Set current date
-   */
   setCurrentDate() {
     const dateEl = document.getElementById('current-date');
     if (dateEl) {
@@ -187,10 +150,6 @@ class AdminSchoolDashboard {
     }
   }
 
-  /**
-   * Switch user tabs
-   * @param {string} tab
-   */
   switchUserTab(tab) {
     document.querySelectorAll('.user-tab-btn').forEach(buttonEl => {
       buttonEl.classList.toggle('active', buttonEl.dataset.tab === tab);
@@ -205,10 +164,6 @@ class AdminSchoolDashboard {
     });
   }
 
-  /**
-   * Switch reward tabs
-   * @param {string} tab
-   */
   switchRewardTab(tab) {
     document.querySelectorAll('.reward-tab-btn').forEach(buttonEl => {
       buttonEl.classList.toggle('active', buttonEl.dataset.tab === tab);
@@ -223,10 +178,6 @@ class AdminSchoolDashboard {
     });
   }
 
-  /**
-   * Filter users by search
-   * @param {string} query
-   */
   filterUsers(query) {
     const currentTab = document.querySelector('.user-tab-btn.active').dataset.tab;
     const users = this.data.users[currentTab];
@@ -237,9 +188,6 @@ class AdminSchoolDashboard {
     this.renderUserList(currentTab, filtered);
   }
 
-  /**
-   * Show/hide import modal
-   */
   showImportModal(role = 'siswa') {
     this.currentImportRole = role;
     const modal = document.getElementById('import-modal');
@@ -255,9 +203,6 @@ class AdminSchoolDashboard {
     document.getElementById('confirm-import-btn').disabled = true;
   }
 
-  /**
-   * Close import modal
-   */
   closeImportModal() {
     const modal = document.getElementById('import-modal');
     if (modal) {
@@ -266,32 +211,16 @@ class AdminSchoolDashboard {
     }
   }
 
-  /**
-   * Ensure PDF libraries are loaded with retry
-   */
-  ensurePDFLibs(attempt = 0) {
-    const maxAttempts = 5;
-    if (window.jspdf && window.jspdf.jsPDF && window.jspdf.jsPDF.prototype.autoTable) {
-      return Promise.resolve(true);
-    }
-    if (attempt >= maxAttempts) {
-      return Promise.reject('PDF libs failed to load');
-    }
-    return new Promise(resolve => {
-      setTimeout(() => {
-        this.ensurePDFLibs(attempt + 1).then(resolve).catch(resolve);
-      }, 300);
-    });
-  }
-
-  /**
-   * Download Template - PDF Format with single row
-   */
   async downloadTemplate() {
-    try {
-      await this.ensurePDFLibs();
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
+    if (!window.jspdf || !window.jspdf.jsPDF.prototype.autoTable) {
+      // Retry with delay for CDN
+      setTimeout(() => this.downloadTemplate(), 800);
+      Toast.warning('PDF Plugin Loading...', 'Please wait 1s and try again');
+      return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
 
     doc.setFontSize(16);
     doc.text('SPINX IMPORT TEMPLATE', 105, 25, { align: 'center' });
@@ -325,13 +254,9 @@ class AdminSchoolDashboard {
     const filename = `siswa_template_${new Date().toISOString().slice(0,10)}.pdf`;
     doc.save(filename);
 
-    Toast.success('PDF Template Complete', `Ready with schoolId: ${schoolId}`);
+    Toast.success('PDF Template Downloaded', `siswa_template_${schoolId}.pdf ready`);
   }
 
-  /**
-   * Handle file preview
-   * @param {File} file
-   */
   async handleFilePreview(file) {
     if (!file || file.size > 5 * 1024 * 1024) {
       Toast.warning('File Invalid', 'Max 5MB');
@@ -340,9 +265,9 @@ class AdminSchoolDashboard {
 
     try {
       const text = await file.text();
-      const rows = text.split('\\n').slice(1).slice(0, 5); // First 5 data rows
+      const rows = text.split('\n').slice(1).slice(0, 5);
       const previewHtml = rows.map(row => {
-        const cols = row.split('\\t').slice(0, 6);
+        const cols = row.split('\t').slice(0, 6);
         return `<div class="grid grid-cols-6 gap-1 p-1 bg-white/10 rounded mb-1">
           ${cols.map(col => `<div class="text-xs truncate">${col || ''}</div>`).join('')}
         </div>`;
@@ -353,26 +278,23 @@ class AdminSchoolDashboard {
       document.getElementById('confirm-import-btn').disabled = false;
       document.getElementById('import-info').classList.remove('hidden');
     } catch (error) {
-      Toast.error('Gagal Baca File', 'Format tidak didukung');
+      Toast.error('Gagal Baca File', 'Format TSV diperlukan (Tab Separated)');
     }
   }
 
-  /**
-   * Handle import user confirmation
-   */
   async confirmImport() {
     const fileInput = document.getElementById('import-file-input');
     const file = fileInput.files[0];
     if (!file) {
-      Toast.warning('Pilih File', 'Silakan pilih file XLS');
+      Toast.warning('Pilih File', 'Silakan pilih file XLS/TSV');
       return;
     }
 
     Toast.loading('Mengimpor data...');
     try {
       const text = await file.text();
-      const rows = text.split('\\n').slice(1).map(row => {
-        const cols = row.split('\\t');
+      const rows = text.split('\n').slice(1).map(row => {
+        const cols = row.split('\t');
         return {
           nis: cols[0]?.trim(),
           nama: cols[1]?.trim(),
@@ -381,7 +303,7 @@ class AdminSchoolDashboard {
           tahun_ajaran: cols[4]?.trim(),
           asal_sekolah: cols[5]?.trim()
         };
-      }).filter(s => s.nis); // Filter valid rows
+      }).filter(s => s.nis);
 
       if (rows.length === 0) {
         Toast.warning('File Kosong', 'Tidak ada data valid');
@@ -394,7 +316,7 @@ class AdminSchoolDashboard {
       });
 
       if (result.success) {
-        Toast.success('Import Berhasil', `${rows.length} siswa diimpor`);
+        Toast.success('Import Berhasil', `${rows.length} siswa berhasil diimpor`);
         this.closeImportModal();
         await this.loadUsers();
         await this.loadDashboardData();
@@ -403,22 +325,14 @@ class AdminSchoolDashboard {
       }
     } catch (error) {
       console.error('Import error:', error);
-      Toast.error('Gagal Proses File', 'Cek format file');
+      Toast.error('Gagal Proses File', 'Pastikan format TSV (Tab Separated)');
     }
   }
 
-  /**
-   * Handle import user (entry point)
-   * @param {string} role
-   */
   handleImportUser(role) {
     this.showImportModal(role);
   }
 
-  /**
-   * Handle menu actions
-   * @param {string} action
-   */
   handleMenuAction(action) {
     switch (action) {
       case 'logo':
@@ -430,9 +344,6 @@ class AdminSchoolDashboard {
     }
   }
 
-  /**
-   * Handle logout
-   */
   handleLogout() {
     Toast.fire({
       title: 'Logout?',
@@ -444,10 +355,6 @@ class AdminSchoolDashboard {
     });
   }
 
-  /**
-   * Load section-specific data
-   * @param {string} section
-   */
   async loadSectionData(section) {
     switch (section) {
       case 'users':
@@ -459,10 +366,7 @@ class AdminSchoolDashboard {
     }
   }
 
-  /**
-   * Load dashboard stats
-   */
-async loadDashboardData() {
+  async loadDashboardData() {
     try {
       const payload = { schoolId: this.schoolId, action: 'getschoolstats' };
       const result = await authApi.call('getschoolstats', payload, false);
@@ -482,9 +386,6 @@ async loadDashboardData() {
     }
   }
 
-  /**
-   * Update dashboard stats UI
-   */
   updateDashboardStats() {
     const stats = this.data.stats;
     document.getElementById('stat-siswa').textContent = stats.siswa || 0;
@@ -492,19 +393,12 @@ async loadDashboardData() {
     document.getElementById('stat-voucher').textContent = stats.vouchers || 0;
   }
 
-  /**
-   * Update users stats (users section)
-   */
   updateUserStats(stats) {
     document.getElementById('stat-siswa-aktif').textContent = stats.siswaAktif || 0;
     document.getElementById('stat-guru-aktif').textContent = stats.guruAktif || 0;
     document.getElementById('stat-mitra-aktif').textContent = stats.mitraAktif || 0;
   }
 
-  /**
-   * Render top students list
-   * @param {Array} students
-   */
   renderTopStudents(students) {
     const container = document.getElementById('top-siswa-list');
     if (!container) return;
@@ -526,10 +420,6 @@ async loadDashboardData() {
     `).join('');
   }
 
-  /**
-   * Render recent activity
-   * @param {Array} activities
-   */
   renderRecentActivity(activities) {
     const container = document.getElementById('activity-list');
     if (!container) return;
@@ -553,22 +443,17 @@ async loadDashboardData() {
     `).join('');
   }
 
-  /**
-   * Load users for school (siswa/guru/mitra)
-   */
-async loadUsers() {
+  async loadUsers() {
     try {
       const result = await authApi.call('getschoolusers', { schoolId: this.schoolId, role: '' }, false);
 
       if (result.success) {
-        // Group by role
         const grouped = { siswa: [], guru: [], mitra: [] };
         result.users.forEach(user => {
           if (grouped[user.role]) grouped[user.role].push(user);
         });
         this.data.users = grouped;
 
-        // Render initial tab (siswa)
         this.renderUserList('siswa', grouped.siswa);
         this.switchUserTab('siswa');
       }
@@ -577,11 +462,6 @@ async loadUsers() {
     }
   }
 
-  /**
-   * Render user list for tab
-   * @param {string} role
-   * @param {Array} users
-   */
   renderUserList(role, users) {
     const containerId = `${role}-list`;
     const container = document.getElementById(containerId);
@@ -604,19 +484,13 @@ async loadUsers() {
     `).join('');
   }
 
-  /**
-   * Load rewards data (placeholder for now)
-   */
   async loadRewards() {
     document.getElementById('wheel-slices').innerHTML = '<div class="text-center py-4 text-gray-500"><i class="fas fa-cog fa-spin text-lg mb-2"></i><p class="text-xs">Wheel config loading...</p></div>';
     document.getElementById('voucher-list').innerHTML = '<div class="text-center py-4 text-gray-500"><i class="fas fa-ticket-alt text-lg mb-2"></i><p class="text-xs">Vouchers loading...</p></div>';
     document.getElementById('voucher-history').innerHTML = '<div class="text-center py-4 text-gray-500"><i class="fas fa-history text-lg mb-2"></i><p class="text-xs">History loading...</p></div>';
   }
 
-  /**
-   * Load account/school info
-   */
-async loadAccountData() {
+  async loadAccountData() {
     try {
       const result = await authApi.call('checksubscription', { schoolId: this.schoolId }, false);
 
@@ -629,9 +503,6 @@ async loadAccountData() {
     }
   }
 
-  /**
-   * Update school info UI
-   */
   updateSchoolInfo() {
     const info = this.data.schoolInfo;
     if (!info) return;
@@ -639,16 +510,12 @@ async loadAccountData() {
     document.getElementById('sekolah-nama').textContent = info.schoolName;
     document.getElementById('sekolah-plan').textContent = info.plan?.toUpperCase();
     document.getElementById('sekolah-siswa').textContent = info.currentStudents || 0;
-    document.getElementById('sekolah-guru').textContent = 'N/A'; // From separate query
+    document.getElementById('sekolah-guru').textContent = 'N/A';
     document.getElementById('subscription-plan').textContent = info.plan?.toUpperCase();
     document.getElementById('subscription-status').textContent = info.status === 'active' ? 'Aktif' : 'Expired';
     document.getElementById('subscription-expired').textContent = info.expiresAt ? new Date(info.expiresAt).toLocaleDateString('id-ID') : 'Forever';
   }
 
-  /**
-   * Get role color class
-   * @param {string} role
-   */
   getRoleColor(role) {
     const colors = {
       'siswa': 'bg-blue-500/20 text-blue-400',
@@ -658,10 +525,6 @@ async loadAccountData() {
     return colors[role] || 'bg-gray-500/20 text-gray-400';
   }
 
-  /**
-   * Format time ago
-   * @param {Date} date
-   */
   formatTimeAgo(date) {
     const now = new Date();
     const diffMs = now - date;
@@ -678,7 +541,6 @@ export { AdminSchoolDashboard };
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new AdminSchoolDashboard();
   
-// Expose dashboard instance methods globally
   ['handleImportUser', 'closeImportModal', 'downloadTemplate', 'handleFilePreview', 'confirmImport'].forEach(method => {
     window.dashboard[method] = window.dashboard[method].bind(window.dashboard);
   });
@@ -687,5 +549,5 @@ document.addEventListener('DOMContentLoaded', () => {
   window.spinWheel = () => Toast.info('Wheel', 'Configure wheel first');
 });
 
-// Make Toast available globally if needed
 window.Toast = Toast;
+
