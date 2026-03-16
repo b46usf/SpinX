@@ -274,35 +274,54 @@ class AdminSchoolDashboard {
     const doc = new jsPDF();
 
     // Title
-    doc.setFontSize(20);
-    doc.text('TEMPLATE IMPORT SISWA', 105, 30, { align: 'center' });
+    doc.setFontSize(18);
+    doc.text('TEMPLATE IMPORT SISWA', 105, 25, { align: 'center' });
 
     // Instructions
-    doc.setFontSize(12);
-    doc.text('Format: TSV (Tab Separated)', 20, 50);
-    doc.text('Gunakan 1 baris contoh ini:', 20, 65);
-
-    // Single line format (tabs will be visible as spaces)
-    const schoolId = this.schoolId || 'SCHOOL_ID';
-    const line1 = 'nis	nama	jenis_kelamin	kelas	tahun_ajaran	asal_sekolah';
-    const line2 = `13925	AGHASA ZEYNA PUTRI MUGIONO	P	x-1	2025/2026	${schoolId}`;
-
-    doc.setFont('monospace');
     doc.setFontSize(11);
-    doc.text(line1, 20, 85);
-    doc.text(line2, 20, 95);
+    doc.text('Format: TSV (Tab Separated Values)', 20, 45);
+    doc.text('Gunakan format satu baris ini:', 20, 55);
 
-    // Note
-    doc.setFontSize(10);
-    doc.text('Catatan:', 20, 110);
-    doc.text('- Copy format di atas ke TSV file', 25, 118);
-    doc.text('- asal_sekolah otomatis School ID Anda', 25, 126);
-    doc.text('- Import tetap format TSV, template PDF panduan', 25, 134);
+    // Headers table - smaller font, fit page
+    const headers = [['nis', 'nama', 'jenis_kelamin', 'kelas', 'tahun_ajaran', 'asal_sekolah']];
+    const exampleRow = ['13925', 'AGHASA ZEYNA PUTRI MUGIONO', 'P', 'x-1', '2025/2026', this.schoolId || 'SCHOOL_ID'];
 
-    const filename = `template_import_${this.currentImportRole}_${new Date().toISOString().slice(0,10)}.pdf`;
+    doc.autoTable({
+      startY: 65,
+      head: headers,
+      body: [exampleRow],
+      theme: 'grid',
+      styles: { 
+        fontSize: 8, 
+        cellPadding: 2,
+        overflow: 'linebreak',
+        halign: 'center',
+        valign: 'middle'
+      },
+      headStyles: { 
+        fillColor: [59, 130, 246],
+        fontSize: 9,
+        fontStyle: 'bold'
+      },
+      columnStyles: {
+        1: { cellWidth: 45, halign: 'left' } // nama column wider
+      },
+      margin: { left: 15, right: 15 }
+    });
+
+    // Notes
+    const finalY = doc.lastAutoTable.finalY + 10;
+    doc.setFontSize(9);
+    doc.text('Panduan:', 20, finalY);
+    doc.setFontSize(8);
+    doc.text('• Copy format tabel ke Excel/TSV', 25, finalY + 8);
+    doc.text('• asal_sekolah = School ID otomatis', 25, finalY + 16);
+    doc.text('• Import tetap TSV, PDF hanya template', 25, finalY + 24);
+
+    const filename = `template_${this.currentImportRole}_${new Date().toISOString().slice(0,10)}.pdf`;
     doc.save(filename);
 
-    Toast.success('PDF Template Downloaded', `Format 1 baris - School ID: ${schoolId}`);
+    Toast.success('PDF Template Fixed', 'Tabel fit page, no cut-off');
   }
 
   /**
