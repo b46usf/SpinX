@@ -212,27 +212,40 @@ class AdminSchoolDashboard {
     }
   }
 
-  async checkPDFReady(maxAttempts = 50) {
-    return new Promise((resolve, reject) => {
-      let attempts = 0;
-      const check = () => {
-        attempts++;
-        const jsPDF = window.jsPDF || (window.jspdf && window.jspdf.jsPDF);
-        const hasAutoTable = jsPDF && (typeof jsPDF.prototype.autoTable === 'function' || typeof jsPDF.prototype.html === 'function');
-        
-        console.log(`PDF check #${attempts}: jsPDF=${!!jsPDF}, autoTable=${!!hasAutoTable}`);
-        
-        if (hasAutoTable) {
-          resolve(true);
-        } else if (attempts >= maxAttempts) {
-          reject(new Error('PDF plugins failed to load after 10s'));
-        } else {
-          setTimeout(check, 200);
-        }
-      };
-      check();
-    });
-  }
+async checkPDFReady(maxAttempts = 50) {
+  return new Promise((resolve, reject) => {
+    let attempts = 0;
+
+    const check = () => {
+      attempts++;
+
+      const jsPDF =
+        window.jspdf?.jsPDF ||
+        window.jsPDF;
+
+      const hasAutoTable =
+        jsPDF &&
+        typeof jsPDF === "function" &&
+        jsPDF.API &&
+        typeof jsPDF.API.autoTable === "function";
+
+      console.log(`PDF check #${attempts}`, {
+        jsPDF: !!jsPDF,
+        autoTable: !!hasAutoTable
+      });
+
+      if (hasAutoTable) {
+        resolve(true);
+      } else if (attempts >= maxAttempts) {
+        reject(new Error("PDF plugins failed to load"));
+      } else {
+        setTimeout(check, 200);
+      }
+    };
+
+    check();
+  });
+}
 
   initPDFCheck() {
     const btn = document.getElementById('download-template-btn');
@@ -261,7 +274,7 @@ class AdminSchoolDashboard {
     try {
       await this.checkPDFReady(10); // Quick recheck
       
-      const jsPDF = window.jsPDF || (window.jspdf && window.jspdf.jsPDF);
+      const jsPDF = window.jspdf?.jsPDF || window.jsPDF;
       if (!jsPDF) throw new Error('jsPDF not found');
       
       const doc = new jsPDF();
