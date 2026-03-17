@@ -201,7 +201,7 @@ class AdminSchoolDashboard {
     }
     modal.classList.remove('hidden');
     modal.style.display = 'flex';
-    document.getElementById('import-title').textContent = `Import ${role === 'siswa' ? 'Siswa' : role.toUpperCase()} XLS`;
+    document.getElementById('import-title').textContent = `Import ${role === 'siswa' ? 'Siswa' : role === 'guru' ? 'Guru' : 'Mitra'} XLS`;
     document.getElementById('import-file-input').value = '';
     document.getElementById('file-preview').classList.add('hidden');
     document.getElementById('confirm-import-btn').disabled = true;
@@ -361,9 +361,7 @@ async checkPDFReady(maxAttempts = 50) {
         });
 
         filename = `guru_template_${new Date().toISOString().slice(0,10)}.pdf`;
-        Toast.success('Template Guru Downloaded', `${mapelData.length} mapel + format guru ready`);
-      } else {
-        // Siswa (existing)
+        Toast.success('Template Guru Downloaded', `${mapelData.length} mapel + format guru ready`);\n      } else if (role === 'mitra') {\n        // Title\n        doc.setFontSize(16);\n        doc.text('SPINX MITRA IMPORT TEMPLATE', 105, 25, { align: 'center' });\n\n        doc.setFontSize(11);\n        doc.text('TSV Format (Tab Separated)', 20, 42);\n        doc.text('Example:', 20, 52);\n\n        const headers = [['mitra_id', 'nama_mitra', 'owner_name', 'email', 'alamat', 'kategori', 'asal_sekolah']];\n        const exampleRow = ['m-001', 'warung bu sony', 'bu sony', 'turtlepartners2@gmail.com', 'jl pepelegi', 'FNB', schoolId];\n\n        doc.autoTable({\n          startY: 60,\n          head: headers,\n          body: [exampleRow],\n          styles: { fontSize: 8, cellPadding: 3, halign: 'left', valign: 'middle' },\n          headStyles: { fillColor: [54, 162, 235], fontSize: 9, fontStyle: 'bold' },\n          columnStyles: { 1: { cellWidth: 40 }, 4: { cellWidth: 35 } },\n          margin: { left: 15, right: 15 },\n          tableWidth: 'auto'\n        });\n\n        const finalY = doc.lastAutoTable.finalY + 10;\n        doc.setFontSize(9);\n        doc.text('Notes:', 20, finalY);\n        doc.setFontSize(8);\n        doc.text('• Use this exact TSV format', 25, finalY + 8);\n        doc.text('• asal_sekolah = school ID', 25, finalY + 16);\n\n        filename = `mitra_template_${new Date().toISOString().slice(0,10)}.pdf`;\n        Toast.success('Template Mitra Downloaded', 'Headers + sample row ready');\n      } else {
         doc.setFontSize(16);
         doc.text('SPINX SISWA IMPORT TEMPLATE', 105, 25, { align: 'center' });
 
