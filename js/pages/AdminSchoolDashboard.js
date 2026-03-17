@@ -459,7 +459,8 @@ async checkPDFReady(maxAttempts = 50) {
       return;
     }
 
-    Toast.loading('Mengimpor data...');
+    const role = this.currentImportRole;
+    Toast.loading(`Mengimpor ${role}...`);
     try {
       const text = await file.text();
       const rows = text.split('\n').slice(1).map(row => {
