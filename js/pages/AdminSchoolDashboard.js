@@ -162,6 +162,10 @@ class AdminSchoolDashboard {
     document.querySelectorAll('.user-list-content').forEach(list => {
       list.classList.toggle('hidden', list.id !== `user-list-${tab}`);
     });
+
+    // Update import button role
+    const importBtn = document.getElementById('import-user-btn');
+    if (importBtn) importBtn.dataset.role = tab;
   }
 
   switchRewardTab(tab) {
@@ -272,51 +276,141 @@ async checkPDFReady(maxAttempts = 50) {
     btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Generating...';
 
     try {
-      await this.checkPDFReady(10); // Quick recheck
+      await this.checkPDFReady(10);
       
-      const jsPDF = window.jspdf?.jsPDF || window.jsPDF;
+      const { jsPDF } = window.jspdf || window;
       if (!jsPDF) throw new Error('jsPDF not found');
       
       const doc = new jsPDF();
-
-      doc.setFontSize(16);
-      doc.text('SPINX IMPORT TEMPLATE', 105, 25, { align: 'center' });
-
-      doc.setFontSize(11);
-      doc.text('TSV Format (Tab Separated)', 20, 42);
-      doc.text('Example:', 20, 52);
-
-      const headers = [['nis', 'nama', 'jenis_kelamin', 'kelas', 'tahun_ajaran', 'asal_sekolah']];
       const schoolId = this.schoolId || 'SCHOOL_ID';
-      const exampleRow = ['13925', 'AGHASA ZEYNA PUTRI MUGIONO', 'P', 'x-1', '2025/2026', schoolId];
+      const role = this.currentImportRole;
+      let filename, title, startY = 35;
 
-      doc.autoTable({
-        startY: 60,
-        head: headers,
-        body: [exampleRow],
-        styles: { fontSize: 8, cellPadding: 3, halign: 'left', valign: 'middle' },
-        headStyles: { fillColor: [54, 162, 235], fontSize: 9, fontStyle: 'bold' },
-        columnStyles: { 1: { cellWidth: 50 } },
-        margin: { left: 15, right: 15 },
-        tableWidth: 'auto'
-      });
+      if (role === 'guru') {
+        // Title
+        doc.setFontSize(18);
+        doc.text('SPINX GURU IMPORT TEMPLATE', 105, startY, { align: 'center' });
+        startY += 15;
 
-      const finalY = doc.lastAutoTable.finalY + 10;
-      doc.setFontSize(9);
-      doc.text('Notes:', 20, finalY);
-      doc.setFontSize(8);
-      doc.text('• Use this exact table format in TSV', 25, finalY + 8);
-      doc.text('• asal_sekolah auto-filled', 25, finalY + 16);
+        // Tabel 1: Mapel Reference
+        doc.setFontSize(12);
+        doc.text('1. DAFTAR MAPEL (Reference)', 20, startY);
+        startY += 8;
 
-      const filename = `siswa_template_${new Date().toISOString().slice(0,10)}.pdf`;
+        const mapelHeaders = [['kode_mapel', 'nama_mapel']];
+        const mapelData = [
+          ['MAT', 'MATEMATIKA'],
+          ['BIG', 'BAHASA INGGRIS'],
+          ['PJOK', 'PENDIDIKAN JASMANI OLAHRAGA KEBUGARAN'],
+          ['PKN', 'PENDIDIKAN KEWARGANEGARAAN'],
+          ['BK', 'BIMBINGAN KONSELING'],
+          ['EKO', 'EKONOMI'],
+          ['BIN', 'BAHASA INDONESIA'],
+          ['SENI', 'SENI'],
+          ['KIM', 'KIMIA'],
+          ['PAI', 'PENDIDIKAN AGAMA ISLAM'],
+          ['BIO', 'BIOLOGI'],
+          ['SEJ', 'SEJARAH'],
+          ['ANTRO', 'ANTROPOLOGI'],
+          ['GEO', 'GEOGRAFI'],
+          ['PAKr', 'PENDIDIKAN AGAMA KRISTEN'],
+          ['SOS', 'SOSIOLOGI'],
+          ['TIK', 'INFORMATIKA'],
+          ['MAND', 'MANDARIN'],
+          ['BHR', 'BAHARI'],
+          ['PAH', 'PENDIDIKAN AGAMA HINDU'],
+          ['PAK', 'PENDIDIKAN AGAMA KATHOLIK'],
+          ['BJW', 'BAHASA JAWA'],
+          ['FIS', 'FISIKA'],
+          ['PKWU', 'PENDIDIKAN KEWIRAUSAHAAN']
+        ];
+
+        doc.autoTable({
+          startY,
+          head: mapelHeaders,
+          body: mapelData,
+          styles: { fontSize: 7, cellPadding: 2, halign: 'left' },
+          headStyles: { fillColor: [75, 192, 192], fontSize: 8, fontStyle: 'bold' },
+          margin: { left: 15, right: 15 },
+          tableWidth: 'auto',
+          columnStyles: { 0: { cellWidth: 25 } }
+        });
+        startY = doc.lastAutoTable.finalY + 10;
+
+        // Instruction
+        doc.setFontSize(10);
+        doc.text('Gunakan kode_mapel dari tabel atas pada kolom kode_mapel', 20, startY);
+        startY += 12;
+
+        // Tabel 2: Guru Format
+        doc.setFontSize(12);
+        doc.text('2. FORMAT GURU (TSV - Tab Separated)', 20, startY);
+        startY += 8;
+
+        const guruHeaders = [['kode_guru', 'nama', 'kode_mapel', 'asal_sekolah']];
+        const guruExample = ['K1', 'ROSYIDAH ROHMAH, S.Pd', 'FIS', schoolId];
+
+        doc.autoTable({
+          startY,
+          head: guruHeaders,
+          body: [guruExample],
+          styles: { fontSize: 8, cellPadding: 3, halign: 'left', valign: 'middle' },
+          headStyles: { fillColor: [54, 162, 235], fontSize: 9, fontStyle: 'bold' },
+          margin: { left: 15, right: 15 },
+          tableWidth: 'auto'
+        });
+
+        filename = `guru_template_${new Date().toISOString().slice(0,10)}.pdf`;
+        Toast.success('Template Guru Downloaded', `${mapelData.length} mapel + format guru ready`);
+      } else {
+        // Siswa (existing)
+        doc.setFontSize(16);
+        doc.text('SPINX SISWA IMPORT TEMPLATE', 105, 25, { align: 'center' });
+
+        doc.setFontSize(11);
+        doc.text('TSV Format (Tab Separated)', 20, 42);
+        doc.text('Example:', 20, 52);
+
+        const headers = [['nis', 'nama', 'jenis_kelamin', 'kelas', 'tahun_ajaran', 'asal_sekolah']];
+        const exampleRow = ['13925', 'AGHASA ZEYNA PUTRI MUGIONO', 'P', 'x-1', '2025/2026', schoolId];
+
+        doc.autoTable({
+          startY: 60,
+          head: headers,
+          body: [exampleRow],
+          styles: { fontSize: 8, cellPadding: 3, halign: 'left', valign: 'middle' },
+          headStyles: { fillColor: [54, 162, 235], fontSize: 9, fontStyle: 'bold' },
+          columnStyles: { 1: { cellWidth: 50 } },
+          margin: { left: 15, right: 15 },
+          tableWidth: 'auto'
+        });
+
+        const finalY = doc.lastAutoTable.finalY + 10;
+        doc.setFontSize(9);
+        doc.text('Notes:', 20, finalY);
+        doc.setFontSize(8);
+        doc.text('• Use this exact table format in TSV', 25, finalY + 8);
+        doc.text('• asal_sekolah auto-filled', 25, finalY + 16);
+
+        filename = `siswa_template_${new Date().toISOString().slice(0,10)}.pdf`;
+        Toast.success('PDF Template Downloaded', `siswa_template_${schoolId}.pdf ready`);
+      }
+
       doc.save(filename);
 
-      Toast.success('PDF Template Downloaded', `siswa_template_${schoolId}.pdf ready`);
     } catch (error) {
       console.error('PDF generation failed:', error);
-      Toast.error('PDF Error', 'Plugin failed to load. Try refresh (F5) or check console.');
-      // Fallback: offer JSON template download
-      const fallbackData = {
+      Toast.error('PDF Error', 'Plugin failed to load. Try refresh (F5)');
+      
+      // Fallback JSON
+      const fallbackData = role === 'guru' ? {
+        mapel: [
+          {kode_mapel: 'MAT', nama_mapel: 'MATEMATIKA'},
+          // ... abbreviated
+        ],
+        headers: ['kode_guru', 'nama', 'kode_mapel', 'asal_sekolah'],
+        example: ['K1', 'ROSYIDAH ROHMAH, S.Pd', 'FIS', schoolId]
+      } : {
         headers: ['nis', 'nama', 'jenis_kelamin', 'kelas', 'tahun_ajaran', 'asal_sekolah'],
         example: ['13925', 'AGHASA ZEYNA PUTRI MUGIONO', 'P', 'x-1', '2025/2026', schoolId]
       };
@@ -324,7 +418,7 @@ async checkPDFReady(maxAttempts = 50) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'siswa_template_fallback.json';
+      a.download = `${role}_template_fallback.json`;
       a.click();
       URL.revokeObjectURL(url);
     } finally {
@@ -404,7 +498,8 @@ async checkPDFReady(maxAttempts = 50) {
     }
   }
 
-  handleImportUser(role) {
+handleImportUser(role) {
+    document.getElementById('import-user-btn').dataset.role = role;
     this.showImportModal(role);
   }
 
