@@ -348,7 +348,7 @@ async checkPDFReady(maxAttempts = 50) {
         startY += 8;
 
         const guruHeaders = [['kode_guru', 'nama', 'kode_mapel', 'asal_sekolah']];
-        const guruExample = ['K1', 'ROSYIDAH ROHMAH, S.Pd', 'FIS', schoolId];
+        const guruExample = ['K1', 'RR Amadani, S.Pd', 'FIS', schoolId];
 
         doc.autoTable({
           startY,
@@ -372,7 +372,7 @@ async checkPDFReady(maxAttempts = 50) {
         startY += 8;
 
         const mitraHeaders = [['mitra_id', 'nama_mitra', 'owner_name', 'email', 'alamat', 'kategori', 'asal_sekolah']];
-        const mitraExample = ['m-001', 'warung bu sony', 'bu sony', 'turtlepartners2@gmail.com', 'jl pepelegi', 'FNB', schoolId];
+        const mitraExample = ['m-001', 'warung bu bos', 'bu bosi', 'example@gmail.com', 'jl manalagi', 'FNB', schoolId];
 
         doc.autoTable({
           startY,
@@ -401,7 +401,7 @@ async checkPDFReady(maxAttempts = 50) {
         doc.text('Example:', 20, 52);
 
         const headers = [['nis', 'nama', 'jenis_kelamin', 'kelas', 'tahun_ajaran', 'asal_sekolah']];
-        const exampleRow = ['13925', 'AGHASA ZEYNA PUTRI MUGIONO', 'P', 'x-1', '2025/2026', schoolId];
+        const exampleRow = ['13005', 'AGHA MUGIONO', 'L', 'x-1', '2025/2026', schoolId];
 
         doc.autoTable({
           startY: 60,
