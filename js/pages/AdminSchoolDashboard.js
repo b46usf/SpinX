@@ -361,7 +361,38 @@ async checkPDFReady(maxAttempts = 50) {
         });
 
         filename = `guru_template_${new Date().toISOString().slice(0,10)}.pdf`;
-        Toast.success('Template Guru Downloaded', `${mapelData.length} mapel + format guru ready`);\n      } else if (role === 'mitra') {\n        // Title\n        doc.setFontSize(16);\n        doc.text('SPINX MITRA IMPORT TEMPLATE', 105, 25, { align: 'center' });\n\n        doc.setFontSize(11);\n        doc.text('TSV Format (Tab Separated)', 20, 42);\n        doc.text('Example:', 20, 52);\n\n        const headers = [['mitra_id', 'nama_mitra', 'owner_name', 'email', 'alamat', 'kategori', 'asal_sekolah']];\n        const exampleRow = ['m-001', 'warung bu sony', 'bu sony', 'turtlepartners2@gmail.com', 'jl pepelegi', 'FNB', schoolId];\n\n        doc.autoTable({\n          startY: 60,\n          head: headers,\n          body: [exampleRow],\n          styles: { fontSize: 8, cellPadding: 3, halign: 'left', valign: 'middle' },\n          headStyles: { fillColor: [54, 162, 235], fontSize: 9, fontStyle: 'bold' },\n          columnStyles: { 1: { cellWidth: 40 }, 4: { cellWidth: 35 } },\n          margin: { left: 15, right: 15 },\n          tableWidth: 'auto'\n        });\n\n        const finalY = doc.lastAutoTable.finalY + 10;\n        doc.setFontSize(9);\n        doc.text('Notes:', 20, finalY);\n        doc.setFontSize(8);\n        doc.text('• Use this exact TSV format', 25, finalY + 8);\n        doc.text('• asal_sekolah = school ID', 25, finalY + 16);\n\n        filename = `mitra_template_${new Date().toISOString().slice(0,10)}.pdf`;\n        Toast.success('Template Mitra Downloaded', 'Headers + sample row ready');\n      } else {
+        Toast.success('Template Guru Downloaded', `${mapelData.length} mapel + format guru ready`);
+      } else if (role === 'mitra') {
+        doc.setFontSize(18);
+        doc.text('SPINX MITRA IMPORT TEMPLATE', 105, startY, { align: 'center' });
+        startY += 15;
+
+        doc.setFontSize(12);
+        doc.text('FORMAT MITRA (TSV - Tab Separated)', 20, startY);
+        startY += 8;
+
+        const mitraHeaders = [['mitra_id', 'nama_mitra', 'owner_name', 'email', 'alamat', 'kategori', 'asal_sekolah']];
+        const mitraExample = ['m-001', 'warung bu sony', 'bu sony', 'turtlepartners2@gmail.com', 'jl pepelegi', 'FNB', schoolId];
+
+        doc.autoTable({
+          startY,
+          head: mitraHeaders,
+          body: [mitraExample],
+          styles: { fontSize: 8, cellPadding: 3, halign: 'left', valign: 'middle' },
+          headStyles: { fillColor: [75, 192, 192], fontSize: 9, fontStyle: 'bold' },
+          margin: { left: 15, right: 15 },
+          tableWidth: 'auto',
+          columnStyles: { 1: { cellWidth: 35 }, 4: { cellWidth: 35 } }
+        });
+
+        startY = doc.lastAutoTable.finalY + 10;
+        doc.setFontSize(10);
+        doc.text('Kategori Contoh: FNB, Snack, Minuman, Toko Buku, Fotokopi', 20, startY);
+        
+        filename = `mitra_template_${new Date().toISOString().slice(0,10)}.pdf`;
+        Toast.success('Template Mitra Downloaded', 'Full mitra format ready');
+      } else {
+        // Siswa default
         doc.setFontSize(16);
         doc.text('SPINX SISWA IMPORT TEMPLATE', 105, 25, { align: 'center' });
 
