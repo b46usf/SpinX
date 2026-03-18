@@ -571,14 +571,17 @@ handleImportUser(role) {
       const payload = { schoolId: this.schoolId, action: 'getschoolstats' };
       const result = await authApi.call('getschoolstats', payload, false);
 
-      if (result.success) {
+      if (result.success && result.data) {
         this.data.stats = result.data;
         this.updateDashboardStats();
         this.renderTopStudents(result.topStudents || []);
         this.renderRecentActivity(result.activities || []);
         this.updateUserStats(result.userStats || {});
       } else {
-        Toast.error('Failed to load stats', result.message || 'Unknown error');
+        // Ensure stats is initialized even on API failure/empty data
+        this.data.stats = this.data.stats || {};
+        this.updateDashboardStats();
+        Toast.warning('Stats unavailable', result?.message || 'Using cached/default data');
       }
     } catch (error) {
       console.error('Load stats error:', error);
@@ -587,7 +590,7 @@ handleImportUser(role) {
   }
 
   updateDashboardStats() {
-    const stats = this.data.stats;
+    const stats = this.data.stats || {};
     document.getElementById('stat-siswa').textContent = stats.siswa || 0;
     document.getElementById('stat-spin').textContent = stats.spinsToday || 0;
     document.getElementById('stat-voucher').textContent = stats.vouchers || 0;
