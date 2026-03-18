@@ -650,18 +650,27 @@ handleImportUser(role) {
     try {
       const result = await authApi.call('getschoolusers', { schoolId: this.schoolId, role: '' }, false);
 
+      // Ensure result.users is always array
+      const users = Array.isArray(result.users) ? result.users : [];
+      
       if (result.success) {
         const grouped = { siswa: [], guru: [], mitra: [] };
-        result.users.forEach(user => {
-          if (grouped[user.role]) grouped[user.role].push(user);
+        users.forEach(user => {
+          const role = user.role || 'siswa'; // Fallback role
+          if (grouped[role]) grouped[role].push(user);
         });
         this.data.users = grouped;
 
         this.renderUserList('siswa', grouped.siswa);
         this.switchUserTab('siswa');
+      } else {
+        // Even on !success, init empty grouped data
+        this.data.users = { siswa: [], guru: [], mitra: [] };
       }
     } catch (error) {
       console.error('Load users error:', error);
+      // Ensure data.users always initialized
+      this.data.users = { siswa: [], guru: [], mitra: [] };
     }
   }
 
