@@ -455,78 +455,152 @@ async checkPDFReady(maxAttempts = 50) {
     }
   }
 
-  async handleFilePreview(file) {
-    if (!file || file.size > 5 * 1024 * 1024) {
-      Toast.warning('File Invalid', 'Max 5MB');
+async handleFilePreview(file) {
+  if (!file) return;
+
+  try {
+    const rows = await this.parseFile(file);
+    const preview = rows.slice(0, 5);
+
+    const html = preview.map(row => `
+      <div class="grid grid-cols-6 gap-1 p-1 bg-white/10 rounded mb-1">
+        ${Object.values(row).slice(0,6).map(v => `<div class="text-xs">${v}</div>`).join('')}
+      </div>
+    `).join('');
+
+    document.getElementById('preview-table').innerHTML = html;
+    document.getElementById('file-preview').classList.remove('hidden');
+    document.getElementById('confirm-import-btn').disabled = false;
+
+  } catch (e) {
+    Toast.error('Preview gagal', 'File tidak valid');
+  }
+}
+
+async parseFile(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+
+  if (ext === 'xlsx' || ext === 'xls') {
+    return this.parseExcel(file);
+  }
+
+  return this.parseText(file);
+}
+
+async parseExcel(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+        resolve(json);
+      } catch (err) {
+        reject(err);
+      }
+    };
+
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+async parseText(file) {
+  const text = await file.text();
+  const rows = text.split('\n').map(r => r.split(/\t|,/));
+
+  const headers = rows[0];
+  return rows.slice(1).map(row => {
+    let obj = {};
+    headers.forEach((h, i) => obj[h.trim()] = row[i]?.trim());
+    return obj;
+  });
+}
+
+normalizeData(rows, role) {
+  return rows.map(r => {
+    if (role === 'guru') {
+      return {
+        kode_guru: r.kode_guru || r.KODE_GURU,
+        nama: r.nama,
+        kode_mapel: r.kode_mapel,
+        asal_sekolah: this.schoolId
+      };
+    }
+
+    if (role === 'mitra') {
+      return {
+        mitra_id: r.mitra_id,
+        nama_mitra: r.nama_mitra,
+        owner_name: r.owner_name,
+        email: r.email,
+        alamat: r.alamat,
+        kategori: r.kategori,
+        asal_sekolah: this.schoolId
+      };
+    }
+
+    // default siswa
+    return {
+      nis: r.nis,
+      nama: r.nama,
+      jenis_kelamin: r.jenis_kelamin,
+      kelas: r.kelas,
+      tahun_ajaran: r.tahun_ajaran,
+      asal_sekolah: this.schoolId
+    };
+  });
+}
+
+async confirmImport() {
+  const file = document.getElementById('import-file-input').files[0];
+  if (!file) {
+    Toast.warning('Pilih File', 'Upload Excel/CSV');
+    return;
+  }
+
+  const role = this.currentImportRole;
+
+  Toast.loading(`Import ${role}...`);
+
+  try {
+    const rawData = await this.parseFile(file);
+
+    if (!rawData || rawData.length === 0) {
+      Toast.warning('Kosong', 'File tidak ada data');
       return;
     }
 
-    try {
-      const text = await file.text();
-      const rows = text.split('\n').slice(1).slice(0, 5);
-      const previewHtml = rows.map(row => {
-        const cols = row.split('\t').slice(0, 6);
-        return `<div class="grid grid-cols-6 gap-1 p-1 bg-white/10 rounded mb-1">
-          ${cols.map(col => `<div class="text-xs truncate">${col || ''}</div>`).join('')}
-        </div>`;
-      }).join('');
-      
-      document.getElementById('preview-table').innerHTML = previewHtml;
-      document.getElementById('file-preview').classList.remove('hidden');
-      document.getElementById('confirm-import-btn').disabled = false;
-      document.getElementById('import-info').classList.remove('hidden');
-    } catch (error) {
-      Toast.error('Gagal Baca File', 'Format TSV diperlukan (Tab Separated)');
+    const data = this.normalizeData(rawData, role);
+
+    let endpoint = {
+      siswa: 'importstudentsmaster',
+      guru: 'importteachersmaster',
+      mitra: 'importmitramaster'
+    }[role];
+
+    const payload = { schoolId: this.schoolId };
+    payload[role === 'siswa' ? 'students' : role === 'guru' ? 'teachers' : 'mitra'] = data;
+
+    const result = await authApi.call(endpoint, payload);
+
+    if (result.success) {
+      Toast.success('Import berhasil', `${data.length} data`);
+      this.closeImportModal();
+      await this.loadUsers();
+    } else {
+      Toast.error('Import gagal', result.error);
     }
+
+  } catch (err) {
+    console.error(err);
+    Toast.error('Error', 'Format file salah / corrupt');
   }
-
-  async confirmImport() {
-    const fileInput = document.getElementById('import-file-input');
-    const file = fileInput.files[0];
-    if (!file) {
-      Toast.warning('Pilih File', 'Silakan pilih file XLS/TSV');
-      return;
-    }
-
-    const role = this.currentImportRole;
-    Toast.loading(`Mengimpor ${role}...`);
-    try {
-      const text = await file.text();
-      const rows = text.split('\n').slice(1).map(row => {
-        const cols = row.split('\t');
-        return {
-          nis: cols[0]?.trim(),
-          nama: cols[1]?.trim(),
-          jenis_kelamin: cols[2]?.trim(),
-          kelas: cols[3]?.trim(),
-          tahun_ajaran: cols[4]?.trim(),
-          asal_sekolah: cols[5]?.trim()
-        };
-      }).filter(s => s.nis);
-
-      if (rows.length === 0) {
-        Toast.warning('File Kosong', 'Tidak ada data valid');
-        return;
-      }
-
-      const result = await authApi.call('importstudentsmaster', { 
-        schoolId: this.schoolId, 
-        students: rows 
-      });
-
-      if (result.success) {
-        Toast.success('Import Berhasil', `${rows.length} siswa berhasil diimpor`);
-        this.closeImportModal();
-        await this.loadUsers();
-        await this.loadDashboardData();
-      } else {
-        Toast.error('Import Gagal', result.error || 'Server error');
-      }
-    } catch (error) {
-      console.error('Import error:', error);
-      Toast.error('Gagal Proses File', 'Pastikan format TSV (Tab Separated)');
-    }
-  }
+}
 
 handleImportUser(role) {
     document.getElementById('import-user-btn').dataset.role = role;

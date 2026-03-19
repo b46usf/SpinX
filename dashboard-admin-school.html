@@ -415,7 +415,7 @@
               <i class="fas fa-cloud-upload-alt text-2xl text-gray-400"></i>
               <div>
                 <p class="text-sm font-medium">Pilih atau drop XLS file</p>
-          <p class="text-xs text-gray-500">Max 5MB (format import tetap TSV)</p>
+                <p class="text-xs text-gray-500">Max 5MB</p>
               </div>
             </label>
             <div id="file-preview" class="mt-3 hidden">
@@ -426,7 +426,7 @@
           
           <div id="import-info" class="text-xs text-gray-400 hidden">
             <i class="fas fa-info-circle mr-1"></i>
-            Format: TSV (tab-separated), header wajib: nis/nama/kelas/etc.
+            Header Wajib: nis/nama/kelas/etc.
           </div>
         </div>
         
@@ -445,7 +445,7 @@
 <!-- jsPDF 2.5.1 + autoTable 3.5.29 (fixed loading issue) -->
   <script onload="console.log('jsPDF 2.5.1 loaded')" src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script onload="console.log('jsPDF-autoTable 3.5.29 loaded')" src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
-  
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
   <!-- Modular Scripts -->
   <script type="module">
     import './js/components/utils/Toast.js';
