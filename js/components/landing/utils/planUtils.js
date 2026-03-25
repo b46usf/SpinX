@@ -139,8 +139,22 @@ function formatRupiah(value) {
   return `Rp ${new Intl.NumberFormat('id-ID').format(value)}`;
 }
 
+function extractTextValue(value) {
+  if (value == null) return '';
+
+  if (Array.isArray(value)) {
+    return extractTextValue(value[0]);
+  }
+
+  if (typeof value === 'object') {
+    return String(value.text ?? value.label ?? value.name ?? '').trim();
+  }
+
+  return String(value).trim();
+}
+
 function normalizePeriod(plan, priceValue) {
-  const rawPeriod = String(plan.period ?? plan.billingPeriod ?? plan.interval ?? '').trim();
+  const rawPeriod = extractTextValue(plan.period ?? plan.billingPeriod ?? plan.interval ?? '');
   return rawPeriod || (priceValue > 0 ? DEFAULT_PERIOD : 'Selamanya');
 }
 
@@ -170,11 +184,9 @@ function normalizePlanName(plan, id) {
   return capitalizeLabel(rawName);
 }
 
-function normalizeStudentLimit(plan) {
+function normalizeUserLimit(plan) {
   const candidates = [
-    plan.maxStudents,
-    plan.studentLimit,
-    plan.students,
+    plan.maxUsers,
     plan.max_users,
     plan.maxUser
   ];
@@ -191,6 +203,27 @@ function normalizeStudentLimit(plan) {
   }
 
   return 0;
+}
+
+function normalizeCapacityUnit(plan) {
+  const hasUserLimit = [
+    plan.maxUsers,
+    plan.max_users,
+    plan.maxUser
+  ].some((value) => value !== null && value !== undefined && value !== '');
+
+  if (hasUserLimit) return 'user';
+
+  const featuresText = JSON.stringify(plan.features ?? '').toLowerCase();
+  if (featuresText.includes('user')) return 'user';
+
+  return 'user';
+}
+
+function formatCapacityDisplay(value, unit) {
+  if (value === Number.POSITIVE_INFINITY) return 'Tak terbatas';
+  if (!Number.isFinite(value) || value <= 0) return 'Belum ditentukan';
+  return `${value} ${unit} maksimal`;
 }
 
 function inferPopular(plan, id, priceValue) {
@@ -249,7 +282,9 @@ export function mapPlanToDisplay(plan = {}) {
     const priceDisplay = String(plan.priceDisplay ?? '').trim() || formatRupiah(price);
     const period = normalizePeriod(plan, price);
     const fullPriceDisplay = getFullPriceDisplay(plan, price);
-    const maxStudents = normalizeStudentLimit(plan);
+    const maxUsers = normalizeUserLimit(plan);
+    const capacityUnit = normalizeCapacityUnit(plan);
+    const capacityDisplay = formatCapacityDisplay(maxUsers, capacityUnit);
     const features = parseFeatures(plan.features);
     const popular = inferPopular(plan, id, price);
 
@@ -261,10 +296,12 @@ export function mapPlanToDisplay(plan = {}) {
       fullPriceDisplay,
       cta: String(plan.cta ?? plan.buttonText ?? 'Aktifkan Paket').trim() || 'Aktifkan Paket',
       period,
-      maxStudents,
-      maxStudentsDisplay: maxStudents === Number.POSITIVE_INFINITY
+      maxUsers,
+      capacityUnit,
+      capacityDisplay,
+      maxUsersDisplay: maxUsers === Number.POSITIVE_INFINITY
         ? 'Tak terbatas'
-        : `${maxStudents}+ siswa`,
+        : capacityDisplay,
       popular,
       description: String(
         plan.description ??
@@ -286,8 +323,10 @@ export function mapPlanToDisplay(plan = {}) {
       fullPriceDisplay: 'Gratis',
       cta: 'Aktifkan Paket',
       period: 'Selamanya',
-      maxStudents: 0,
-      maxStudentsDisplay: '0 siswa',
+      maxUsers: 0,
+      capacityUnit: 'user',
+      capacityDisplay: 'Belum ditentukan',
+      maxUsersDisplay: 'Belum ditentukan',
       popular: false,
       description: 'Paket dasar untuk mulai mencoba platform.',
       features: []

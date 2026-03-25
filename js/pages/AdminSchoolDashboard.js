@@ -795,7 +795,7 @@ handleImportUser(role) {
 
     document.getElementById('sekolah-nama').textContent = info.schoolName;
     document.getElementById('sekolah-plan').textContent = info.plan?.toUpperCase();
-    document.getElementById('sekolah-siswa').textContent = info.currentStudents || 0;
+    document.getElementById('sekolah-users').textContent = info.currentUsers || 0;
     document.getElementById('sekolah-guru').textContent = 'N/A';
     document.getElementById('subscription-plan').textContent = info.plan?.toUpperCase();
     document.getElementById('subscription-status').textContent = info.status === 'active' ? 'Aktif' : 'Expired';

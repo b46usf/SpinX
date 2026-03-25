@@ -257,7 +257,7 @@ export const PricingSection = {
         </div>
 
         <div class="pricing-plan__meta">
-          <span><i class="fas fa-users"></i>${plan.maxStudentsDisplay}</span>
+          <span><i class="fas fa-users"></i>${plan.capacityDisplay || plan.maxUsersDisplay}</span>
           <span><i class="fas fa-bolt"></i>${tone.helper}</span>
         </div>
 
@@ -283,8 +283,8 @@ export const PricingSection = {
         getValue: (plan) => ({ type: 'text', value: plan.fullPriceDisplay })
       },
       {
-        label: 'Kapasitas siswa',
-        getValue: (plan) => ({ type: 'text', value: plan.maxStudentsDisplay })
+        label: 'Kapasitas pengguna',
+        getValue: (plan) => ({ type: 'text', value: plan.capacityDisplay || plan.maxUsersDisplay })
       },
       {
         label: 'Status paket',

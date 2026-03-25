@@ -644,7 +644,7 @@ class AdminSystemDashboard {
       const schoolName = school.nama || school.name || school.schoolName || '-';
       const schoolEmail = school.email || '-';
       const schoolPhone = school.phone || school.noWa || '-';
-      const studentCount = school.currentStudents || school.students || school.siswa_count || school.siswa || 0;
+      const userCount = school.currentUsers || school.users || school.siswa_count || school.siswa || 0;
       const planLabel = this.formatPlanName(school.plan);
 
       return `
@@ -666,7 +666,7 @@ class AdminSystemDashboard {
 
               <div class="flex flex-wrap items-center gap-3 mt-3 text-xs text-gray-400">
                 <span>
-                  <i class="fas fa-users mr-1"></i>${studentCount} siswa
+                  <i class="fas fa-users mr-1"></i>${userCount} user
                 </span>
                 <span>
                   <i class="fas fa-tag mr-1"></i>${planLabel}
@@ -766,8 +766,8 @@ class AdminSystemDashboard {
             <span id="custom-school-amount-preview" class="mt-1 block text-[11px] text-slate-400">Masukkan nominal custom bulanan.</span>
           </label>
           <label class="block">
-            <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-300">Kuota Maksimal Siswa</span>
-            <input id="custom-school-max-students" type="number" min="1" step="1" class="input w-full text-sm" placeholder="500">
+            <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-300">Kuota Maksimal User</span>
+            <input id="custom-school-max-users" type="number" min="1" step="1" class="input w-full text-sm" placeholder="500">
           </label>
         </div>
 
@@ -834,7 +834,7 @@ class AdminSystemDashboard {
       email: popup.querySelector('#custom-school-email')?.value.trim().toLowerCase() || '',
       noWa: popup.querySelector('#custom-school-phone')?.value.trim() || '',
       amount: popup.querySelector('#custom-school-amount')?.value.trim() || '',
-      maxStudents: popup.querySelector('#custom-school-max-students')?.value.trim() || '',
+      maxUsers: popup.querySelector('#custom-school-max-users')?.value.trim() || '',
       buktiTF_link: popup.querySelector('#custom-school-proof')?.value.trim() || '',
       plan: 'custom'
     };
@@ -863,9 +863,9 @@ class AdminSystemDashboard {
       return 'Nominal tagihan custom wajib diisi dengan angka lebih dari 0.';
     }
 
-    const maxStudents = Number(data.maxStudents);
-    if (!Number.isFinite(maxStudents) || maxStudents <= 0) {
-      return 'Kuota maksimal siswa wajib diisi dengan angka lebih dari 0.';
+    const maxUsers = Number(data.maxUsers);
+    if (!Number.isFinite(maxUsers) || maxUsers <= 0) {
+      return 'Kuota maksimal user wajib diisi dengan angka lebih dari 0.';
     }
 
     if (!data.buktiTF_link) {
@@ -907,7 +907,7 @@ class AdminSystemDashboard {
           ...formData,
           noWa: formData.noWa.replace(/[^0-9]/g, ''),
           amount: Number(formData.amount),
-          maxStudents: Number(formData.maxStudents)
+          maxUsers: Number(formData.maxUsers)
         };
       }
     });
