@@ -33,6 +33,7 @@ class AdminSchoolDashboard {
     this.currentUser = null;
     this.schoolId = null;
     this.currentImportRole = 'siswa';
+    this.loadedUserTabs = { siswa: false, guru: false, mitra: false };
     this.data = {
       stats: {},
       users: { siswa: [], guru: [], mitra: [] },
@@ -195,7 +196,7 @@ class AdminSchoolDashboard {
     renderListSkeleton('voucher-history', { items: 3, avatar: 'circle', trailing: 'none' });
   }
 
-  switchUserTab(tab) {
+  switchUserTab(tab, skipFetch = false) {
     document.querySelectorAll('.user-tab-btn').forEach(buttonEl => {
       buttonEl.classList.toggle('active', buttonEl.dataset.tab === tab);
       buttonEl.classList.toggle('bg-purple-500/20', buttonEl.dataset.tab === tab);
@@ -211,6 +212,10 @@ class AdminSchoolDashboard {
     // Update import button role
     const importBtn = document.getElementById('import-user-btn');
     if (importBtn) importBtn.dataset.role = tab;
+
+    if (!skipFetch && this.currentSection === 'users' && !this.loadedUserTabs[tab]) {
+      this.loadUsers(tab);
+    }
   }
 
   switchRewardTab(tab) {
@@ -677,6 +682,7 @@ async confirmImport() {
       const notes = [];
       if (result.stats?.skipped) notes.push(`${result.stats.skipped} baris kosong/tidak valid`);
       if (result.stats?.duplicates) notes.push(`${result.stats.duplicates} duplikat`);
+      this.loadedUserTabs[role] = false;
       this.closeImportModal();
       await this.loadUsers(role);
       Toast.success('Import berhasil', notes.length ? `${processed} data tersimpan, ${notes.join(', ')}` : `${processed} data tersimpan`);
@@ -720,8 +726,9 @@ handleImportUser(role) {
   async loadSectionData(section) {
     switch (section) {
       case 'users':
-        if (!Object.values(this.data.users || {}).some(list => Array.isArray(list) && list.length > 0)) {
-          await this.loadUsers();
+        const activeTab = document.querySelector('.user-tab-btn.active')?.dataset.tab || 'siswa';
+        if (!this.loadedUserTabs[activeTab]) {
+          await this.loadUsers(activeTab);
         }
         break;
       case 'reward':
@@ -894,39 +901,52 @@ handleImportUser(role) {
       .join(' • ');
   }
 
-  async loadUsers(preferredTab) {
-    renderListSkeleton('siswa-list', { items: 4, avatar: 'circle' });
-    renderListSkeleton('guru-list', { items: 3, avatar: 'circle' });
-    renderListSkeleton('mitra-list', { items: 3, avatar: 'circle' });
+  async loadUsers(preferredTab = 'siswa') {
+    const targetTab = ['siswa', 'guru', 'mitra'].includes(preferredTab) ? preferredTab : 'siswa';
+    const skeletonConfig = {
+      siswa: { items: 4, avatar: 'circle' },
+      guru: { items: 3, avatar: 'circle' },
+      mitra: { items: 3, avatar: 'circle' }
+    };
+    renderListSkeleton(`${targetTab}-list`, skeletonConfig[targetTab]);
 
     try {
-      let result = await authApi.call('getschoolmasterusers', { schoolId: this.schoolId }, false);
+      let result = await authApi.call('getschoolmasterusers', { schoolId: this.schoolId, role: targetTab }, false);
       if (!result?.success) {
-        result = await authApi.call('getschoolusers', { schoolId: this.schoolId, role: '' }, false);
+        result = await authApi.call('getschoolusers', { schoolId: this.schoolId, role: targetTab }, false);
       }
 
       if (result.success) {
-        const grouped = this.normalizeUserGroups(result);
-        this.data.users = grouped;
+        if (Array.isArray(result.data)) {
+          this.data.users[targetTab] = result.data;
+          this.loadedUserTabs[targetTab] = true;
+          this.renderUserList(targetTab, result.data);
+        } else {
+          const grouped = this.normalizeUserGroups(result);
+          this.data.users = grouped;
+          this.loadedUserTabs = {
+            siswa: true,
+            guru: true,
+            mitra: true
+          };
+          this.renderUserList('siswa', grouped.siswa);
+          this.renderUserList('guru', grouped.guru);
+          this.renderUserList('mitra', grouped.mitra);
+        }
 
-        this.renderUserList('siswa', grouped.siswa);
-        this.renderUserList('guru', grouped.guru);
-        this.renderUserList('mitra', grouped.mitra);
-        this.switchUserTab(preferredTab || document.querySelector('.user-tab-btn.active')?.dataset.tab || 'siswa');
+        this.updateUserStats(result.stats || {});
+        this.switchUserTab(targetTab, true);
       } else {
-        // Even on !success, init empty grouped data
-        this.data.users = { siswa: [], guru: [], mitra: [] };
-        this.renderUserList('siswa', []);
-        this.renderUserList('guru', []);
-        this.renderUserList('mitra', []);
+        this.loadedUserTabs[targetTab] = false;
+        this.data.users[targetTab] = [];
+        this.renderUserList(targetTab, []);
+        this.updateUserStats(result.stats || {});
       }
     } catch (error) {
       console.error('Load users error:', error);
-      // Ensure data.users always initialized
-      this.data.users = { siswa: [], guru: [], mitra: [] };
-      this.renderUserList('siswa', []);
-      this.renderUserList('guru', []);
-      this.renderUserList('mitra', []);
+      this.loadedUserTabs[targetTab] = false;
+      this.data.users[targetTab] = [];
+      this.renderUserList(targetTab, []);
     }
   }
 
