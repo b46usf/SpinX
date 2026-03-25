@@ -10,6 +10,13 @@
 // Access SweetAlert2 from global (loaded via CDN in index.html)
 const Swal = window.SweetAlert2 || window.Swal;
 
+if (typeof document !== 'undefined' && !document.getElementById('swal-above-import-style')) {
+  const style = document.createElement('style');
+  style.id = 'swal-above-import-style';
+  style.textContent = '.swal2-container.swal-above-import{z-index:20050 !important;}';
+  document.head.appendChild(style);
+}
+
 // Configure SweetAlert2 defaults
 const ToastDefaults = {
   confirmButtonColor: '#3b82f6',
@@ -25,6 +32,9 @@ const ToastDefaults = {
   },
   hideClass: {
     popup: 'animate__animated animate__fadeOut animate__faster'
+  },
+  customClass: {
+    container: 'swal-above-import'
   }
 };
 

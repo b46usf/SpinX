@@ -228,12 +228,12 @@ class AdminSchoolDashboard {
   }
 
   filterUsers(query) {
-    const currentTab = document.querySelector('.user-tab-btn.active').dataset.tab;
-    const users = this.data.users[currentTab];
-    const filtered = users.filter(user => 
-      user.name?.toLowerCase().includes(query.toLowerCase()) ||
-      user.email?.toLowerCase().includes(query.toLowerCase())
-    );
+    const currentTab = document.querySelector('.user-tab-btn.active')?.dataset.tab || 'siswa';
+    const users = this.data.users[currentTab] || [];
+    const normalizedQuery = (query || '').trim().toLowerCase();
+    const filtered = !normalizedQuery
+      ? users
+      : users.filter(user => this.getUserSearchText(user).includes(normalizedQuery));
     this.renderUserList(currentTab, filtered);
   }
 
@@ -677,9 +677,9 @@ async confirmImport() {
       const notes = [];
       if (result.stats?.skipped) notes.push(`${result.stats.skipped} baris kosong/tidak valid`);
       if (result.stats?.duplicates) notes.push(`${result.stats.duplicates} duplikat`);
-      Toast.success('Import berhasil', notes.length ? `${processed} data tersimpan, ${notes.join(', ')}` : `${processed} data tersimpan`);
       this.closeImportModal();
-      await this.loadUsers();
+      await this.loadUsers(role);
+      Toast.success('Import berhasil', notes.length ? `${processed} data tersimpan, ${notes.join(', ')}` : `${processed} data tersimpan`);
     } else {
       Toast.error('Import gagal', result.error);
     }
@@ -720,7 +720,9 @@ handleImportUser(role) {
   async loadSectionData(section) {
     switch (section) {
       case 'users':
-        if (this.data.users.siswa.length === 0) await this.loadUsers();
+        if (!Object.values(this.data.users || {}).some(list => Array.isArray(list) && list.length > 0)) {
+          await this.loadUsers();
+        }
         break;
       case 'reward':
         if (this.data.rewards.wheel.length === 0) await this.loadRewards();
@@ -827,31 +829,90 @@ handleImportUser(role) {
     `).join('');
   }
 
-  async loadUsers() {
+  normalizeUserGroups(result) {
+    if (result?.data && !Array.isArray(result.data)) {
+      return {
+        siswa: Array.isArray(result.data.siswa) ? result.data.siswa : [],
+        guru: Array.isArray(result.data.guru) ? result.data.guru : [],
+        mitra: Array.isArray(result.data.mitra) ? result.data.mitra : []
+      };
+    }
+
+    const users = Array.isArray(result?.data)
+      ? result.data
+      : Array.isArray(result?.users)
+        ? result.users
+        : [];
+
+    const grouped = { siswa: [], guru: [], mitra: [] };
+    users.forEach(user => {
+      const role = user.role || 'siswa';
+      if (grouped[role]) grouped[role].push(user);
+    });
+    return grouped;
+  }
+
+  getUserSearchText(user) {
+    return [
+      user.name,
+      user.nama,
+      user.email,
+      user.no_wa,
+      user.noWa,
+      user.nis,
+      user.kelas,
+      user.kode_guru,
+      user.kode_mapel,
+      user.mitra_id,
+      user.owner_name,
+      user.kategori
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+  }
+
+  getUserSecondaryText(role, user) {
+    if (role === 'siswa') {
+      return [`NIS ${user.nis || user.id || '-'}`, user.kelas || '-', user.tahun_ajaran || '']
+        .filter(Boolean)
+        .join(' • ');
+    }
+
+    if (role === 'guru') {
+      return [user.kode_guru || user.id || '-', user.kode_mapel || 'Mapel belum diisi']
+        .filter(Boolean)
+        .join(' • ');
+    }
+
+    return [
+      user.owner_name ? `Owner: ${user.owner_name}` : '',
+      user.no_wa || user.email || '',
+      user.kategori || ''
+    ]
+      .filter(Boolean)
+      .join(' • ');
+  }
+
+  async loadUsers(preferredTab) {
     renderListSkeleton('siswa-list', { items: 4, avatar: 'circle' });
     renderListSkeleton('guru-list', { items: 3, avatar: 'circle' });
     renderListSkeleton('mitra-list', { items: 3, avatar: 'circle' });
 
     try {
-      const result = await authApi.call('getschoolusers', { schoolId: this.schoolId, role: '' }, false);
-      const users = Array.isArray(result?.data)
-        ? result.data
-        : Array.isArray(result?.users)
-          ? result.users
-          : [];
-      
+      let result = await authApi.call('getschoolmasterusers', { schoolId: this.schoolId }, false);
+      if (!result?.success) {
+        result = await authApi.call('getschoolusers', { schoolId: this.schoolId, role: '' }, false);
+      }
+
       if (result.success) {
-        const grouped = { siswa: [], guru: [], mitra: [] };
-        users.forEach(user => {
-          const role = user.role || 'siswa'; // Fallback role
-          if (grouped[role]) grouped[role].push(user);
-        });
+        const grouped = this.normalizeUserGroups(result);
         this.data.users = grouped;
 
         this.renderUserList('siswa', grouped.siswa);
         this.renderUserList('guru', grouped.guru);
         this.renderUserList('mitra', grouped.mitra);
-        this.switchUserTab('siswa');
+        this.switchUserTab(preferredTab || document.querySelector('.user-tab-btn.active')?.dataset.tab || 'siswa');
       } else {
         // Even on !success, init empty grouped data
         this.data.users = { siswa: [], guru: [], mitra: [] };
@@ -882,12 +943,12 @@ handleImportUser(role) {
 
     container.innerHTML = users.map(user => `
       <div class="glass-card p-3 flex items-center gap-3 hover:bg-white/10">
-        <img src="${user.foto || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || user.nama || 'U')}`}" class="w-10 h-10 rounded-full">
+        <img src="${user.foto || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || user.nama || user.nama_mitra || 'U')}`}" class="w-10 h-10 rounded-full">
         <div class="flex-1 min-w-0">
-          <div class="font-medium text-sm">${user.name || user.nama || '-'}</div>
-          <div class="text-xs text-gray-500">${user.email || user.no_wa}</div>
+          <div class="font-medium text-sm">${user.name || user.nama || user.nama_mitra || '-'}</div>
+          <div class="text-xs text-gray-500">${this.getUserSecondaryText(role, user) || '-'}</div>
         </div>
-        <span class="badge badge-primary text-xs">${user.status === 'active' ? 'Aktif' : 'Nonaktif'}</span>
+        <span class="badge badge-primary text-xs">${(user.status || 'active') === 'active' ? 'Aktif' : 'Nonaktif'}</span>
       </div>
     `).join('');
   }
