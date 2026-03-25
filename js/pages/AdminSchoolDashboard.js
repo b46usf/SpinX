@@ -8,7 +8,24 @@
 import { authGuard } from '../core/AuthGuard.js';
 import { themeManager } from '../core/ThemeManager.js';
 import { authApi } from '../auth/AuthApi.js';
-import { toastConfig } from '../components/utils/Toast.js';
+import {
+  applyTextSkeleton,
+  clearTextSkeleton,
+  renderListSkeleton,
+  renderInfoSkeleton,
+  clearContainerSkeleton
+} from '../components/utils/DashboardSkeleton.js';
+
+const Toast = new Proxy({}, {
+  get(_, prop) {
+    if (prop === 'fire') {
+      return (...args) => window.Toast?.Swal?.fire?.(...args);
+    }
+
+    const value = window.Toast?.[prop];
+    return typeof value === 'function' ? value.bind(window.Toast) : value;
+  }
+});
 
 class AdminSchoolDashboard {
   constructor() {
@@ -46,6 +63,7 @@ class AdminSchoolDashboard {
     this.setupNavigation();
     this.setupEventListeners();
     this.setCurrentDate();
+    this.showInitialSkeletons();
     document.getElementById('school-name').textContent = this.currentUser.schoolName || 'Sekolah';
 
     await this.loadDashboardData();
@@ -148,6 +166,33 @@ class AdminSchoolDashboard {
         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
       });
     }
+  }
+
+  showInitialSkeletons() {
+    applyTextSkeleton([
+      { target: 'stat-siswa', width: '52px' },
+      { target: 'stat-spin', width: '64px' },
+      { target: 'stat-voucher', width: '58px' },
+      { target: 'stat-siswa-aktif', width: '56px' },
+      { target: 'stat-guru-aktif', width: '56px' },
+      { target: 'stat-mitra-aktif', width: '56px' },
+      { target: 'sekolah-nama', width: '52%' },
+      { target: 'sekolah-plan', width: '70px' },
+      { target: 'sekolah-users', width: '44px' },
+      { target: 'sekolah-guru', width: '44px' },
+      { target: 'subscription-plan', width: '70px' },
+      { target: 'subscription-status', width: '78px' },
+      { target: 'subscription-expired', width: '110px' }
+    ]);
+
+    renderListSkeleton('top-siswa-list', { items: 4, avatar: 'circle' });
+    renderListSkeleton('activity-list', { items: 4, avatar: 'circle', trailing: 'none' });
+    renderListSkeleton('siswa-list', { items: 4, avatar: 'circle' });
+    renderListSkeleton('guru-list', { items: 3, avatar: 'circle' });
+    renderListSkeleton('mitra-list', { items: 3, avatar: 'circle' });
+    renderInfoSkeleton('wheel-slices', { rows: 3 });
+    renderListSkeleton('voucher-list', { items: 3, avatar: 'square', trailing: 'pill' });
+    renderListSkeleton('voucher-history', { items: 3, avatar: 'circle', trailing: 'none' });
   }
 
   switchUserTab(tab) {
@@ -641,36 +686,53 @@ handleImportUser(role) {
   }
 
   async loadDashboardData() {
+    applyTextSkeleton([
+      { target: 'stat-siswa', width: '52px' },
+      { target: 'stat-spin', width: '64px' },
+      { target: 'stat-voucher', width: '58px' }
+    ]);
+    renderListSkeleton('top-siswa-list', { items: 4, avatar: 'circle' });
+    renderListSkeleton('activity-list', { items: 4, avatar: 'circle', trailing: 'none' });
+
     try {
       const payload = { schoolId: this.schoolId, action: 'getschoolstats' };
       const result = await authApi.call('getschoolstats', payload, false);
+      const hasFallbackData = Boolean(result?.data || result?.topStudents || result?.activities || result?.userStats);
 
-      if (result.success && result.data) {
-        this.data.stats = result.data;
+      if (result?.success || hasFallbackData) {
+        this.data.stats = result.data || {};
         this.updateDashboardStats();
         this.renderTopStudents(result.topStudents || []);
         this.renderRecentActivity(result.activities || []);
         this.updateUserStats(result.userStats || {});
       } else {
-        // Ensure stats is initialized even on API failure/empty data
-        this.data.stats = this.data.stats || {};
+        this.data.stats = {};
         this.updateDashboardStats();
-        Toast.warning('Stats unavailable', result?.message || 'Using cached/default data');
+        this.renderTopStudents([]);
+        this.renderRecentActivity([]);
+        this.updateUserStats({});
       }
     } catch (error) {
       console.error('Load stats error:', error);
+      this.data.stats = {};
+      this.updateDashboardStats();
+      this.renderTopStudents([]);
+      this.renderRecentActivity([]);
+      this.updateUserStats({});
       Toast.error('Connection error', 'Please check your connection');
     }
   }
 
   updateDashboardStats() {
     const stats = this.data.stats || {};
-    document.getElementById('stat-siswa').textContent = stats.siswa || 0;
-    document.getElementById('stat-spin').textContent = stats.spinsToday || 0;
-    document.getElementById('stat-voucher').textContent = stats.vouchers || 0;
+    clearTextSkeleton(['stat-siswa', 'stat-spin', 'stat-voucher']);
+    document.getElementById('stat-siswa').textContent = stats.siswa || stats.students || 0;
+    document.getElementById('stat-spin').textContent = stats.spinsToday || stats.spinToday || 0;
+    document.getElementById('stat-voucher').textContent = stats.vouchers || stats.voucher || 0;
   }
 
   updateUserStats(stats) {
+    clearTextSkeleton(['stat-siswa-aktif', 'stat-guru-aktif', 'stat-mitra-aktif']);
     document.getElementById('stat-siswa-aktif').textContent = stats.siswaAktif || 0;
     document.getElementById('stat-guru-aktif').textContent = stats.guruAktif || 0;
     document.getElementById('stat-mitra-aktif').textContent = stats.mitraAktif || 0;
@@ -679,6 +741,7 @@ handleImportUser(role) {
   renderTopStudents(students) {
     const container = document.getElementById('top-siswa-list');
     if (!container) return;
+    clearContainerSkeleton(container);
 
     if (students.length === 0) {
       container.innerHTML = '<div class="text-center py-4 text-gray-500"><i class="fas fa-trophy text-lg mb-2"></i><p class="text-xs">Belum ada data</p></div>';
@@ -700,6 +763,7 @@ handleImportUser(role) {
   renderRecentActivity(activities) {
     const container = document.getElementById('activity-list');
     if (!container) return;
+    clearContainerSkeleton(container);
 
     if (activities.length === 0) {
       container.innerHTML = '<div class="text-center py-4 text-gray-500"><i class="fas fa-history text-lg mb-2"></i><p class="text-xs">Belum ada aktivitas</p></div>';
@@ -721,11 +785,17 @@ handleImportUser(role) {
   }
 
   async loadUsers() {
+    renderListSkeleton('siswa-list', { items: 4, avatar: 'circle' });
+    renderListSkeleton('guru-list', { items: 3, avatar: 'circle' });
+    renderListSkeleton('mitra-list', { items: 3, avatar: 'circle' });
+
     try {
       const result = await authApi.call('getschoolusers', { schoolId: this.schoolId, role: '' }, false);
-
-      // Ensure result.users is always array
-      const users = Array.isArray(result.users) ? result.users : [];
+      const users = Array.isArray(result?.data)
+        ? result.data
+        : Array.isArray(result?.users)
+          ? result.users
+          : [];
       
       if (result.success) {
         const grouped = { siswa: [], guru: [], mitra: [] };
@@ -736,15 +806,23 @@ handleImportUser(role) {
         this.data.users = grouped;
 
         this.renderUserList('siswa', grouped.siswa);
+        this.renderUserList('guru', grouped.guru);
+        this.renderUserList('mitra', grouped.mitra);
         this.switchUserTab('siswa');
       } else {
         // Even on !success, init empty grouped data
         this.data.users = { siswa: [], guru: [], mitra: [] };
+        this.renderUserList('siswa', []);
+        this.renderUserList('guru', []);
+        this.renderUserList('mitra', []);
       }
     } catch (error) {
       console.error('Load users error:', error);
       // Ensure data.users always initialized
       this.data.users = { siswa: [], guru: [], mitra: [] };
+      this.renderUserList('siswa', []);
+      this.renderUserList('guru', []);
+      this.renderUserList('mitra', []);
     }
   }
 
@@ -752,6 +830,7 @@ handleImportUser(role) {
     const containerId = `${role}-list`;
     const container = document.getElementById(containerId);
     if (!container) return;
+    clearContainerSkeleton(container);
 
     if (users.length === 0) {
       container.innerHTML = '<div class="text-center py-6 text-gray-500"><i class="fas fa-users text-xl mb-2"></i><p class="text-sm">Belum ada data</p></div>';
@@ -760,9 +839,9 @@ handleImportUser(role) {
 
     container.innerHTML = users.map(user => `
       <div class="glass-card p-3 flex items-center gap-3 hover:bg-white/10">
-        <img src="${user.foto || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nama)}`}" class="w-10 h-10 rounded-full">
+        <img src="${user.foto || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || user.nama || 'U')}`}" class="w-10 h-10 rounded-full">
         <div class="flex-1 min-w-0">
-          <div class="font-medium text-sm">${user.nama}</div>
+          <div class="font-medium text-sm">${user.name || user.nama || '-'}</div>
           <div class="text-xs text-gray-500">${user.email || user.no_wa}</div>
         </div>
         <span class="badge badge-primary text-xs">${user.status === 'active' ? 'Aktif' : 'Nonaktif'}</span>
@@ -771,21 +850,50 @@ handleImportUser(role) {
   }
 
   async loadRewards() {
-    document.getElementById('wheel-slices').innerHTML = '<div class="text-center py-4 text-gray-500"><i class="fas fa-cog fa-spin text-lg mb-2"></i><p class="text-xs">Wheel config loading...</p></div>';
-    document.getElementById('voucher-list').innerHTML = '<div class="text-center py-4 text-gray-500"><i class="fas fa-ticket-alt text-lg mb-2"></i><p class="text-xs">Vouchers loading...</p></div>';
-    document.getElementById('voucher-history').innerHTML = '<div class="text-center py-4 text-gray-500"><i class="fas fa-history text-lg mb-2"></i><p class="text-xs">History loading...</p></div>';
+    document.getElementById('wheel-slices').innerHTML = '<div class="text-center py-4 text-gray-500"><i class="fas fa-sliders-h text-lg mb-2"></i><p class="text-xs">Konfigurasi reward belum tersedia</p></div>';
+    document.getElementById('voucher-list').innerHTML = '<div class="text-center py-4 text-gray-500"><i class="fas fa-ticket-alt text-lg mb-2"></i><p class="text-xs">Data voucher belum tersedia</p></div>';
+    document.getElementById('voucher-history').innerHTML = '<div class="text-center py-4 text-gray-500"><i class="fas fa-history text-lg mb-2"></i><p class="text-xs">Riwayat voucher belum tersedia</p></div>';
   }
 
   async loadAccountData() {
+    applyTextSkeleton([
+      { target: 'sekolah-nama', width: '52%' },
+      { target: 'sekolah-plan', width: '70px' },
+      { target: 'sekolah-users', width: '44px' },
+      { target: 'sekolah-guru', width: '44px' },
+      { target: 'subscription-plan', width: '70px' },
+      { target: 'subscription-status', width: '78px' },
+      { target: 'subscription-expired', width: '110px' }
+    ]);
+
     try {
       const result = await authApi.call('checksubscription', { schoolId: this.schoolId }, false);
 
       if (result.success && result.school) {
         this.data.schoolInfo = result.school;
         this.updateSchoolInfo();
+      } else {
+        clearTextSkeleton([
+          'sekolah-nama',
+          'sekolah-plan',
+          'sekolah-users',
+          'sekolah-guru',
+          'subscription-plan',
+          'subscription-status',
+          'subscription-expired'
+        ]);
       }
     } catch (error) {
       console.error('Load school info error:', error);
+      clearTextSkeleton([
+        'sekolah-nama',
+        'sekolah-plan',
+        'sekolah-users',
+        'sekolah-guru',
+        'subscription-plan',
+        'subscription-status',
+        'subscription-expired'
+      ]);
     }
   }
 
@@ -793,11 +901,21 @@ handleImportUser(role) {
     const info = this.data.schoolInfo;
     if (!info) return;
 
-    document.getElementById('sekolah-nama').textContent = info.schoolName;
-    document.getElementById('sekolah-plan').textContent = info.plan?.toUpperCase();
+    clearTextSkeleton([
+      'sekolah-nama',
+      'sekolah-plan',
+      'sekolah-users',
+      'sekolah-guru',
+      'subscription-plan',
+      'subscription-status',
+      'subscription-expired'
+    ]);
+
+    document.getElementById('sekolah-nama').textContent = info.schoolName || info.name || '-';
+    document.getElementById('sekolah-plan').textContent = info.plan?.toUpperCase() || '-';
     document.getElementById('sekolah-users').textContent = info.currentUsers || 0;
     document.getElementById('sekolah-guru').textContent = 'N/A';
-    document.getElementById('subscription-plan').textContent = info.plan?.toUpperCase();
+    document.getElementById('subscription-plan').textContent = info.plan?.toUpperCase() || '-';
     document.getElementById('subscription-status').textContent = info.status === 'active' ? 'Aktif' : 'Expired';
     document.getElementById('subscription-expired').textContent = info.expiresAt ? new Date(info.expiresAt).toLocaleDateString('id-ID') : 'Forever';
   }
@@ -834,6 +952,4 @@ document.addEventListener('DOMContentLoaded', () => {
   window.startGame = () => Toast.info('Game', 'Student game interface');
   window.spinWheel = () => Toast.info('Wheel', 'Configure wheel first');
 });
-
-window.Toast = Toast;
 

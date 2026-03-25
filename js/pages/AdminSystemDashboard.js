@@ -16,6 +16,14 @@ import {
   showSuccess,
   SwalExport
 } from '../components/utils/Toast.js';
+import {
+  applyTextSkeleton,
+  clearTextSkeleton,
+  renderListSkeleton,
+  renderCardSkeleton,
+  renderChartSkeleton,
+  clearContainerSkeleton
+} from '../components/utils/DashboardSkeleton.js';
 
 class AdminSystemDashboard {
   constructor() {
@@ -60,6 +68,7 @@ class AdminSystemDashboard {
     this.setupNavigation();
     this.setupEventListeners();
     this.setCurrentDate();
+    this.showInitialSkeletons();
 
     // Load initial data
     this.loadSubscriptionStatusConfig();
@@ -393,6 +402,58 @@ class AdminSystemDashboard {
     }
   }
 
+  showInitialSkeletons() {
+    this.showDashboardSkeleton();
+    this.showSchoolsSkeleton();
+    this.showSubscriptionsSkeleton();
+  }
+
+  showDashboardSkeleton() {
+    applyTextSkeleton([
+      { target: 'stat-sekolah', width: '62px' },
+      { target: 'stat-siswa', width: '62px' },
+      { target: 'stat-voucher', width: '62px' },
+      { target: 'stat-revenue', width: '92px' }
+    ]);
+    renderChartSkeleton('revenue-chart');
+    renderListSkeleton('activity-list', { items: 4, avatar: 'circle', trailing: 'none' });
+  }
+
+  showSchoolsSkeleton() {
+    applyTextSkeleton([
+      { target: 'sekolah-aktif', width: '52px' },
+      { target: 'sekolah-nonaktif', width: '52px' },
+      { target: 'sekolah-revenue', width: '86px' }
+    ]);
+    renderCardSkeleton('sekolah-list', { items: 3, media: 'square', badges: 1, footer: true });
+  }
+
+  showSubscriptionsSkeleton() {
+    applyTextSkeleton([
+      { target: 'sub-starter', width: '52px' },
+      { target: 'sub-pro', width: '52px' },
+      { target: 'sub-enterprise', width: '52px' }
+    ]);
+    renderListSkeleton('invoice-content', { items: 3, avatar: 'square', trailing: 'pill' });
+    renderListSkeleton('payment-content', { items: 3, avatar: 'square', trailing: 'pill' });
+  }
+
+  renderRevenueChart(totalRevenue = 0) {
+    const container = document.getElementById('revenue-chart');
+    if (!container) return;
+
+    const seed = Math.max(Number(totalRevenue) || 0, 1);
+    const bars = [0.38, 0.54, 0.47, 0.7, 0.62, 0.84, 1].map((ratio, index) => {
+      const variance = ((seed / (index + 3)) % 17) / 100;
+      return Math.min(1, Math.max(0.22, ratio - variance));
+    });
+
+    container.removeAttribute('aria-busy');
+    container.innerHTML = bars.map((height, index) => `
+      <div class="flex-1 rounded-t ${index === bars.length - 1 ? 'bg-gradient-to-t from-indigo-500 to-pink-500' : 'bg-indigo-500/35'}" style="height:${Math.round(height * 100)}%"></div>
+    `).join('');
+  }
+
   /**
    * Handle logout
    */
@@ -436,15 +497,21 @@ class AdminSystemDashboard {
    * Load dashboard data
    */
   async loadDashboardData() {
+    this.showDashboardSkeleton();
     try {
       const result = await authApi.call('getAdminStats', {}, false);
       
       if (result.success) {
         this.data.stats = result.data || {};
         this.updateDashboardStats(result.data);
+      } else {
+        this.data.stats = {};
+        this.updateDashboardStats({});
       }
     } catch (error) {
       console.error('Failed to load dashboard stats:', error);
+      this.data.stats = {};
+      this.updateDashboardStats({});
     }
 
     // Load recent activity
@@ -456,6 +523,8 @@ class AdminSystemDashboard {
    * @param {Object} data - Stats data
    */
   updateDashboardStats(data) {
+    clearTextSkeleton(['stat-sekolah', 'stat-siswa', 'stat-voucher', 'stat-revenue']);
+    this.renderRevenueChart(data.revenue || data.revenueSaaS || 0);
     const elements = {
       'stat-sekolah': data.sekolah || data.schools || 0,
       'stat-siswa': data.siswa || data.students || 0,
@@ -489,6 +558,7 @@ class AdminSystemDashboard {
   async loadRecentActivity() {
     const container = document.getElementById('activity-list');
     if (!container) return;
+    renderListSkeleton(container, { items: 4, avatar: 'circle', trailing: 'none' });
 
     try {
       const result = await authApi.getRecentActivity();
@@ -514,6 +584,7 @@ class AdminSystemDashboard {
   renderActivityList(activities) {
     const container = document.getElementById('activity-list');
     if (!container) return;
+    clearContainerSkeleton(container);
 
     container.innerHTML = activities.slice(0, 5).map(activity => `
       <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
@@ -535,6 +606,7 @@ class AdminSystemDashboard {
   renderEmptyActivity() {
     const container = document.getElementById('activity-list');
     if (!container) return;
+    clearContainerSkeleton(container);
 
     container.innerHTML = `
       <div class="text-center py-6 text-gray-500">
@@ -605,6 +677,7 @@ class AdminSystemDashboard {
   async loadSchools() {
     const container = document.getElementById('sekolah-list');
     if (!container) return;
+    this.showSchoolsSkeleton();
 
     try {
       const result = await authApi.call('getAllSchools', {}, false);
@@ -629,6 +702,7 @@ class AdminSystemDashboard {
   renderSchools(schools) {
     const container = document.getElementById('sekolah-list');
     if (!container) return;
+    clearContainerSkeleton(container);
 
     if (schools.length === 0) {
       this.renderEmptySchools();
@@ -707,6 +781,7 @@ class AdminSystemDashboard {
   renderEmptySchools() {
     const container = document.getElementById('sekolah-list');
     if (!container) return;
+    clearContainerSkeleton(container);
 
     container.innerHTML = `
       <div class="glass-card p-8 text-center">
@@ -957,6 +1032,7 @@ class AdminSystemDashboard {
     const nonaktifEl = document.getElementById('sekolah-nonaktif');
     const revenueEl = document.getElementById('sekolah-revenue');
 
+    clearTextSkeleton(['sekolah-aktif', 'sekolah-nonaktif', 'sekolah-revenue']);
     if (aktifEl) aktifEl.textContent = active;
     if (nonaktifEl) nonaktifEl.textContent = inactive;
     if (revenueEl) revenueEl.textContent = this.formatCurrency(revenue);
@@ -984,17 +1060,36 @@ class AdminSystemDashboard {
    * Load subscriptions data
    */
   async loadSubscriptions() {
+    this.showSubscriptionsSkeleton();
     try {
-      const result = await authApi.call('getSubscriptionStats', {}, false);
+      const [result, paymentsResult] = await Promise.all([
+        authApi.call('getSubscriptionStats', {}, false),
+        authApi.call('getPayments', {}, false)
+      ]);
       
       if (result.success) {
         this.data.subscriptions = result.data || {};
         this.data.invoices = result.invoices || [];
+        this.data.payments = paymentsResult?.invoices || paymentsResult?.payments || [];
         this.updateSubscriptionStats();
         this.renderInvoices(this.data.invoices);
+        this.renderPayments(this.data.payments);
+      } else {
+        this.data.subscriptions = {};
+        this.data.invoices = [];
+        this.data.payments = [];
+        this.updateSubscriptionStats();
+        this.renderInvoices([]);
+        this.renderPayments([]);
       }
     } catch (error) {
       console.error('Failed to load subscriptions:', error);
+      this.data.subscriptions = {};
+      this.data.invoices = [];
+      this.data.payments = [];
+      this.updateSubscriptionStats();
+      this.renderInvoices([]);
+      this.renderPayments([]);
     }
   }
 
@@ -1008,6 +1103,7 @@ class AdminSystemDashboard {
     const proEl = document.getElementById('sub-pro');
     const enterpriseEl = document.getElementById('sub-enterprise');
 
+    clearTextSkeleton(['sub-starter', 'sub-pro', 'sub-enterprise']);
     if (starterEl) starterEl.textContent = subs.starter || 0;
     if (proEl) proEl.textContent = subs.pro || 0;
     if (enterpriseEl) enterpriseEl.textContent = subs.enterprise || 0;
@@ -1020,6 +1116,7 @@ class AdminSystemDashboard {
   renderInvoices(invoices) {
     const container = document.getElementById('invoice-content');
     if (!container) return;
+    clearContainerSkeleton(container);
 
     if (invoices.length === 0) {
       container.innerHTML = `
@@ -1041,6 +1138,35 @@ class AdminSystemDashboard {
           <div class="text-xs text-gray-500">${inv.plan} - ${this.formatCurrency(inv.amount)}</div>
         </div>
         <span class="badge badge-${this.getInvoiceStatusBadge(inv.status)} text-xs">${this.getInvoiceStatusLabel(inv.status)}</span>
+      </div>
+    `).join('');
+  }
+
+  renderPayments(payments) {
+    const container = document.getElementById('payment-content');
+    if (!container) return;
+    clearContainerSkeleton(container);
+
+    if (!payments.length) {
+      container.innerHTML = `
+        <div class="text-center py-6 text-gray-500">
+          <i class="fas fa-money-bill-wave text-2xl mb-2"></i>
+          <p class="text-sm">Belum ada pembayaran</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = payments.slice(0, 5).map(payment => `
+      <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
+        <div class="w-10 h-10 rounded-lg ${this.getInvoiceStatusBg(payment.status)} flex items-center justify-center">
+          <i class="${this.getInvoiceIcon(payment.status)}"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="font-medium text-sm">${payment.sekolah || payment.name}</div>
+          <div class="text-xs text-gray-500">${payment.plan} - ${this.formatCurrency(payment.amount)}</div>
+        </div>
+        <span class="badge badge-${this.getInvoiceStatusBadge(payment.status)} text-xs">${this.getInvoiceStatusLabel(payment.status)}</span>
       </div>
     `).join('');
   }

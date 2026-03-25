@@ -7,6 +7,23 @@
 import { authGuard } from '../core/AuthGuard.js';
 import { themeManager } from '../core/ThemeManager.js';
 import { authApi } from '../auth/AuthApi.js';
+import {
+  applyTextSkeleton,
+  clearTextSkeleton,
+  renderListSkeleton,
+  clearContainerSkeleton
+} from '../components/utils/DashboardSkeleton.js';
+
+const Toast = new Proxy({}, {
+  get(_, prop) {
+    if (prop === 'fire') {
+      return (...args) => window.Toast?.Swal?.fire?.(...args);
+    }
+
+    const value = window.Toast?.[prop];
+    return typeof value === 'function' ? value.bind(window.Toast) : value;
+  }
+});
 
 class GuruDashboard {
   constructor() {
@@ -40,6 +57,7 @@ class GuruDashboard {
     this.setupNavigation();
     this.setupEventListeners();
     this.setCurrentDate();
+    this.showInitialSkeletons();
     
     document.getElementById('kelas-name').textContent = this.currentUser.kelasName || 'Kelas';
 
@@ -103,6 +121,19 @@ class GuruDashboard {
     });
   }
 
+  showInitialSkeletons() {
+    applyTextSkeleton([
+      { target: 'stat-siswa-kelas', width: '58px' },
+      { target: 'stat-spin-kelas', width: '58px' },
+      { target: 'stat-voucher-kelas', width: '58px' },
+      { target: 'stat-siswa-aktif', width: '58px' },
+      { target: 'stat-hadir', width: '58px' }
+    ]);
+    renderListSkeleton('top-siswa-kelas', { items: 4, avatar: 'circle' });
+    renderListSkeleton('aktivitas-terbaru', { items: 4, avatar: 'circle', trailing: 'none' });
+    renderListSkeleton('siswa-list', { items: 4, avatar: 'circle', trailing: 'icon' });
+  }
+
   switchRewardTab(tab) {
     document.querySelectorAll('.reward-tab-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tab));
     document.querySelectorAll('.reward-content').forEach(content => content.classList.toggle('hidden', content.id !== `reward-${tab}`));
@@ -131,6 +162,16 @@ class GuruDashboard {
   }
 
 async loadDashboardData() {
+    applyTextSkeleton([
+      { target: 'stat-siswa-kelas', width: '58px' },
+      { target: 'stat-spin-kelas', width: '58px' },
+      { target: 'stat-voucher-kelas', width: '58px' },
+      { target: 'stat-siswa-aktif', width: '58px' },
+      { target: 'stat-hadir', width: '58px' }
+    ]);
+    renderListSkeleton('top-siswa-kelas', { items: 4, avatar: 'circle' });
+    renderListSkeleton('aktivitas-terbaru', { items: 4, avatar: 'circle', trailing: 'none' });
+
     try {
       const result = await authApi.call('getgurudashboard', { kelasId: this.kelasId }, false);
       if (result.success) {
@@ -138,15 +179,31 @@ async loadDashboardData() {
         this.updateDashboardStats();
         this.renderTopSiswa(result.topSiswa || []);
         this.renderAktivitas(result.aktivitas || []);
+      } else {
+        this.data.stats = {};
+        this.updateDashboardStats();
+        this.renderTopSiswa([]);
+        this.renderAktivitas([]);
       }
     } catch (error) {
       console.error(error);
-window.Toast?.error('Error', 'Gagal memuat dashboard');
+      this.data.stats = {};
+      this.updateDashboardStats();
+      this.renderTopSiswa([]);
+      this.renderAktivitas([]);
+      window.Toast?.error('Error', 'Gagal memuat dashboard');
     }
   }
 
   updateDashboardStats() {
     const stats = this.data.stats;
+    clearTextSkeleton([
+      'stat-siswa-kelas',
+      'stat-spin-kelas',
+      'stat-voucher-kelas',
+      'stat-siswa-aktif',
+      'stat-hadir'
+    ]);
     document.getElementById('stat-siswa-kelas').textContent = stats.siswaKelas || 0;
     document.getElementById('stat-spin-kelas').textContent = stats.spinKelas || 0;
     document.getElementById('stat-voucher-kelas').textContent = stats.voucherKelas || 0;
@@ -156,6 +213,7 @@ window.Toast?.error('Error', 'Gagal memuat dashboard');
 
   renderTopSiswa(siswa) {
     const container = document.getElementById('top-siswa-kelas');
+    clearContainerSkeleton(container);
     if (siswa.length === 0) {
       container.innerHTML = '<div class="text-center py-4 text-gray-500"><i class="fas fa-trophy text-lg mb-2"></i><p class="text-xs">Belum ada data</p></div>';
       return;
@@ -174,6 +232,7 @@ window.Toast?.error('Error', 'Gagal memuat dashboard');
 
   renderAktivitas(activities) {
     const container = document.getElementById('aktivitas-terbaru');
+    clearContainerSkeleton(container);
     if (activities.length === 0) {
       container.innerHTML = '<div class="text-center py-4 text-gray-500"><i class="fas fa-history text-lg mb-2"></i><p class="text-xs">Belum ada aktivitas</p></div>';
       return;
@@ -193,20 +252,27 @@ window.Toast?.error('Error', 'Gagal memuat dashboard');
   }
 
 async loadSiswa() {
+    renderListSkeleton('siswa-list', { items: 4, avatar: 'circle', trailing: 'icon' });
     try {
       const result = await authApi.call('getsiswakelas', { kelasId: this.kelasId }, false);
       if (result.success) {
         this.data.siswa = result.siswa;
         this.renderSiswaList(result.siswa);
+      } else {
+        this.data.siswa = [];
+        this.renderSiswaList([]);
       }
     } catch (error) {
       console.error(error);
+      this.data.siswa = [];
+      this.renderSiswaList([]);
       Toast.error('Error', 'Gagal memuat siswa');
     }
   }
 
   renderSiswaList(siswa) {
     const container = document.getElementById('siswa-list');
+    clearContainerSkeleton(container);
     if (siswa.length === 0) {
       container.innerHTML = '<div class="text-center py-6 text-gray-500"><i class="fas fa-user-graduate text-xl mb-2"></i><p class="text-sm">Belum ada siswa</p></div>';
       return;
@@ -241,14 +307,20 @@ async loadSiswa() {
 
   giveReward(type) {
     const siswaId = document.getElementById(`${type}-siswa`)?.value;
-window.Toast?.warning('Pilih Siswa', 'Harap pilih siswa terlebih dahulu');
+    if (!siswaId) {
+      window.Toast?.warning('Pilih Siswa', 'Harap pilih siswa terlebih dahulu');
+      return;
+    }
     
     let jumlah;
     if (type === 'voucher') {
       jumlah = document.getElementById('voucher-kode')?.value;
     } else {
       jumlah = parseInt(document.getElementById(`${type}-jumlah`)?.value) || 0;
-window.Toast?.warning('Jumlah', 'Masukkan jumlah yang valid');
+      if (!jumlah) {
+        window.Toast?.warning('Jumlah', 'Masukkan jumlah yang valid');
+        return;
+      }
     }
     
 window.Toast?.loading('Memberikan reward...');
@@ -291,6 +363,7 @@ export { GuruDashboard };
 // Auto-init when DOM ready
 document.addEventListener('DOMContentLoaded', () => {
   const dashboard = new GuruDashboard();
+  window.dashboard = dashboard;
   dashboard.init();
 });
 

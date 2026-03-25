@@ -1057,6 +1057,148 @@ body::before {
   animation: pulse 2s ease-in-out infinite;
 }
 
+.dashboard-text-skeleton,
+.dashboard-skeleton-line,
+.dashboard-skeleton-media,
+.dashboard-skeleton-pill,
+.dashboard-skeleton-bar {
+  position: relative;
+  overflow: hidden;
+  background: rgba(148, 163, 184, 0.16);
+}
+
+.dashboard-text-skeleton::after,
+.dashboard-skeleton-line::after,
+.dashboard-skeleton-media::after,
+.dashboard-skeleton-pill::after,
+.dashboard-skeleton-bar::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.22) 45%, transparent 100%);
+  animation: dashboardSkeletonShimmer 1.4s ease-in-out infinite;
+}
+
+.dashboard-text-skeleton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--dashboard-skeleton-width, 100%);
+  min-height: 1.05em;
+  min-width: 2.75rem;
+  border-radius: 999px;
+  color: transparent !important;
+  vertical-align: middle;
+}
+
+.dashboard-skeleton-card {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.dashboard-skeleton-card--block {
+  display: block;
+}
+
+.dashboard-skeleton-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.dashboard-skeleton-line {
+  height: 0.8rem;
+  border-radius: 999px;
+}
+
+.dashboard-skeleton-line + .dashboard-skeleton-line {
+  margin-top: 0.65rem;
+}
+
+.dashboard-skeleton-line--sm {
+  height: 0.65rem;
+}
+
+.dashboard-skeleton-line--md {
+  height: 0.95rem;
+}
+
+.dashboard-skeleton-media {
+  flex-shrink: 0;
+  width: 2.9rem;
+  height: 2.9rem;
+  border-radius: 0.95rem;
+}
+
+.dashboard-skeleton-media--circle {
+  border-radius: 999px;
+}
+
+.dashboard-skeleton-media--square {
+  width: 2.75rem;
+  height: 2.75rem;
+}
+
+.dashboard-skeleton-media--square-lg {
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 1.1rem;
+}
+
+.dashboard-skeleton-media--icon {
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 0.45rem;
+}
+
+.dashboard-skeleton-pill {
+  flex-shrink: 0;
+  width: 4.5rem;
+  height: 1.45rem;
+  border-radius: 999px;
+}
+
+.dashboard-skeleton-pill--sm {
+  width: 3.35rem;
+  height: 1.15rem;
+}
+
+.dashboard-skeleton-badges {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+
+.dashboard-skeleton-bar-wrap {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+
+.dashboard-skeleton-bar {
+  width: 100%;
+  border-radius: 0.9rem 0.9rem 0 0;
+}
+
+.dashboard-skeleton-info-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.dashboard-skeleton-info-row + .dashboard-skeleton-info-row {
+  margin-top: 0.9rem;
+}
+
+@keyframes dashboardSkeletonShimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 @keyframes pulse {
   0%, 100% { opacity: 0.8; }
   50% { opacity: 1; }

@@ -1,67 +1,90 @@
-/**
- * Mitra Dashboard Module
- * Modular dashboard logic for mitra/partner role
- * Clean, DRY, best practice
- */
-
 import { authGuard } from '../core/AuthGuard.js';
 import { themeManager } from '../core/ThemeManager.js';
 import { authApi } from '../auth/AuthApi.js';
-import { showLoading, showSuccess, showError } from '../components/utils/Toast.js';
+import { showError, showInfo, showSuccess } from '../components/utils/Toast.js';
+import {
+  applyTextSkeleton,
+  clearTextSkeleton,
+  renderListSkeleton,
+  renderCardSkeleton,
+  renderChartSkeleton,
+  clearContainerSkeleton
+} from '../components/utils/DashboardSkeleton.js';
 
 class MitraDashboard {
   constructor() {
     this.currentSection = 'dashboard';
-    this.stats = {
-      voucherRedeemed: 0,
-      totalDiscount: 0,
-      customerCount: 0,
-      produk: 0,
-      transaksi: 0,
-      voucherAktif: 0
+    this.currentPeriod = 'hari';
+    this.currentUser = null;
+    this.data = {
+      stats: {},
+      detail: {},
+      transaksi: [],
+      statistik: {}
     };
-    this.qrStream = null;
   }
 
-  /**
-   * Initialize mitra dashboard
-   */
   async init() {
-    // Auth protection
     if (!authGuard.init('mitra', {
       avatarId: 'user-avatar',
-      nameId: 'user-name', 
       welcomeId: 'welcome-name',
-      logoutId: 'logout-btn',
-      profileIds: ['profile-name', 'profile-email', 'mitra-nama', 'mitra-kategori', 'mitra-kontak', 'toko-nama', 'toko-alamat', 'toko-telepon']
+      logoutId: 'logout-btn'
     })) {
       return;
     }
 
-    // Update mitra name in header
-    const mitraNameEl = document.getElementById('mitra-name');
-    if (mitraNameEl) {
-      const user = authGuard.getUser();
-      mitraNameEl.textContent = user?.profile?.namaMitra || 'Mitra';
-    }
-
-    // Theme + date
+    this.currentUser = authGuard.getUser();
     themeManager.init();
+    this.setupProfile();
     this.updateDate();
-
-    // Bottom nav
+    this.showInitialSkeletons();
     this.initBottomNav();
-
-    // Load dashboard (default)
-    this.loadDashboard();
-
-    // Event listeners
     this.initEventListeners();
+
+    await this.loadDashboard();
   }
 
-  /**
-   * Update current date
-   */
+  setupProfile() {
+    const avatarUrl = this.currentUser?.picture || this.currentUser?.foto ||
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(this.currentUser?.name || 'M')}&background=random`;
+
+    const avatarIds = ['user-avatar', 'profile-avatar'];
+    avatarIds.forEach((id) => {
+      const element = document.getElementById(id);
+      if (element) {
+        element.src = avatarUrl;
+      }
+    });
+
+    const profileName = document.getElementById('profile-name');
+    const profileEmail = document.getElementById('profile-email');
+    const mitraName = document.getElementById('mitra-name');
+
+    if (profileName) profileName.textContent = this.currentUser?.name || 'Mitra';
+    if (profileEmail) profileEmail.textContent = this.currentUser?.email || '-';
+    if (mitraName) mitraName.textContent = this.currentUser?.schoolName || this.currentUser?.name || 'Mitra';
+  }
+
+  showInitialSkeletons() {
+    applyTextSkeleton([
+      { target: 'stat-produk', width: '56px' },
+      { target: 'stat-transaksi', width: '56px' },
+      { target: 'stat-voucher', width: '56px' },
+      { target: 'stat-voucher-hari', width: '56px' },
+      { target: 'stat-voucher-minggu', width: '56px' },
+      { target: 'mitra-nama', width: '44%' },
+      { target: 'mitra-kategori', width: '30%' },
+      { target: 'mitra-kontak', width: '34%' },
+      { target: 'toko-nama', width: '44%' },
+      { target: 'toko-alamat', width: '52%' },
+      { target: 'toko-telepon', width: '32%' }
+    ]);
+    renderListSkeleton('top-produk-list', { items: 3, avatar: 'square' });
+    renderListSkeleton('activity-list', { items: 4, avatar: 'circle', trailing: 'none' });
+    renderListSkeleton('transaksi-list', { items: 3, avatar: 'square', trailing: 'pill' });
+    renderChartSkeleton('diskon-chart', { bars: 7 });
+  }
+
   updateDate() {
     const dateEl = document.getElementById('current-date');
     if (dateEl) {
@@ -74,357 +97,351 @@ class MitraDashboard {
     }
   }
 
-  /**
-   * Initialize bottom navigation
-   */
   initBottomNav() {
-    document.querySelectorAll('.bottom-nav-item').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const section = e.currentTarget.dataset.section;
-        this.switchSection(section);
+    document.querySelectorAll('.bottom-nav-item').forEach((btn) => {
+      btn.addEventListener('click', (event) => {
+        this.switchSection(event.currentTarget.dataset.section);
       });
     });
   }
 
-  /**
-   * Switch between sections
-   */
   switchSection(section) {
-    // Update nav
-    document.querySelectorAll('.bottom-nav-item').forEach(btn => {
-      btn.classList.remove('active');
-    });
-    document.querySelector(`[data-section="${section}"]`).classList.add('active');
-
-    // Hide all sections
-    document.querySelectorAll('.section-content').forEach(s => {
-      s.classList.add('hidden');
-    });
-
-    // Show target section
-    document.getElementById(`section-${section}`).classList.remove('hidden');
-
-    // Load section data
     this.currentSection = section;
-    this[`load${this.capitalize(section)}`]();
-  }
 
-  /**
-   * Capitalize string
-   */
-  capitalize(str) {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-  }
+    document.querySelectorAll('.bottom-nav-item').forEach((btn) => {
+      const isActive = btn.dataset.section === section;
+      btn.classList.toggle('active', isActive);
+      btn.classList.toggle('text-green-400', isActive);
+      btn.classList.toggle('text-gray-400', !isActive);
+    });
 
-  /**
-   * Initialize event listeners
-   */
-  initEventListeners() {
-    // Manual scan (Scan tab)
-    const manualBtn = document.getElementById('manual-scan-btn');
-    if (manualBtn) {
-      manualBtn.addEventListener('click', () => this.manualScan());
+    document.querySelectorAll('.section-content').forEach((content) => {
+      content.classList.toggle('hidden', content.id !== `section-${section}`);
+    });
+
+    switch (section) {
+      case 'dashboard':
+        this.loadDashboard();
+        break;
+      case 'transaksi':
+        this.loadTransaksi(this.currentPeriod);
+        break;
+      case 'scan':
+        this.loadScan();
+        break;
+      case 'statistik':
+        this.loadStatistik();
+        break;
+      case 'akun':
+        this.loadAkun();
+        break;
+      default:
+        break;
     }
+  }
 
-    // Scan camera toggle
-    document.querySelectorAll('.scan-tab-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const tab = e.currentTarget.dataset.tab;
-        this.switchScanTab(tab);
+  initEventListeners() {
+    document.querySelectorAll('.scan-tab-btn').forEach((btn) => {
+      btn.addEventListener('click', (event) => {
+        this.switchScanTab(event.currentTarget.dataset.tab);
       });
     });
 
-    // Transaksi filters
-    ['hari', 'minggu', 'bulan'].forEach(period => {
-      const btn = document.getElementById(`filter-${period}`);
-      if (btn) {
-        btn.addEventListener('click', () => this.filterTransaksi(period));
-      }
+    ['hari', 'minggu', 'bulan'].forEach((period) => {
+      const button = document.getElementById(`filter-${period}`);
+      button?.addEventListener('click', () => this.filterTransaksi(period));
     });
 
-    // Akun menu actions
-    document.querySelectorAll('.menu-item').forEach(item => {
-      item.addEventListener('click', (e) => {
-        const action = e.currentTarget.dataset.action;
-        this.handleAkunAction(action);
-      });
+    document.getElementById('manual-scan-btn')?.addEventListener('click', () => this.manualScan());
+    document.getElementById('edit-profile-btn')?.addEventListener('click', () => showInfo('Edit Profil', 'Fitur segera hadir.'));
+
+    document.querySelectorAll('.menu-item').forEach((item) => {
+      item.addEventListener('click', (event) => this.handleAkunAction(event.currentTarget.dataset.action));
     });
   }
 
-  /**
-   * Switch scan tabs (camera/manual)
-   */
   switchScanTab(tab) {
-    document.querySelectorAll('.scan-tab-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelectorAll('.scan-content').forEach(content => content.classList.add('hidden'));
-    
-    document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
-    document.getElementById(`scan-${tab}`).classList.remove('hidden');
+    document.querySelectorAll('.scan-tab-btn').forEach((btn) => {
+      const isActive = btn.dataset.tab === tab;
+      btn.classList.toggle('active', isActive);
+      btn.classList.toggle('bg-green-500/20', isActive);
+      btn.classList.toggle('text-green-400', isActive);
+      btn.classList.toggle('bg-white/5', !isActive);
+      btn.classList.toggle('text-gray-400', !isActive);
+    });
+
+    document.querySelectorAll('.scan-content').forEach((content) => {
+      content.classList.toggle('hidden', content.id !== `scan-${tab}`);
+    });
   }
 
-  /**
-   * Redeem voucher
-   */
-  async redeemVoucher() {
-    const codeInput = document.getElementById('voucher-code');
-    const resultEl = document.getElementById('redeem-result');
-    const code = codeInput?.value.trim();
+  async loadDashboard() {
+    applyTextSkeleton([
+      { target: 'stat-produk', width: '56px' },
+      { target: 'stat-transaksi', width: '56px' },
+      { target: 'stat-voucher', width: '56px' }
+    ]);
+    renderListSkeleton('top-produk-list', { items: 3, avatar: 'square' });
+    renderListSkeleton('activity-list', { items: 4, avatar: 'circle', trailing: 'none' });
 
-    if (!code) {
-      if (resultEl) {
-        resultEl.innerHTML = '<span class="text-red-400"><i class="fas fa-exclamation-circle"></i> Masukkan kode voucher</span>';
-      }
+    try {
+      const [statsResult, detailResult] = await Promise.all([
+        authApi.getMitraStats(),
+        authApi.call('getmitrastatsdetail', {}, false)
+      ]);
+
+      const statsData = statsResult?.success ? (statsResult.data || {}) : {};
+      const detailData = detailResult?.success ? (detailResult.data || {}) : {};
+      const mergedStats = { ...statsData, ...(detailData.stats || {}) };
+
+      this.data.stats = mergedStats;
+      this.data.detail = detailData;
+
+      this.updateSummaryStats(mergedStats);
+      this.renderTopProduk(detailData.topProduk || []);
+      this.renderDashboardActivity(detailData.aktivitas || []);
+    } catch (error) {
+      console.error('Failed to load mitra dashboard:', error);
+      this.updateSummaryStats({});
+      this.renderTopProduk([]);
+      this.renderDashboardActivity([]);
+      showError('Error', 'Gagal memuat dashboard mitra.');
+    }
+  }
+
+  updateSummaryStats(stats = {}) {
+    clearTextSkeleton(['stat-produk', 'stat-transaksi', 'stat-voucher']);
+    document.getElementById('stat-produk').textContent = stats.produk || 0;
+    document.getElementById('stat-transaksi').textContent = stats.transaksi || 0;
+    document.getElementById('stat-voucher').textContent = stats.voucherAktif || stats.voucherRedeemed || 0;
+  }
+
+  renderTopProduk(items) {
+    const container = document.getElementById('top-produk-list');
+    if (!container) return;
+    clearContainerSkeleton(container);
+
+    if (!items.length) {
+      container.innerHTML = '<div class="text-center py-4 text-gray-500"><i class="fas fa-box-open text-lg mb-2"></i><p class="text-xs">Belum ada data produk</p></div>';
       return;
     }
 
-    if (resultEl) {
-      resultEl.innerHTML = '<span class="text-yellow-400"><i class="fas fa-spinner fa-spin"></i> Memvalidasi...</span>';
-    }
-
-    try {
-      const result = await authApi.redeemVoucher(code);
-
-      if (result.success) {
-        if (resultEl) {
-          resultEl.innerHTML = `<span class="text-green-400"><i class="fas fa-check-circle"></i> ${result.message}</span>`;
-        }
-        // Clear input
-        if (codeInput) codeInput.value = '';
-        // Refresh history
-        this.loadRedeemHistory();
-      } else {
-        if (resultEl) {
-          resultEl.innerHTML = `<span class="text-red-400"><i class="fas fa-exclamation-circle"></i> ${result.message}</span>`;
-        }
-      }
-    } catch (error) {
-      console.error('Redeem error:', error);
-      if (resultEl) {
-        resultEl.innerHTML = '<span class="text-red-400"><i class="fas fa-exclamation-circle"></i> Error koneksi</span>';
-      }
-    }
-  }
-
-  /**
-   * Load stats
-   */
-  async loadStats() {
-    try {
-      const result = await authApi.getMitraStats();
-      
-      if (result.success) {
-        this.updateStats(result.data);
-      }
-    } catch (error) {
-      console.error('Failed to load stats:', error);
-    }
-  }
-
-  /**
-   * Update stats display
-   * @param {Object} data - Stats data
-   */
-  updateStats(data) {
-    const elements = {
-      'voucher-redeemed': data.voucherRedeemed || 0,
-      'total-discount': data.totalDiscount ? `Rp ${this.formatNumber(data.totalDiscount)}` : 'Rp 0',
-      'customer-count': data.customerCount || 0
-    };
-
-    Object.entries(elements).forEach(([id, value]) => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = value;
-    });
-  }
-
-  /**
-   * Load redeem history
-   */
-  async loadRedeemHistory() {
-    const container = document.getElementById('redeem-history');
-    if (!container) return;
-
-    try {
-      const result = await authApi.getRedeemHistory();
-      
-      if (result.success && result.data?.length > 0) {
-        this.renderHistory(result.data);
-      } else {
-        this.renderEmptyHistory();
-      }
-    } catch (error) {
-      console.error('Failed to load history:', error);
-      this.renderEmptyHistory();
-    }
-  }
-
-  /**
-   * Render history
-   * @param {Array} history - History list
-   */
-  renderHistory(history) {
-    const container = document.getElementById('redeem-history');
-    if (!container) return;
-
-    container.innerHTML = history.map(item => `
-      <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-        <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-emerald-400 flex items-center justify-center">
-            <i class="fas fa-check text-white text-xs"></i>
-          </div>
-          <div>
-            <div class="font-medium text-sm">${item.kode}</div>
-            <div class="text-xs text-muted">${item.waktu}</div>
-          </div>
+    container.innerHTML = items.slice(0, 5).map((item, index) => `
+      <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
+        <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-green-500 to-emerald-400 flex items-center justify-center text-white text-xs font-bold">#${index + 1}</div>
+        <div class="flex-1 min-w-0">
+          <div class="font-medium text-sm">${item.nama || item.name || `Produk ${index + 1}`}</div>
+          <div class="text-xs text-gray-400">${item.terjual || 0} terjual</div>
         </div>
-        <span class="badge badge-success">${item.diskon}</span>
       </div>
     `).join('');
   }
 
-  /**
-   * Render empty history
-   */
-  renderEmptyHistory() {
-    const container = document.getElementById('redeem-history');
+  renderDashboardActivity(items) {
+    const container = document.getElementById('activity-list');
     if (!container) return;
+    clearContainerSkeleton(container);
 
-    container.innerHTML = `
-      <p class="text-muted text-center py-8">
-        <i class="fas fa-inbox text-3xl mb-3 block opacity-50"></i>
-        Belum ada riwayat redeem
-      </p>
-    `;
+    if (!items.length) {
+      container.innerHTML = '<div class="text-center py-4 text-gray-500"><i class="fas fa-history text-lg mb-2"></i><p class="text-xs">Belum ada aktivitas</p></div>';
+      return;
+    }
+
+    container.innerHTML = items.slice(0, 6).map((item) => `
+      <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
+        <div class="w-8 h-8 rounded-full ${item.iconBg || 'bg-green-500/20'} flex items-center justify-center">
+          <i class="fas ${item.icon || 'fa-check'} text-xs text-white"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="font-medium text-sm">${item.judul || item.title || 'Aktivitas terbaru'}</div>
+          <div class="text-xs text-gray-400">${item.waktu || item.time || '-'}</div>
+        </div>
+      </div>
+    `).join('');
   }
 
-  /**
-   * Format number
-   * @param {number} num - Number to format
-   * @returns {string}
-   */
-  formatNumber(num) {
-    return new Intl.NumberFormat('id-ID').format(num);
+  async loadTransaksi(period = 'hari') {
+    this.currentPeriod = period;
+    renderListSkeleton('transaksi-list', { items: 3, avatar: 'square', trailing: 'pill' });
+
+    try {
+      const result = await authApi.call('getmitratransaksi', { period }, false);
+      this.data.transaksi = result?.success ? (result.data || []) : [];
+      this.renderTransaksi(this.data.transaksi);
+    } catch (error) {
+      console.error('Failed to load transaksi:', error);
+      this.data.transaksi = [];
+      this.renderTransaksi([]);
+      showError('Error', 'Gagal memuat transaksi.');
+    }
   }
 
-  /**
-   * Load Dashboard section (default)
-   */
-  async loadDashboard() {
-    const topProdukList = document.getElementById('top-produk-list');
-    const activityList = document.getElementById('activity-list');
-    
-    // Mock data - replace with API
-    topProdukList.innerHTML = `
-      <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
-        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-400 to-orange-400 flex items-center justify-center text-white font-bold text-xs">#1</div>
-        <div class="flex-1">
-          <div class="font-medium text-sm">Mie Goreng</div>
-          <div class="text-xs text-gray-400">25 terjual</div>
-        </div>
-      </div>
-      <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
-        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-yellow-500 to-orange-500 flex items-center justify-center text-white font-bold text-xs">#2</div>
-        <div class="flex-1">
-          <div class="font-medium text-sm">Es Teh</div>
-          <div class="text-xs text-gray-400">18 terjual</div>
-        </div>
-      </div>
-    `;
+  filterTransaksi(period) {
+    this.currentPeriod = period;
+    ['hari', 'minggu', 'bulan'].forEach((key) => {
+      const btn = document.getElementById(`filter-${key}`);
+      if (!btn) return;
 
-    activityList.innerHTML = `
-      <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
-        <div class="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
-          <i class="fas fa-check text-green-400 text-xs"></i>
-        </div>
-        <div class="flex-1">
-          <div class="font-medium text-sm">Voucher SPIN001 ditebus</div>
-          <div class="text-xs text-gray-400">2 menit lalu</div>
-        </div>
-      </div>
-      <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
-        <div class="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
-          <i class="fas fa-plus text-blue-400 text-xs"></i>
-        </div>
-        <div class="flex-1">
-          <div class="font-medium text-sm">Produk baru ditambahkan</div>
-          <div class="text-xs text-gray-400">1 jam lalu</div>
-        </div>
-      </div>
-    `;
+      const isActive = key === period;
+      btn.classList.toggle('bg-green-500/20', isActive);
+      btn.classList.toggle('text-green-400', isActive);
+      btn.classList.toggle('bg-white/5', !isActive);
+      btn.classList.toggle('text-gray-300', !isActive);
+    });
 
-    // Update stats with mock
-    setTimeout(() => {
-      document.getElementById('stat-produk').textContent = '47';
-      document.getElementById('stat-transaksi').textContent = '12';
-      document.getElementById('stat-voucher').textContent = '8';
-    }, 500);
+    this.loadTransaksi(period);
   }
 
-  /**
-   * Load Transaksi (mock)
-   */
-  async loadTransaksi() {
+  renderTransaksi(items) {
     const container = document.getElementById('transaksi-list');
-    container.innerHTML = `
+    if (!container) return;
+    clearContainerSkeleton(container);
+
+    if (!items.length) {
+      container.innerHTML = '<div class="text-center py-6 text-gray-500"><i class="fas fa-receipt text-xl mb-2"></i><p class="text-sm">Belum ada transaksi pada periode ini</p></div>';
+      return;
+    }
+
+    container.innerHTML = items.map((item) => `
       <div class="glass-card p-3">
-        <div class="flex items-center justify-between mb-1">
-          <span class="text-sm font-medium">Budi S.</span>
-          <span class="badge badge-success">Rp 5.000</span>
+        <div class="flex items-center justify-between gap-3 mb-1">
+          <span class="text-sm font-medium">${item.siswa || 'Pelanggan'}</span>
+          <span class="badge badge-success">${item.diskon || 'Rp 0'}</span>
         </div>
-        <div class="text-xs text-gray-400">Hari ini 14:32</div>
-        <div class="text-xs text-gray-500">VOUCHER123</div>
+        <div class="text-xs text-gray-400">${item.tanggal || '-'}</div>
+        <div class="text-xs text-gray-500">${item.kodeVoucher || '-'}</div>
       </div>
-      <div class="glass-card p-3">
-        <div class="flex items-center justify-between mb-1">
-          <span class="text-sm font-medium">Sari K.</span>
-          <span class="badge badge-success">Rp 10.000</span>
-        </div>
-        <div class="text-xs text-gray-400">Hari ini 13:45</div>
-        <div class="text-xs text-gray-500">DISKON50</div>
-      </div>
-    `;
+    `).join('');
   }
 
-  /**
-   * Load Scan (init camera)
-   */
-  async loadScan() {
-    // Camera logic here
-    document.getElementById('scan-status').innerHTML = 
-      '<i class="fas fa-camera text-yellow-400"></i> Arahkan kamera ke QR code';
+  loadScan() {
+    const status = document.getElementById('scan-status');
+    if (status) {
+      status.innerHTML = '<i class="fas fa-camera text-yellow-400"></i> Arahkan kamera ke QR code';
+    }
   }
 
-  /**
-   * Load Statistik (mock charts)
-   */
+  async manualScan() {
+    const input = document.getElementById('manual-code');
+    const resultEl = document.getElementById('manual-result');
+    const code = input?.value.trim();
+
+    if (!resultEl) return;
+
+    if (!code) {
+      resultEl.innerHTML = '<span class="text-red-400"><i class="fas fa-exclamation-circle"></i> Masukkan kode voucher</span>';
+      return;
+    }
+
+    resultEl.innerHTML = '<span class="text-yellow-400"><i class="fas fa-spinner fa-spin"></i> Memvalidasi voucher...</span>';
+
+    try {
+      const result = await authApi.call('validatevoucher', { voucher: code }, false);
+
+      if (result?.success) {
+        const voucherData = result.data || {};
+        resultEl.innerHTML = `<span class="text-green-400"><i class="fas fa-check-circle"></i> ${voucherData.message || 'Voucher valid'}</span>`;
+        if (input) input.value = '';
+        showSuccess('Voucher Valid', voucherData.message || 'Voucher siap diproses.');
+        this.loadDashboard();
+        if (this.currentSection === 'transaksi') {
+          this.loadTransaksi(this.currentPeriod);
+        }
+      } else {
+        resultEl.innerHTML = `<span class="text-red-400"><i class="fas fa-exclamation-circle"></i> ${result?.message || 'Voucher tidak valid'}</span>`;
+      }
+    } catch (error) {
+      console.error('Manual scan failed:', error);
+      resultEl.innerHTML = '<span class="text-red-400"><i class="fas fa-exclamation-circle"></i> Error koneksi</span>';
+    }
+  }
+
   async loadStatistik() {
-    document.getElementById('stat-voucher-hari').textContent = '5';
-    document.getElementById('stat-voucher-minggu').textContent = '28';
-    
-    // Simple chart
-    const container = document.getElementById('diskon-chart');
-    container.innerHTML = `
-      <div style="flex:1"><div class="w-3 bg-green-500 rounded-t" style="height:30%"></div></div>
-      <div style="flex:1"><div class="w-3 bg-green-500 rounded-t" style="height:60%"></div></div>
-      <div style="flex:1"><div class="w-3 bg-green-500 rounded-t" style="height:80%"></div></div>
-      <div style="flex:1"><div class="w-3 bg-green-500 rounded-t bg-green-600" style="height:100%"></div></div>
-    `;
+    applyTextSkeleton([
+      { target: 'stat-voucher-hari', width: '56px' },
+      { target: 'stat-voucher-minggu', width: '56px' },
+      { target: 'mitra-nama', width: '44%' },
+      { target: 'mitra-kategori', width: '30%' },
+      { target: 'mitra-kontak', width: '34%' },
+      { target: 'toko-nama', width: '44%' },
+      { target: 'toko-alamat', width: '52%' },
+      { target: 'toko-telepon', width: '32%' }
+    ]);
+    renderChartSkeleton('diskon-chart', { bars: 7 });
+
+    try {
+      const result = await authApi.call('getmitrastatistik', {}, false);
+      const data = result?.success ? (result.data || {}) : {};
+      this.data.statistik = data;
+      this.renderStatistik(data);
+    } catch (error) {
+      console.error('Failed to load statistik:', error);
+      this.renderStatistik({});
+      showError('Error', 'Gagal memuat statistik mitra.');
+    }
   }
 
-  /**
-   * Load Akun (profile)
-   */
+  renderStatistik(data = {}) {
+    clearTextSkeleton([
+      'stat-voucher-hari',
+      'stat-voucher-minggu',
+      'mitra-nama',
+      'mitra-kategori',
+      'mitra-kontak',
+      'toko-nama',
+      'toko-alamat',
+      'toko-telepon'
+    ]);
+
+    document.getElementById('stat-voucher-hari').textContent = data.hari || 0;
+    document.getElementById('stat-voucher-minggu').textContent = data.minggu || 0;
+
+    const profile = data.profile || {};
+    document.getElementById('mitra-nama').textContent = profile.nama_mitra || '-';
+    document.getElementById('mitra-kategori').textContent = profile.kategori || '-';
+    document.getElementById('mitra-kontak').textContent = profile.kontak || '-';
+    document.getElementById('toko-nama').textContent = profile.nama_mitra || '-';
+    document.getElementById('toko-alamat').textContent = profile.alamat || '-';
+    document.getElementById('toko-telepon').textContent = profile.kontak || '-';
+
+    const chart = document.getElementById('diskon-chart');
+    if (!chart) return;
+
+    const bars = Array.isArray(data.diskonHarian) ? data.diskonHarian : [];
+    const maxValue = bars.reduce((max, item) => Math.max(max, Number(item.value) || 0), 0) || 1;
+    chart.removeAttribute('aria-busy');
+    chart.innerHTML = bars.length
+      ? bars.map((item) => `
+          <div class="flex-1 flex items-end justify-center h-full">
+            <div class="w-3 rounded-t bg-green-500" style="height:${Math.max(12, Math.round(((Number(item.value) || 0) / maxValue) * 100))}%"></div>
+          </div>
+        `).join('')
+      : '<div class="w-full text-center text-xs text-gray-500">Belum ada data diskon</div>';
+  }
+
   loadAkun() {
-    // Data from authGuard
+    if (this.data.statistik?.profile) {
+      this.renderStatistik(this.data.statistik);
+      return;
+    }
+
+    this.loadStatistik();
+  }
+
+  handleAkunAction(action) {
+    const messages = {
+      bank: 'Fitur rekening bank segera hadir.',
+      settings: 'Pengaturan mitra segera hadir.'
+    };
+
+    showInfo('Menu Mitra', messages[action] || 'Fitur sedang disiapkan.');
   }
 }
 
-// Export
 export { MitraDashboard };
 
-// Auto-init when DOM ready
 document.addEventListener('DOMContentLoaded', () => {
-  new MitraDashboard().init();
+  const dashboard = new MitraDashboard();
+  window.dashboard = dashboard;
+  dashboard.init();
 });
-
-

@@ -8,7 +8,14 @@
 import { authGuard } from '../core/AuthGuard.js';
 import { themeManager } from '../core/ThemeManager.js';
 import { authApi } from '../auth/AuthApi.js';
-import { showSuccess, showError, showWarning, showInfo, showLoading } from '../components/utils/Toast.js';
+import { showSuccess, showError, showWarning, showInfo } from '../components/utils/Toast.js';
+import {
+  applyTextSkeleton,
+  clearTextSkeleton,
+  renderListSkeleton,
+  renderCardSkeleton,
+  clearContainerSkeleton
+} from '../components/utils/DashboardSkeleton.js';
 
 /**
  * Wheel Configuration
@@ -86,10 +93,35 @@ class SiswaDashboard {
     this.setupNavigation();
     this.setupEventListeners();
     this.loadSavedWa();
+    this.showInitialSkeletons();
 
     // Load data
     await this.loadDashboardData();
     this.initGame();
+  }
+
+  showSuccess(title, message = '') {
+    return showSuccess(title, message);
+  }
+
+  showError(title, message = '') {
+    return showError(title, message);
+  }
+
+  showWarning(title, message = '') {
+    return showWarning(title, message);
+  }
+
+  showInitialSkeletons() {
+    applyTextSkeleton([
+      { target: 'spin-available', width: '52px' },
+      { target: 'voucher-active', width: '52px' },
+      { target: 'reward-points', width: '64px' }
+    ]);
+    renderListSkeleton('activity-list', { items: 4, avatar: 'square', trailing: 'none' });
+    renderListSkeleton('leaderboard', { items: 4, avatar: 'circle' });
+    renderCardSkeleton('mitra-list', { items: 3, footer: true });
+    renderCardSkeleton('pesanan-list', { items: 3, footer: true });
   }
 
   /**
@@ -371,30 +403,52 @@ class SiswaDashboard {
    * Load dashboard data
    */
 async loadDashboardData() {
+    applyTextSkeleton([
+      { target: 'spin-available', width: '52px' },
+      { target: 'voucher-active', width: '52px' },
+      { target: 'reward-points', width: '64px' }
+    ]);
+    renderListSkeleton('activity-list', { items: 4, avatar: 'square', trailing: 'none' });
+    renderListSkeleton('leaderboard', { items: 4, avatar: 'circle' });
+
     try {
-      showLoading('Memuat dashboard...');
       const result = await authApi.call('getsiswadata', { userId: this.currentUser.id }, false);
       if (result.success) {
+        const stats = result.data || result.stats || {};
+
         // Update quick info
-        document.getElementById('spin-available').textContent = result.spinAvailable || 0;
-        document.getElementById('voucher-active').textContent = result.voucherActive || 0;
-        document.getElementById('reward-points').textContent = result.points || 0;
+        clearTextSkeleton(['spin-available', 'voucher-active', 'reward-points']);
+        document.getElementById('spin-available').textContent = stats.spinAvailable || result.spinAvailable || 0;
+        document.getElementById('voucher-active').textContent = stats.voucherActive || result.voucherActive || 0;
+        document.getElementById('reward-points').textContent = stats.points || result.points || 0;
 
         // Activity
         this.renderActivity(result.activity || []);
 
         // Leaderboard
         this.renderLeaderboard(result.leaderboard || []);
+      } else {
+        clearTextSkeleton(['spin-available', 'voucher-active', 'reward-points']);
+        document.getElementById('spin-available').textContent = 0;
+        document.getElementById('voucher-active').textContent = 0;
+        document.getElementById('reward-points').textContent = 0;
+        this.renderActivity([]);
+        this.renderLeaderboard([]);
       }
     } catch (error) {
       showError('Error', 'Gagal memuat data dashboard');
-    } finally {
-      closeLoading();
+      clearTextSkeleton(['spin-available', 'voucher-active', 'reward-points']);
+      document.getElementById('spin-available').textContent = 0;
+      document.getElementById('voucher-active').textContent = 0;
+      document.getElementById('reward-points').textContent = 0;
+      this.renderActivity([]);
+      this.renderLeaderboard([]);
     }
   }
 
   renderActivity(activities) {
     const container = document.getElementById('activity-list');
+    clearContainerSkeleton(container);
     if (activities.length === 0) {
       container.innerHTML = '<div class="text-center py-6 text-gray-500"><i class="fas fa-inbox text-lg mb-2"></i><p class="text-sm">Belum ada aktivitas</p></div>';
       return;
@@ -413,8 +467,9 @@ async loadDashboardData() {
 
   renderLeaderboard(leaderboard) {
     const container = document.getElementById('leaderboard');
+    clearContainerSkeleton(container);
     if (leaderboard.length === 0) {
-      container.innerHTML = '<div class="text-center py-4 text-gray-500"><i class="fas fa-crown text-lg mb-2"></i><p class="text-xs">Loading top siswa...</p></div>';
+      container.innerHTML = '<div class="text-center py-4 text-gray-500"><i class="fas fa-crown text-lg mb-2"></i><p class="text-xs">Belum ada leaderboard</p></div>';
       return;
     }
     container.innerHTML = leaderboard.slice(0, 10).map((user, idx) => `
@@ -433,19 +488,26 @@ async loadDashboardData() {
    * Load mitra list
    */
 async loadMitra() {
+    renderCardSkeleton('mitra-list', { items: 3, footer: true });
     try {
       const result = await authApi.call('getmitra', { role: 'siswa' }, false);
       if (result.success) {
         this.data.mitra = result.mitra || [];
         this.renderMitra();
+      } else {
+        this.data.mitra = [];
+        this.renderMitra();
       }
     } catch (error) {
+      this.data.mitra = [];
+      this.renderMitra();
       showError('Error', 'Gagal memuat mitra');
     }
   }
 
   renderMitra() {
     const container = document.getElementById('mitra-list');
+    clearContainerSkeleton(container);
     const search = document.getElementById('mitra-search').value.toLowerCase();
     const filtered = this.data.mitra.filter(m => 
       m.nama.toLowerCase().includes(search) || 
@@ -479,13 +541,19 @@ async loadMitra() {
    * Load pesanan
    */
 async loadPesanan() {
+    renderCardSkeleton('pesanan-list', { items: 3, footer: true });
     try {
       const result = await authApi.call('getpesanan', { userId: this.currentUser.id }, false);
       if (result.success) {
         this.data.pesanan = result.pesanan || [];
         this.renderPesanan('aktif');
+      } else {
+        this.data.pesanan = [];
+        this.renderPesanan('aktif');
       }
     } catch (error) {
+      this.data.pesanan = [];
+      this.renderPesanan('aktif');
       showError('Error', 'Gagal memuat pesanan');
     }
   }
@@ -495,7 +563,9 @@ async loadPesanan() {
       btn.classList.remove('active', 'bg-green-500/20', 'text-green-400');
       btn.classList.add('bg-gray-500/20', 'text-gray-400');
     });
-    event.target.classList.add('active', 'bg-green-500/20', 'text-green-400');
+    const activeBtn = document.querySelector(`.pesanan-tab[data-tab="${tab}"]`);
+    activeBtn?.classList.add('active', 'bg-green-500/20', 'text-green-400');
+    activeBtn?.classList.remove('bg-gray-500/20', 'text-gray-400');
 
     this.renderPesanan(tab);
   }
@@ -503,6 +573,7 @@ async loadPesanan() {
   renderPesanan(status) {
     const filtered = this.data.pesanan.filter(p => p.status === status);
     const container = document.getElementById('pesanan-list');
+    clearContainerSkeleton(container);
 
     if (filtered.length === 0) {
       container.innerHTML = '<div class="text-center py-12 text-gray-500"><i class="fas fa-receipt text-3xl mb-4 opacity-50"></i><p class="text-lg">Belum ada pesanan ' + status + '</p></div>';
@@ -535,8 +606,7 @@ async loadPesanan() {
    * Load akun data
    */
   loadAkunData() {
-    // Already set in init
-    showInfo('Akun', 'Data profil dimuat');
+    // Data profil sudah dipasang saat init.
   }
 
   /**
@@ -586,6 +656,7 @@ export { SiswaDashboard };
 
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new SiswaDashboard();
+  window.dashboard.init();
   window.startGame = () => window.dashboard.startGame();
   window.spinWheel = () => window.dashboard.spinWheel();
 });
