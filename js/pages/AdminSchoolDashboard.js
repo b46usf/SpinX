@@ -416,8 +416,8 @@ async checkPDFReady(maxAttempts = 50) {
         doc.text('FORMAT MITRA (TSV - Tab Separated)', 20, startY);
         startY += 8;
 
-        const mitraHeaders = [['mitra_id', 'nama_mitra', 'owner_name', 'email', 'alamat', 'kategori', 'asal_sekolah']];
-        const mitraExample = ['m-001', 'warung bu bos', 'bu bosi', 'example@gmail.com', 'jl manalagi', 'FNB', schoolId];
+        const mitraHeaders = [['mitra_id', 'nama_mitra', 'owner_name', 'email', 'no_wa', 'alamat', 'kategori', 'asal_sekolah']];
+        const mitraExample = ['m-001', 'warung bu bos', 'bu bosi', 'example@gmail.com', '08123456789', 'jl manalagi', 'FNB', schoolId];
 
         doc.autoTable({
           startY,
@@ -539,12 +539,17 @@ async parseExcel(file) {
     reader.onload = (e) => {
       try {
         const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
+        const workbook = XLSX.read(data, { type: 'array', cellText: true, cellDates: false });
 
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const json = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+        const rows = XLSX.utils.sheet_to_json(sheet, {
+          header: 1,
+          raw: false,
+          defval: '',
+          blankrows: false
+        });
 
-        resolve(json);
+        resolve(this.rowsToObjects(rows));
       } catch (err) {
         reject(err);
       }
@@ -556,14 +561,47 @@ async parseExcel(file) {
 
 async parseText(file) {
   const text = await file.text();
-  const rows = text.split('\n').map(r => r.split(/\t|,/));
+  const rows = text
+    .split(/\r?\n/)
+    .map(row => row.split(/\t|,/))
+    .filter(row => row.some(cell => this.normalizeImportValue(cell) !== ''));
 
-  const headers = rows[0];
-  return rows.slice(1).map(row => {
-    let obj = {};
-    headers.forEach((h, i) => obj[h.trim()] = row[i]?.trim());
-    return obj;
+  return this.rowsToObjects(rows);
+}
+
+normalizeImportHeader(header) {
+  return (header ?? '')
+    .toString()
+    .replace(/^\uFEFF/, '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^\w]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
+normalizeImportValue(value) {
+  return value == null ? '' : value.toString().trim();
+}
+
+rowsToObjects(rows) {
+  if (!Array.isArray(rows) || rows.length === 0) return [];
+
+  const [rawHeaders = [], ...bodyRows] = rows;
+  const headers = rawHeaders.map((header, index) => {
+    const normalized = this.normalizeImportHeader(header);
+    return normalized || `column_${index + 1}`;
   });
+
+  return bodyRows
+    .map(row => headers.reduce((obj, header, index) => {
+      obj[header] = this.normalizeImportValue(row?.[index]);
+      return obj;
+    }, {}))
+    .filter(row => !this.isImportRowEmpty(row));
+}
+
+isImportRowEmpty(row) {
+  return Object.values(row).every(value => this.normalizeImportValue(value) === '');
 }
 
 normalizeData(rows, role) {
@@ -583,6 +621,7 @@ normalizeData(rows, role) {
         nama_mitra: r.nama_mitra,
         owner_name: r.owner_name,
         email: r.email,
+        no_wa: r.no_wa,
         alamat: r.alamat,
         kategori: r.kategori,
         asal_sekolah: this.schoolId
@@ -624,17 +663,21 @@ async confirmImport() {
 
     let endpoint = {
       siswa: 'importstudentsmaster',
-      guru: 'importteachersmaster',
+      guru: 'importgurumaster',
       mitra: 'importmitramaster'
     }[role];
 
     const payload = { schoolId: this.schoolId };
-    payload[role === 'siswa' ? 'students' : role === 'guru' ? 'teachers' : 'mitra'] = data;
+    payload[role === 'siswa' ? 'students' : role === 'guru' ? 'teachers' : 'mitras'] = data;
 
     const result = await authApi.call(endpoint, payload);
 
     if (result.success) {
-      Toast.success('Import berhasil', `${data.length} data`);
+      const processed = result.stats?.total ?? data.length;
+      const notes = [];
+      if (result.stats?.skipped) notes.push(`${result.stats.skipped} baris kosong/tidak valid`);
+      if (result.stats?.duplicates) notes.push(`${result.stats.duplicates} duplikat`);
+      Toast.success('Import berhasil', notes.length ? `${processed} data tersimpan, ${notes.join(', ')}` : `${processed} data tersimpan`);
       this.closeImportModal();
       await this.loadUsers();
     } else {
