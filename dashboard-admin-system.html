@@ -339,14 +339,8 @@
   <!-- Toast Container -->
   <div id="toast-container" class="fixed top-20 right-4 z-50"></div>
 
-  <!-- Modular Scripts -->
-  <script type="module">
-    // Import core modules
-    import './js/components/utils/Toast.js';
-    import { AdminSystemDashboard } from './js/pages/AdminSystemDashboard.js';
-    
-    // Auto-init
-  </script>
+  <!-- Modular Scripts - Vite auto-imports -->
+  <script type="module" src="./js/pages/AdminSystemDashboard.js"></script>
 
 </body>
 </html>
