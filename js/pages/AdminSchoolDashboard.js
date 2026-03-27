@@ -72,7 +72,7 @@ export class AdminSchoolDashboard {
     
     // Final subscription check before dashboard load
     try {
-      await SubscriptionGuard.verify(currentUser);
+      await window.SubscriptionGuard.verify(currentUser);
     } catch (error) {
       // Guard handles toast/redirect to login
       return;

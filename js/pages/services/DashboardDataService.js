@@ -1,5 +1,4 @@
 // DashboardDataService - Stats/Account data
-import { SubscriptionGuard } from './SubscriptionGuard.js';
 
 export class DashboardDataService {
   constructor(authApi) {
