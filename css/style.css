@@ -1431,6 +1431,78 @@ body::before {
   transform: scale(0.95);
 }
 
+/* ============================================
+   SUBSCRIPTION EXPIRY MODAL
+   ============================================ */
+#subscription-expiry-modal {
+  z-index: 9999;
+}
+
+#subscription-expiry-modal:not(.hidden) {
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+#subscription-expiry-modal .bg-gradient-to-br {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #1e293b 100%);
+}
+
+#subscription-expiry-modal [id^="modal-"] {
+  transition: all 0.3s ease;
+}
+
+#modal-contact-admin {
+  position: relative;
+  overflow: hidden;
+}
+
+#modal-contact-admin::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+#modal-contact-admin:hover::before {
+  opacity: 1;
+}
+
+#modal-contact-admin:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+}
+
+#modal-close-btn, #modal-close-action:hover {
+  transform: scale(1.1);
+}
+
+#modal-close-btn:hover i, #modal-close-action:hover {
+  color: #ffffff !important;
+}
+
+@media (max-width: 640px) {
+  #subscription-expiry-modal > div {
+    margin: 1rem;
+    max-height: 95vh;
+  }
+  
+  #subscription-expiry-modal [id^="modal-close"] {
+    padding: 12px;
+  }
+}
+
 /* Section animations */
 .section-content {
   animation: fadeInUp 0.3s ease-out forwards;

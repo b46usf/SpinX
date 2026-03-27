@@ -96,6 +96,17 @@ class AuthApi {
       
       const message = errorMessages[action] || result.message || 'Terjadi kesalahan';
       
+      // NEW: School subscription invalid → Custom modal
+      if (result.error === 'SCHOOL_SUBSCRIPTION_INVALID') {
+        // Don't show toast - use custom modal instead
+        if (window.LoginComponent) {
+          window.LoginComponent.showSubscriptionModal(result);
+        } else {
+          Toast.error('Subscription Expired', message);
+        }
+        return;
+      }
+
       // Special handling for specific errors
       if (result.error === 'TELEGRAM_NOT_LINKED') {
         Toast.warning('Telegram Belum Terhubung', message);
@@ -112,9 +123,7 @@ class AuthApi {
       } else if (result.error === 'USER_BLOCKED') {
         Toast.error('Akun Diblokir', message);
       } else if (result.error === 'TOKEN_EXPIRED' || result.error === 'INVALID_TOKEN') {
-        // Handle token-related errors
         Toast.warning('Sesi Habis', 'Silakan login kembali');
-        // Trigger logout after a delay
         setTimeout(() => {
           jwtManager.clearAuthData();
           window.location.href = 'index.html';
