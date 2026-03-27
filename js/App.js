@@ -223,24 +223,42 @@ class App {
     });
   }
 
-  handleOtpSuccess() {
+  async handleOtpSuccess() {
     const storedUser = window.jwtManager?.getUser?.() || null;
 
     if (storedUser) {
-      localStorage.setItem('user', JSON.stringify(storedUser));
-      AuthRouter.routeToDashboard(storedUser.role);
+      try {
+        // Check subscription before routing (bypass admin-system)
+        await window.SubscriptionGuard.verify(storedUser);
+        localStorage.setItem('user', JSON.stringify(storedUser));
+        AuthRouter.routeToDashboard(storedUser.role);
+      } catch (error) {
+        // Guard handles toast/redirect
+        console.warn('Post-OTP subscription check failed:', error);
+      }
       return;
     }
 
     this.showLoginSection({ role: this.pendingLoginRole });
   }
 
-  handleAuthChange(user, extra) {
+  async handleAuthChange(user, extra) {
     if (user && !extra) {
       return;
     }
 
     if (!extra) {
+      return;
+    }
+
+    // If login success without extra flow, check subscription and route
+    if (user && extra === 'login-success') {
+      try {
+        await window.SubscriptionGuard.verify(user);
+        AuthRouter.routeToDashboard(user.role);
+      } catch (error) {
+        // Guard handles toast/redirect
+      }
       return;
     }
 

@@ -43,6 +43,27 @@ const AuthRouter = {
   },
 
   /**
+   * Safe route with subscription check (bypass admin-system)
+   * @param {string} role - User role
+   * @param {Object} user - User object (w/ schoolId)
+   */
+  async safeRouteToDashboard(role, user) {
+    try {
+      // Bypass admin-system
+      if (role === 'admin-system') {
+        this.routeToDashboard(role);
+        return;
+      }
+      
+      await window.SubscriptionGuard.verify(user);
+      this.routeToDashboard(role);
+    } catch (error) {
+      // Guard already shows toast/redirects to login
+      console.warn('Safe route blocked:', error.message);
+    }
+  },
+
+  /**
    * Route to login page
    */
   routeToLogin(role = '') {

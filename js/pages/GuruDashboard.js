@@ -50,6 +50,15 @@ class GuruDashboard {
     if (!authResult) return;
 
     this.currentUser = authGuard.getUser();
+    
+    // Final subscription check
+    try {
+      await window.SubscriptionGuard.verify(this.currentUser);
+    } catch (error) {
+      // Guard handles toast/redirect
+      return;
+    }
+    
     this.kelasId = this.currentUser.kelasId || this.currentUser.kelas;
     
     themeManager.init();

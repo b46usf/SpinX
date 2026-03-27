@@ -81,6 +81,15 @@ class SiswaDashboard {
     if (!authResult) return;
 
     this.currentUser = authGuard.getUser();
+    
+    // Final subscription check
+    try {
+      await window.SubscriptionGuard.verify(this.currentUser);
+    } catch (error) {
+      // Guard handles toast/redirect
+      return;
+    }
+    
     document.getElementById('kelas-name').textContent = this.currentUser.kelas || '-';
     document.getElementById('student-name').textContent = this.currentUser.name;
     document.getElementById('student-kelas').textContent = this.currentUser.kelas;

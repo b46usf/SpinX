@@ -68,6 +68,15 @@ export class AdminSchoolDashboard {
     if (!authResult) return;
 
     const currentUser = authGuard.getUser();
+    
+    // Final subscription check before dashboard load
+    try {
+      await window.SubscriptionGuard.verify(currentUser);
+    } catch (error) {
+      // Guard handles toast/redirect to login
+      return;
+    }
+    
     this.schoolId = currentUser.schoolId || currentUser.sekolah;
 
     if (!this.schoolId) {

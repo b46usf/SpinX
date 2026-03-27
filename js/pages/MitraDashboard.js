@@ -34,6 +34,15 @@ class MitraDashboard {
     }
 
     this.currentUser = authGuard.getUser();
+    
+    // Final subscription check
+    try {
+      await window.SubscriptionGuard.verify(this.currentUser);
+    } catch (error) {
+      // Guard handles toast/redirect
+      return;
+    }
+    
     themeManager.init();
     this.setupProfile();
     this.updateDate();
