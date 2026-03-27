@@ -191,14 +191,12 @@ class AuthApi {
       }
 
   // Handle token in response (for login action) + subscription check
-      if (result.token && action === 'login') {
+        if (result.token && action === 'login') {
         // Subscription check for non-admin-system (bypass system admin)
         if (result.user && result.user.role !== 'admin-system') {
           try {
-            const guard = new window.SubscriptionGuard();
-            await guard.check(result.user);
+            await window.SubscriptionGuard.verify(result.user);
           } catch (error) {
-            // Guard handles toast/redirect - don't set token
             console.warn('Subscription check failed:', error.message);
             return { success: false, message: error.message, requireSubscriptionCheck: true };
           }
