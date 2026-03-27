@@ -99,8 +99,8 @@ class AuthApi {
       // NEW: School subscription invalid → Custom modal
       if (result.error === 'SCHOOL_SUBSCRIPTION_INVALID') {
         // Don't show toast - use custom modal instead
-        if (window.LoginComponent) {
-          window.LoginComponent.showSubscriptionModal(result);
+        if (window.loginComponent && window.loginComponent.showSubscriptionModal) {
+          window.loginComponent.showSubscriptionModal(result);
         } else {
           Toast.error('Subscription Expired', message);
         }

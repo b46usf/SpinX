@@ -281,6 +281,7 @@ class App {
     this.loginComponent = new LoginComponent({
       googleAuth: this.googleAuth
     });
+    window.loginComponent = this.loginComponent;  // NEW: Expose instance globally
 
     this.registerComponent = new RegisterComponent({
       googleAuth: this.googleAuth,
