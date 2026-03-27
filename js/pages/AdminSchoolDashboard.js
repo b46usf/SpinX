@@ -327,8 +327,6 @@ export class AdminSchoolDashboard {
   }
 }
 
-export { AdminSchoolDashboard };
-
 document.addEventListener('DOMContentLoaded', () => {
   window.dashboard = new AdminSchoolDashboard();
   window.dashboard.init();
