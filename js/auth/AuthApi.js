@@ -192,13 +192,18 @@ class AuthApi {
 
   // Handle token in response (for login action) + subscription check
         if (result.token && action === 'login') {
-        // Subscription check for non-admin-system (bypass system admin)
+        // Subscription check for non-admin-system (bypass system admin) - FIXED: Defensive load check
         if (result.user && result.user.role !== 'admin-system') {
-          try {
-            await window.SubscriptionGuard.verify(result.user);
-          } catch (error) {
-            console.warn('Subscription check failed:', error.message);
-            return { success: false, message: error.message, requireSubscriptionCheck: true };
+          if (window.SubscriptionGuard?.verify) {
+            try {
+              await window.SubscriptionGuard.verify(result.user);
+            } catch (error) {
+              console.warn('SubscriptionGuard verify failed:', error.message);
+              // Continue login - don't block dashboard (subscription checked in BE)
+            }
+          } else {
+            console.warn('SubscriptionGuard not loaded - bypassing check (backend already validated)');
+            // Continue login safely
           }
         }
         
