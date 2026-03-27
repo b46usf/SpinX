@@ -1,89 +1,68 @@
 /**
  * SubscriptionGuard - Ensures active subscription before dashboard access
- * Blocks expired/inactive schools with toast + redirect to login
+ * Static verify() method - no instantiation needed
+ * Blocks expired/inactive schools with toast + login redirect
  * Bypasses admin-system (no subscription required)
  */
 
-import { DashboardDataService } from './DashboardDataService.js';
 import { authApi } from '../../auth/AuthApi.js';
+import { DashboardDataService } from './DashboardDataService.js';
 import AuthRouter from '../../auth/utils/AuthRouter.js';
 
 const ToastProxy = {
   error(title, message) {
     window.Toast?.error?.(title, message);
-  },
-  warning(title, message) {
-    window.Toast?.warning?.(title, message);
   }
 };
 
 export class SubscriptionGuard {
-  constructor() {
-    this.dataService = new DashboardDataService(authApi);
-  }
-
   /**
-   * Check subscription for user
-   * @param {Object} user - User object from auth (must have role, userId/schoolId)
-   * @returns {Promise<{ok: boolean, data: any}>} - ok:true if active
+   * Static check - use SubscriptionGuard.verify(user)
+   * @param {Object} user - User from authGuard/JWT
    */
-  async check(user) {
-    // Bypass admin-system (no subscription needed)
+  static async verify(user) {
+    // Bypass admin-system
     if (user.role === 'admin-system') {
-      return { ok: true, data: { status: 'system-admin' } };
+      return { ok: true, status: 'bypassed' };
     }
 
     try {
-      // Require schoolId for school-related roles
+      const dataService = new DashboardDataService(authApi);
       const schoolId = user.schoolId || user.sekolah;
+      
       if (!schoolId) {
-        throw new Error('schoolId tidak ditemukan. Hubungi admin sekolah.');
+        throw new Error('schoolId tidak ditemukan. Login ulang atau hubungi admin.');
       }
 
-      const result = await this.dataService.loadAccountData(schoolId);
+      const result = await dataService.loadAccountData(schoolId);
       
       if (result.success !== true || result.status !== 'active') {
-        const msg = result.message || `Subscription ${result.status || 'expired'}. Hubungi admin sekolah untuk renew.`;
+        const msg = result.message || 'Subscription tidak aktif. Hubungi admin sekolah untuk renew.';
         throw new Error(msg);
       }
 
       return { ok: true, data: result };
     } catch (error) {
-      await this.handleExpired(error.message);
+      await SubscriptionGuard._handleExpired(error.message);
       return { ok: false, error: error.message };
     }
   }
 
-  /**
-   * Handle expired subscription - show toast + redirect
-   */
-  async handleExpired(message = 'Subscription expired') {
+  static async _handleExpired(message = 'Subscription expired/inactive') {
     ToastProxy.error('Subscription Expired', message);
     
-    // Clear any stale session
+    // Clear session
     if (window.jwtManager) window.jwtManager.clearAuthData();
     localStorage.removeItem('user');
     
-    // Stay/block at login (update route)
+    // Redirect to login (stay/block)
     setTimeout(() => {
       AuthRouter.routeToLogin();
-    }, 2000);
-  }
-
-  /**
-   * Static convenience method
-   */
-  static async verify(user) {
-    const guard = new SubscriptionGuard();
-    return await guard.check(user);
+    }, 1500);
   }
 }
 
-// Global convenience
+// Global static access
 if (typeof window !== 'undefined') {
   window.SubscriptionGuard = SubscriptionGuard;
-  window.checkSubscription = async (user) => SubscriptionGuard.verify(user);
 }
-
-export default SubscriptionGuard;
-
