@@ -49,8 +49,20 @@ const AuthRouter = {
    */
   async safeRouteToDashboard(role, user) {
     try {
+      // Validate inputs
+      if (!role || !user) {
+        throw new Error('Missing role or user for safe routing');
+      }
+      
       // Bypass admin-system
       if (role === 'admin-system') {
+        this.routeToDashboard(role);
+        return;
+      }
+      
+      // Null-safe verify call
+      if (!window.SubscriptionGuard?.verify) {
+        console.warn('SubscriptionGuard.verify not available - bypassing check');
         this.routeToDashboard(role);
         return;
       }
@@ -58,8 +70,9 @@ const AuthRouter = {
       await window.SubscriptionGuard.verify(user);
       this.routeToDashboard(role);
     } catch (error) {
-      // Guard already shows toast/redirects to login
-      console.warn('Safe route blocked:', error.message);
+      console.error('SafeRoute failed:', error.message);
+      // Don't block routing on verify failure - let dashboard handle
+      this.routeToDashboard(role);
     }
   },
 

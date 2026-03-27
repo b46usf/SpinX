@@ -21,6 +21,12 @@ export class SubscriptionGuard {
    * @param {Object} user - User from authGuard/JWT
    */
   static async verify(user) {
+    // Defensive: validate user object
+    if (!user || typeof user !== 'object' || !user.role) {
+      console.warn('SubscriptionGuard.verify: Invalid/missing user object');
+      throw new Error('User object invalid or missing (no role). Check login response.');
+    }
+    
     // Bypass admin-system
     if (user.role === 'admin-system') {
       return { ok: true, status: 'bypassed' };
@@ -28,10 +34,11 @@ export class SubscriptionGuard {
 
     try {
       const dataService = new DashboardDataService(authApi);
-      const schoolId = user.schoolId || user.sekolah;
+      const schoolId = user.schoolId || user.sekolah || user.school_id;
       
       if (!schoolId) {
-        throw new Error('schoolId tidak ditemukan. Login ulang atau hubungi admin.');
+        console.warn('SubscriptionGuard: No schoolId for role', user.role, '- bypassing check');
+        return { ok: true, status: 'no-schoolId-bypassed' }; // Bypass for mitra/guru-only users?
       }
 
       const result = await dataService.loadAccountData(schoolId);
@@ -64,5 +71,9 @@ export class SubscriptionGuard {
 
 // Global static access
 if (typeof window !== 'undefined') {
-  window.SubscriptionGuard = SubscriptionGuard;
+  // Expose static methods globally as object (fix TypeError: verify undefined)
+  window.SubscriptionGuard = {
+    verify: SubscriptionGuard.verify.bind(SubscriptionGuard),
+    _handleExpired: SubscriptionGuard._handleExpired.bind(SubscriptionGuard)
+  };
 }

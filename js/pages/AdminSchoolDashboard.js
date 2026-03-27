@@ -72,9 +72,10 @@ export class AdminSchoolDashboard {
     
     // Final subscription check before dashboard load
     try {
-      await window.SubscriptionGuard.verify(currentUser);
+      await window.SubscriptionGuard?.verify?.(currentUser);
     } catch (error) {
       // Guard handles toast/redirect to login
+      console.warn('Dashboard subscription check failed:', error.message);
       return;
     }
     

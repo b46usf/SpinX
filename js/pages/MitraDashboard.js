@@ -37,7 +37,7 @@ class MitraDashboard {
     
     // Final subscription check
     try {
-      await window.SubscriptionGuard.verify(this.currentUser);
+      await window.SubscriptionGuard?.verify?.(this.currentUser);
     } catch (error) {
       // Guard handles toast/redirect
       return;
