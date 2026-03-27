@@ -32,6 +32,5 @@ export class DashboardDataService {
   }
 }
 
-// Export guard for convenience
-export { SubscriptionGuard };
+
 
