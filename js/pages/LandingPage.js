@@ -11,15 +11,14 @@ import {
   TestimonialsSection,
   CTASection,
   Footer,
-  RegisterModal,
-  ToastContainer
+  RegisterModal
 } from '../components/landing/index.js';
 import AuthRouter from '../auth/utils/AuthRouter.js';
+import Toast from '../components/utils/Toast.js';
 
 class LandingPage {
   constructor() {
     this.container = null;
-    this.selectedPlan = 'starter';
     this.loadingSections = new Map();
     this.loadedSections = new Set();
     this.sectionObserver = null;
@@ -84,7 +83,6 @@ class LandingPage {
         ${HeroSection.render()}
         ${this.sectionDefinitions.map((section) => this.renderLazyHost(section)).join('')}
         ${RegisterModal.render()}
-        ${ToastContainer.render()}
       </div>
     `;
   }
@@ -220,8 +218,8 @@ class LandingPage {
     PricingSection.initEvents();
 
     RegisterModal.initEvents({
-      onSuccess: (title, message) => ToastContainer.show('success', title, message),
-      onError: (title, message) => ToastContainer.show('error', title, message)
+      onSuccess: (title, message) => Toast.show('success', title, message),
+      onError: (title, message) => Toast.show('error', title, message)
     });
 
     this.initLazySections();
@@ -308,8 +306,6 @@ class LandingPage {
   }
 
   async openRegisterModal(planId = 'starter') {
-    this.selectedPlan = planId;
-
     if (PricingSection.state.loading && !PricingSection.state.data.length) {
       await PricingSection.preload();
     }
@@ -324,10 +320,6 @@ class LandingPage {
   closeRegisterModal() {
     const modal = document.getElementById('register-modal');
     if (modal) modal.classList.add('hidden');
-  }
-
-  showToast(type, title, message) {
-    ToastContainer.show(type, title, message);
   }
 }
 

@@ -12,5 +12,4 @@ export { TestimonialsSection } from './TestimonialsSection.js';
 export { CTASection } from './CTASection.js';
 export { Footer } from './Footer.js';
 export { RegisterModal } from './RegisterModal.js';
-export { ToastContainer } from './ToastContainer.js';
 

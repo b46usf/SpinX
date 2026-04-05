@@ -1,14 +1,24 @@
 /**
  * Toast Notification Module
- * Wrapper for SweetAlert2 with customized defaults
- * SINGLE SOURCE - Import this for all toast notifications
- * 
- * Note: SweetAlert2 is loaded via CDN script tag in index.html
- * We access it via the global Swal object
+ * Shared SweetAlert2-backed toast API for all pages.
+ *
+ * Note: SweetAlert2 is loaded via CDN script tag in each HTML entry.
  */
 
-// Access SweetAlert2 from global (loaded via CDN in index.html)
-const Swal = window.SweetAlert2 || window.Swal;
+const getSwalInstance = () => {
+  if (typeof window === 'undefined') return null;
+  return window.SweetAlert2 || window.Swal || null;
+};
+
+const ensureSwalInstance = () => {
+  const swal = getSwalInstance();
+
+  if (!swal) {
+    throw new Error('SweetAlert2 is not loaded. Load the CDN script before Toast.js.');
+  }
+
+  return swal;
+};
 
 if (typeof document !== 'undefined' && !document.getElementById('swal-above-import-style')) {
   const style = document.createElement('style');
@@ -17,7 +27,6 @@ if (typeof document !== 'undefined' && !document.getElementById('swal-above-impo
   document.head.appendChild(style);
 }
 
-// Configure SweetAlert2 defaults
 const ToastDefaults = {
   confirmButtonColor: '#3b82f6',
   cancelButtonColor: '#6b7280',
@@ -38,6 +47,14 @@ const ToastDefaults = {
   }
 };
 
+function fireToast(options = {}) {
+  const swal = ensureSwalInstance();
+  return swal.fire({
+    ...ToastDefaults,
+    ...options
+  });
+}
+
 /**
  * Show success toast
  * @param {string} title - Title message
@@ -45,10 +62,9 @@ const ToastDefaults = {
  * @param {number} duration - Duration in milliseconds (default: 3000)
  */
 export async function showSuccess(title, message = '', duration = 3000) {
-  return Swal.fire({
-    ...ToastDefaults,
+  return fireToast({
     icon: 'success',
-    title: title,
+    title,
     text: message,
     timer: duration,
     toast: message === '',
@@ -63,10 +79,9 @@ export async function showSuccess(title, message = '', duration = 3000) {
  * @param {string} message - Optional description message
  */
 export async function showError(title, message = '') {
-  return Swal.fire({
-    ...ToastDefaults,
+  return fireToast({
     icon: 'error',
-    title: title,
+    title,
     text: message,
     confirmButtonColor: '#ef4444'
   });
@@ -78,10 +93,9 @@ export async function showError(title, message = '') {
  * @param {string} message - Optional description message
  */
 export async function showWarning(title, message = '') {
-  return Swal.fire({
-    ...ToastDefaults,
+  return fireToast({
     icon: 'warning',
-    title: title,
+    title,
     text: message,
     confirmButtonColor: '#f59e0b'
   });
@@ -94,10 +108,9 @@ export async function showWarning(title, message = '') {
  * @param {number} duration - Duration in milliseconds (default: 0 = no auto-close)
  */
 export async function showInfo(title, message = '', duration = 0) {
-  return Swal.fire({
-    ...ToastDefaults,
+  return fireToast({
     icon: 'info',
-    title: title,
+    title,
     text: message,
     timer: duration,
     timerProgressBar: duration > 0,
@@ -112,14 +125,15 @@ export async function showInfo(title, message = '', duration = 0) {
  * @returns {Promise} - Swal fire promise
  */
 export function showLoading(message = 'Memproses...') {
-  return Swal.fire({
-    ...ToastDefaults,
+  const swal = ensureSwalInstance();
+
+  return fireToast({
     title: message,
     allowOutsideClick: false,
     timer: 15000, // Auto close after 15 seconds
     timerProgressBar: true,
     didOpen: () => {
-      Swal.showLoading();
+      swal.showLoading();
     }
   });
 }
@@ -128,7 +142,7 @@ export function showLoading(message = 'Memproses...') {
  * Close loading toast
  */
 export function closeLoading() {
-  Swal.close();
+  getSwalInstance()?.close();
 }
 
 /**
@@ -147,10 +161,9 @@ export async function showConfirm(
   cancelText = 'Batal',
   icon = 'warning'
 ) {
-  const result = await Swal.fire({
-    ...ToastDefaults,
+  const result = await fireToast({
     icon: icon,
-    title: title,
+    title,
     text: message,
     showCancelButton: true,
     confirmButtonText: confirmText,
@@ -169,9 +182,8 @@ export async function showConfirm(
  * @returns {Promise<string|null>} - Input value or null if cancelled
  */
 export async function showInput(title, message = '', placeholder = '') {
-  const result = await Swal.fire({
-    ...ToastDefaults,
-    title: title,
+  const result = await fireToast({
+    title,
     text: message,
     input: 'text',
     inputPlaceholder: placeholder,
@@ -188,24 +200,55 @@ export async function showInput(title, message = '', placeholder = '') {
   return result.isConfirmed ? result.value : null;
 }
 
+/**
+ * Generic toast entry point for reusable component-style usage.
+ * @param {'success'|'error'|'warning'|'info'|'loading'} type
+ * @param {string} title
+ * @param {string} message
+ * @param {number} duration
+ */
+export function showToast(type = 'info', title = '', message = '', duration) {
+  switch (type) {
+    case 'success':
+      return showSuccess(title, message, typeof duration === 'number' ? duration : 3000);
+    case 'error':
+      return showError(title, message);
+    case 'warning':
+      return showWarning(title, message);
+    case 'loading':
+      return showLoading(title || message || 'Memproses...');
+    case 'info':
+    default:
+      return showInfo(title, message, typeof duration === 'number' ? duration : 0);
+  }
+}
+
+const ToastApi = {
+  success: showSuccess,
+  error: showError,
+  warning: showWarning,
+  info: showInfo,
+  loading: showLoading,
+  closeLoading,
+  confirm: showConfirm,
+  input: showInput,
+  show: showToast,
+  fire: fireToast,
+  get Swal() {
+    return getSwalInstance();
+  }
+};
+
 // Export default configuration
 export const toastConfig = ToastDefaults;
 
-// Export Swal for direct access if needed (check if Swal is available)
-export const SwalExport = Swal || window.Swal;
+// Export Swal for direct access if needed
+export const SwalExport = getSwalInstance();
 
 // Also expose to window for non-module scripts
 if (typeof window !== 'undefined') {
-  window.Toast = {
-    success: showSuccess,
-    error: showError,
-    warning: showWarning,
-    info: showInfo,
-    loading: showLoading,
-    closeLoading: closeLoading,
-    confirm: showConfirm,
-    input: showInput,
-    Swal: Swal || window.Swal
-  };
+  window.Toast = ToastApi;
 }
+
+export default ToastApi;
 
