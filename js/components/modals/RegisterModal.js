@@ -102,7 +102,7 @@ export async function showRegisterModal(planName = 'Starter - Gratis', options =
   const result = await showCustomModal({
     title: 'Lengkapi Data Admin Sekolah',
     html: generateRegisterHTML(planDisplayName, selectedPlanId),
-    confirmButtonText: 'Kirim Data Sekolah',
+    confirmButtonText: 'Kirim Data Pilihan Paket',
     showCancelButton: true,
     cancelButtonText: 'Batal',
     allowEscapeKey: true,
@@ -176,6 +176,7 @@ export async function showRenewalRegisterModal(renewalData = {}, options = {}) {
       const email = document.getElementById('school-email')?.value;
       const noWa = document.getElementById('school-phone')?.value;
       const buktiTransfer = document.getElementById('bukti-transfer')?.files[0];
+      const isPaidPlan = selectedPlanId !== 'starter';
 
       if (!schoolName) {
         return Promise.reject('Nama sekolah harus diisi');
@@ -186,8 +187,8 @@ export async function showRenewalRegisterModal(renewalData = {}, options = {}) {
       if (!noWa) {
         return Promise.reject('No. WhatsApp harus diisi');
       }
-      if (!buktiTransfer) {
-        return Promise.reject('Bukti transfer harus diupload');
+      if (isPaidPlan && !buktiTransfer) {
+        return Promise.reject('Bukti transfer harus diupload untuk paket berbayar');
       }
 
       return {
@@ -196,7 +197,7 @@ export async function showRenewalRegisterModal(renewalData = {}, options = {}) {
         noWa,
         phone: noWa,
         plan: selectedPlanId,
-        buktiTransfer,
+        buktiTransfer: isPaidPlan ? buktiTransfer : null,
         isRenewal: true,
         previousPlan: renewalData.currentPlan
       };
@@ -214,9 +215,25 @@ export async function showRenewalRegisterModal(renewalData = {}, options = {}) {
  * Generate renewal registration form HTML
  * @param {string} planName - Selected plan name
  * @param {Object} renewalData - Renewal context
+ * @param {string} planId - Plan identifier
  * @returns {string} HTML form content
  */
 function generateRenewalRegisterHTML(planName = 'Unknown Plan', renewalData = {}, planId = 'starter') {
+  const isPaidPlan = planId !== 'starter';
+  const buktiTransferField = isPaidPlan ? `
+      <div class="form-group">
+        <label class="block text-sm font-medium text-gray-300 mb-2">Bukti Transfer</label>
+        <input
+          type="file"
+          id="bukti-transfer"
+          accept="image/*,.pdf"
+          required
+          class="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-700"
+        >
+        <p class="text-xs text-gray-400 mt-1">Upload bukti transfer pembayaran perpanjangan.
+        Transfer ke BCA 3250883497 a.n. Bagus Farouktiawan.</p>
+      </div>` : '';
+
   return `
     <div class="renewal-notice">
       <div class="notice-icon">
@@ -263,19 +280,7 @@ function generateRenewalRegisterHTML(planName = 'Unknown Plan', renewalData = {}
           class="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-400"
         >
       </div>
-
-      <div class="form-group">
-        <label class="block text-sm font-medium text-gray-300 mb-2">Bukti Transfer</label>
-        <input
-          type="file"
-          id="bukti-transfer"
-          accept="image/*,.pdf"
-          required
-          class="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-700"
-        >
-        <p class="text-xs text-gray-400 mt-1">Upload bukti transfer pembayaran perpanjangan.
-        Transfer ke BCA 3250883497 a.n. Bagus Farouktiawan.</p>
-      </div>
+      ${buktiTransferField}
     </form>
   `;
 }
