@@ -69,10 +69,213 @@ class SiswaDashboard {
     };
   }
 
+  renderDashboardShell() {
+    const appContainer = document.getElementById('app');
+    if (!appContainer) {
+      console.error('[SiswaDashboard] #app container not found');
+      return false;
+    }
+
+    appContainer.innerHTML = `
+      <header class="fixed top-0 left-0 right-0 z-40 glass-card border-b border-white/10">
+        <div class="flex justify-between items-center px-4 py-3">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center">
+              <i class="fas fa-user-graduate text-white text-sm"></i>
+            </div>
+            <div>
+              <h1 class="text-base font-bold text-white">SpinX <span class="text-gradient">Siswa</span></h1>
+              <p class="text-xs text-gray-400" id="kelas-name">-</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button id="notif-btn" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-300 transition-colors">
+              <i class="fas fa-bell"></i>
+            </button>
+            <img id="user-avatar" src="" alt="Avatar" class="w-9 h-9 rounded-full border-2 border-purple-500">
+          </div>
+        </div>
+      </header>
+
+      <main class="pt-16 px-4 pb-4">
+        <section id="section-dashboard" class="section-content">
+          <div class="glass-card p-4 mb-4 animate-fade-in-up">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="text-lg font-bold">Welcome, <span id="welcome-name" class="text-gradient"></span>! 🎮</h2>
+                <p class="text-xs text-gray-400">Spin voucher, jelajahi mitra, pesan produk</p>
+              </div>
+              <div class="text-right">
+                <p class="text-xs text-gray-500" id="current-date"></p>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3 mb-4">
+            <div class="glass-card p-3 text-center animate-fade-in-up delay-1">
+              <div class="text-2xl mb-1">🎫</div>
+              <div class="text-xl font-bold text-gradient" id="stat-voucher">-</div>
+              <div class="text-xs text-gray-400">Voucher</div>
+            </div>
+            <div class="glass-card p-3 text-center animate-fade-in-up delay-2">
+              <div class="text-2xl mb-1">🎯</div>
+              <div class="text-xl font-bold text-gradient" id="stat-spin">-</div>
+              <div class="text-xs text-gray-400">Spin</div>
+            </div>
+            <div class="glass-card p-3 text-center animate-fade-in-up delay-3">
+              <div class="text-2xl mb-1">💰</div>
+              <div class="text-xl font-bold text-gradient" id="stat-poin">-</div>
+              <div class="text-xs text-gray-400">Poin</div>
+            </div>
+          </div>
+
+          <div class="glass-card p-4 mb-4 animate-fade-in-up delay-3">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-bold">Lucky Wheel</h3>
+              <button id="spin-btn" class="btn btn-primary text-xs py-1 px-2">
+                <i class="fas fa-play"></i>Spin
+              </button>
+            </div>
+            <div class="flex justify-center mb-3">
+              <canvas id="wheel-canvas" width="300" height="300" class="border-2 border-purple-500/20 rounded-full"></canvas>
+            </div>
+            <div class="text-center">
+              <p class="text-xs text-gray-400" id="spin-result">Siap untuk spin!</p>
+            </div>
+          </div>
+
+          <div class="glass-card p-4 animate-fade-in-up delay-4">
+            <h3 class="text-sm font-bold mb-3 flex items-center gap-2">
+              <i class="fas fa-trophy text-yellow-400"></i>
+              Leaderboard
+            </h3>
+            <div class="space-y-2" id="leaderboard-list">
+              <div class="text-center py-4 text-gray-500">
+                <i class="fas fa-spinner fa-spin text-lg mb-2"></i>
+                <p class="text-xs">Memuat leaderboard...</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="section-mitra" class="section-content hidden">
+          <div class="glass-card p-4 mb-4 animate-fade-in-up">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-bold">Mitra Terdekat</h3>
+              <button id="refresh-mitra-btn" class="btn btn-secondary text-xs py-1 px-2">
+                <i class="fas fa-sync"></i>Refresh
+              </button>
+            </div>
+            <div class="relative mb-4">
+              <input type="text" id="mitra-search" placeholder="Cari mitra..." class="input text-sm py-2 pl-9">
+              <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm"></i>
+            </div>
+            <div class="space-y-2" id="mitra-list">
+              <div class="text-center py-6 text-gray-500">
+                <i class="fas fa-spinner fa-spin text-xl mb-2"></i>
+                <p class="text-sm">Memuat data mitra...</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="section-pesanan" class="section-content hidden">
+          <div class="glass-card p-4 mb-4 animate-fade-in-up">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-bold">Riwayat Pesanan</h3>
+              <button id="new-order-btn" class="btn btn-primary text-xs py-1 px-2">
+                <i class="fas fa-plus"></i>Pesan Baru
+              </button>
+            </div>
+            <div class="space-y-2" id="pesanan-list">
+              <div class="text-center py-6 text-gray-500">
+                <i class="fas fa-spinner fa-spin text-xl mb-2"></i>
+                <p class="text-sm">Memuat riwayat pesanan...</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="section-akun" class="section-content hidden">
+          <div class="glass-card p-4 mb-4 animate-fade-in-up">
+            <div class="flex items-center gap-4 mb-4">
+              <img id="profile-avatar" src="" alt="Profile" class="w-16 h-16 rounded-full border-2 border-purple-500">
+              <div>
+                <h2 class="text-lg font-bold" id="profile-name">-</h2>
+                <p class="text-sm text-gray-400" id="profile-email">-</p>
+                <span class="badge badge-primary text-xs">Siswa</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-card p-4 mb-4 animate-fade-in-up delay-1">
+            <h3 class="text-sm font-bold mb-3 flex items-center gap-2">
+              <i class="fas fa-school text-purple-400"></i>
+              Info Sekolah
+            </h3>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                <span class="text-sm">Nama Sekolah</span>
+                <span class="text-sm text-gray-300" id="sekolah-nama">-</span>
+              </div>
+              <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                <span class="text-sm">Kelas</span>
+                <span class="text-sm text-gray-300" id="sekolah-kelas">-</span>
+              </div>
+              <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                <span class="text-sm">Total Poin</span>
+                <span class="text-sm text-gray-300" id="sekolah-poin">-</span>
+              </div>
+            </div>
+          </div>
+
+          <button id="logout-btn" class="w-full glass-card p-4 flex items-center gap-3 text-red-400 hover:bg-red-500/10 transition-colors rounded-lg">
+            <div class="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center">
+              <i class="fas fa-sign-out-alt"></i>
+            </div>
+            <div class="font-medium">Logout</div>
+          </button>
+        </section>
+      </main>
+
+      <nav class="fixed bottom-0 left-0 right-0 z-50 glass-card border-t border-white/10">
+        <div class="flex justify-around items-center px-2 py-2">
+          <button class="bottom-nav-item active flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all" data-section="dashboard">
+            <i class="fas fa-th-large text-lg mb-1"></i>
+            <span class="text-xs">Dashboard</span>
+          </button>
+
+          <button class="bottom-nav-item flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all text-gray-400" data-section="mitra">
+            <i class="fas fa-store text-lg mb-1"></i>
+            <span class="text-xs">Mitra</span>
+          </button>
+
+          <button class="bottom-nav-item flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all text-gray-400" data-section="pesanan">
+            <i class="fas fa-shopping-cart text-lg mb-1"></i>
+            <span class="text-xs">Pesanan</span>
+          </button>
+
+          <button class="bottom-nav-item flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all text-gray-400" data-section="akun">
+            <i class="fas fa-user-cog text-lg mb-1"></i>
+            <span class="text-xs">Akun</span>
+          </button>
+        </div>
+      </nav>
+    `;
+    return true;
+  }
+
   /**
    * Initialize full siswa dashboard
    */
   async init() {
+    // Render the dashboard shell first
+    if (!this.renderDashboardShell()) {
+      console.error('[SiswaDashboard] Failed to render dashboard shell');
+      return;
+    }
+
     // Auth protection - siswa role
     const authResult = authGuard.init('siswa', {
       avatarId: 'user-avatar',

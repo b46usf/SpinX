@@ -24,7 +24,233 @@ class MitraDashboard {
     };
   }
 
+  renderDashboardShell() {
+    const appContainer = document.getElementById('app');
+    if (!appContainer) {
+      console.error('[MitraDashboard] #app container not found');
+      return false;
+    }
+
+    appContainer.innerHTML = `
+      <header class="fixed top-0 left-0 right-0 z-40 glass-card border-b border-white/10">
+        <div class="flex justify-between items-center px-4 py-3">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
+              <i class="fas fa-store text-white text-sm"></i>
+            </div>
+            <div>
+              <h1 class="text-base font-bold text-white">SpinX <span class="text-gradient">Mitra</span></h1>
+              <p class="text-xs text-gray-400" id="mitra-name">Mitra</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button id="notif-btn" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-300 transition-colors">
+              <i class="fas fa-bell"></i>
+            </button>
+            <img id="user-avatar" src="" alt="Avatar" class="w-9 h-9 rounded-full border-2 border-green-500">
+          </div>
+        </div>
+      </header>
+
+      <main class="pt-16 px-4 pb-4">
+        <section id="section-dashboard" class="section-content">
+          <div class="glass-card p-4 mb-4 animate-fade-in-up">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="text-lg font-bold">Welcome, <span id="welcome-name" class="text-gradient"></span>! 🏪</h2>
+                <p class="text-xs text-gray-400">Kelola voucher, scan QR, lihat transaksi</p>
+              </div>
+              <div class="text-right">
+                <p class="text-xs text-gray-500" id="current-date"></p>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3 mb-4">
+            <div class="glass-card p-3 text-center animate-fade-in-up delay-1">
+              <div class="text-2xl mb-1">💰</div>
+              <div class="text-xl font-bold text-gradient" id="stat-pendapatan">-</div>
+              <div class="text-xs text-gray-400">Pendapatan</div>
+            </div>
+            <div class="glass-card p-3 text-center animate-fade-in-up delay-2">
+              <div class="text-2xl mb-1">🎫</div>
+              <div class="text-xl font-bold text-gradient" id="stat-voucher">-</div>
+              <div class="text-xs text-gray-400">Voucher</div>
+            </div>
+            <div class="glass-card p-3 text-center animate-fade-in-up delay-3">
+              <div class="text-2xl mb-1">📊</div>
+              <div class="text-xl font-bold text-gradient" id="stat-transaksi">-</div>
+              <div class="text-xs text-gray-400">Transaksi</div>
+            </div>
+          </div>
+
+          <div class="glass-card p-4 mb-4 animate-fade-in-up delay-3">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-bold">Performa Hari Ini</h3>
+              <select id="period-select" class="bg-white/5 border border-white/10 rounded-lg px-2 py-1 text-xs">
+                <option value="hari">Hari Ini</option>
+                <option value="minggu">Minggu Ini</option>
+                <option value="bulan">Bulan Ini</option>
+              </select>
+            </div>
+            <div class="grid grid-cols-2 gap-3" id="performance-stats">
+              <div class="text-center p-3 bg-white/5 rounded-lg">
+                <div class="text-lg font-bold text-green-400" id="stat-hari-pendapatan">-</div>
+                <div class="text-xs text-gray-400">Pendapatan</div>
+              </div>
+              <div class="text-center p-3 bg-white/5 rounded-lg">
+                <div class="text-lg font-bold text-blue-400" id="stat-hari-transaksi">-</div>
+                <div class="text-xs text-gray-400">Transaksi</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-card p-4 animate-fade-in-up delay-4">
+            <h3 class="text-sm font-bold mb-3 flex items-center gap-2">
+              <i class="fas fa-clock text-cyan-400"></i>
+              Aktivitas Terbaru
+            </h3>
+            <div class="space-y-2" id="activity-list">
+              <div class="text-center py-4 text-gray-500">
+                <i class="fas fa-spinner fa-spin text-lg mb-2"></i>
+                <p class="text-xs">Memuat aktivitas...</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="section-transaksi" class="section-content hidden">
+          <div class="glass-card p-4 mb-4 animate-fade-in-up">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-bold">Riwayat Transaksi</h3>
+              <button id="export-transaksi-btn" class="btn btn-secondary text-xs py-1 px-2">
+                <i class="fas fa-download"></i>Export
+              </button>
+            </div>
+            <div class="relative mb-4">
+              <input type="text" id="transaksi-search" placeholder="Cari transaksi..." class="input text-sm py-2 pl-9">
+              <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm"></i>
+            </div>
+            <div class="space-y-2" id="transaksi-list">
+              <div class="text-center py-6 text-gray-500">
+                <i class="fas fa-spinner fa-spin text-xl mb-2"></i>
+                <p class="text-sm">Memuat transaksi...</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="section-scan" class="section-content hidden">
+          <div class="glass-card p-4 mb-4 animate-fade-in-up">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-bold">Scan QR Code</h3>
+              <button id="scan-qr-btn" class="btn btn-primary text-xs py-1 px-2">
+                <i class="fas fa-qrcode"></i>Scan QR
+              </button>
+            </div>
+            <div class="text-center py-8">
+              <div class="w-32 h-32 mx-auto mb-4 bg-white/5 rounded-lg flex items-center justify-center">
+                <i class="fas fa-qrcode text-4xl text-gray-400"></i>
+              </div>
+              <p class="text-sm text-gray-400">Klik tombol scan untuk memindai QR code voucher</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="section-statistik" class="section-content hidden">
+          <div class="glass-card p-4 mb-4 animate-fade-in-up">
+            <h3 class="text-sm font-bold mb-3">Statistik Penjualan</h3>
+            <div class="space-y-3" id="statistik-charts">
+              <div class="text-center py-6 text-gray-500">
+                <i class="fas fa-chart-bar text-2xl mb-2"></i>
+                <p class="text-sm">Memuat statistik...</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="section-akun" class="section-content hidden">
+          <div class="glass-card p-4 mb-4 animate-fade-in-up">
+            <div class="flex items-center gap-4 mb-4">
+              <img id="profile-avatar" src="" alt="Profile" class="w-16 h-16 rounded-full border-2 border-green-500">
+              <div>
+                <h2 class="text-lg font-bold" id="profile-name">-</h2>
+                <p class="text-sm text-gray-400" id="profile-email">-</p>
+                <span class="badge badge-success text-xs">Mitra</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-card p-4 mb-4 animate-fade-in-up delay-1">
+            <h3 class="text-sm font-bold mb-3 flex items-center gap-2">
+              <i class="fas fa-store text-green-400"></i>
+              Info Toko
+            </h3>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                <span class="text-sm">Nama Toko</span>
+                <span class="text-sm text-gray-300" id="toko-nama">-</span>
+              </div>
+              <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                <span class="text-sm">Kategori</span>
+                <span class="text-sm text-gray-300" id="toko-kategori">-</span>
+              </div>
+              <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                <span class="text-sm">Total Pendapatan</span>
+                <span class="text-sm text-gray-300" id="toko-pendapatan">-</span>
+              </div>
+            </div>
+          </div>
+
+          <button id="logout-btn" class="w-full glass-card p-4 flex items-center gap-3 text-red-400 hover:bg-red-500/10 transition-colors rounded-lg">
+            <div class="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center">
+              <i class="fas fa-sign-out-alt"></i>
+            </div>
+            <div class="font-medium">Logout</div>
+          </button>
+        </section>
+      </main>
+
+      <nav class="fixed bottom-0 left-0 right-0 z-50 glass-card border-t border-white/10">
+        <div class="flex justify-around items-center px-2 py-2">
+          <button class="bottom-nav-item active flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all" data-section="dashboard">
+            <i class="fas fa-th-large text-lg mb-1"></i>
+            <span class="text-xs">Dashboard</span>
+          </button>
+
+          <button class="bottom-nav-item flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all text-gray-400" data-section="transaksi">
+            <i class="fas fa-receipt text-lg mb-1"></i>
+            <span class="text-xs">Transaksi</span>
+          </button>
+
+          <button class="bottom-nav-item flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all text-gray-400" data-section="scan">
+            <i class="fas fa-qrcode text-lg mb-1"></i>
+            <span class="text-xs">Scan</span>
+          </button>
+
+          <button class="bottom-nav-item flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all text-gray-400" data-section="statistik">
+            <i class="fas fa-chart-bar text-lg mb-1"></i>
+            <span class="text-xs">Statistik</span>
+          </button>
+
+          <button class="bottom-nav-item flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all text-gray-400" data-section="akun">
+            <i class="fas fa-user-cog text-lg mb-1"></i>
+            <span class="text-xs">Akun</span>
+          </button>
+        </div>
+      </nav>
+    `;
+    return true;
+  }
+
   async init() {
+    // Render the dashboard shell first
+    if (!this.renderDashboardShell()) {
+      console.error('[MitraDashboard] Failed to render dashboard shell');
+      return;
+    }
+
     if (!authGuard.init('mitra', {
       avatarId: 'user-avatar',
       welcomeId: 'welcome-name',

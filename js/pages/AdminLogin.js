@@ -10,6 +10,7 @@
 import { AUTH_CONFIG } from '../auth/Config.js';
 import { authApi } from '../auth/AuthApi.js';
 import { TelegramLinkSection } from '../components/auth/TelegramLinkSection.js';
+import { LoginTemplates } from '../components/templates/LoginTemplates.js';
 
 // Get Toast from global
 const getToast = () => window.Toast || null;
@@ -29,9 +30,9 @@ class AdminLogin {
     // Expose AUTH_CONFIG globally for Google Sign-In
     window.AUTH_CONFIG = AUTH_CONFIG;
 
-    // Note: Removed auto-redirect check so admin can stay on login page even if already logged in
-    // Admin can manually go to dashboard or logout from here
-    
+    // Render the login UI via single module entry-point
+    this.renderLoginSection();
+
     // Check if already logged in - just store the info, don't redirect
     if (this.isLoggedIn() && this.hasRole('admin-system')) {
       console.log('User already logged in as admin');
@@ -59,6 +60,15 @@ class AdminLogin {
   /**
    * Restore pending Telegram section if exists from localStorage
    */
+  renderLoginSection() {
+    const appContainer = document.getElementById('app');
+    if (!appContainer) {
+      console.error('[AdminLogin] #app container not found');
+      return;
+    }
+    appContainer.innerHTML = LoginTemplates.loginSection();
+  }
+
   restorePendingTelegramState() {
     try {
       const pendingData = localStorage.getItem('pendingTelegramData');
@@ -918,6 +928,22 @@ class AdminLogin {
       errorEl.textContent = '';
       errorEl.classList.add('hidden');
     }
+  }
+}
+
+// Bootstrap when this module is loaded directly in browser
+if (typeof document !== 'undefined') {
+  const startAdminLogin = () => {
+    const adminLogin = new AdminLogin();
+    adminLogin.init().catch((error) => {
+      console.error('[AdminLogin] init failed:', error);
+    });
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startAdminLogin);
+  } else {
+    startAdminLogin();
   }
 }
 
