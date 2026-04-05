@@ -2,10 +2,11 @@
  * Error Handler Utility
  * Reusable error display functions with Toast integration
  * Uses SweetAlert2 for professional notifications
- * 
- * Note: Toast functions are accessed via global window.Toast 
+ *
+ * Note: Toast functions are accessed via global window.Toast
  * which is set after Toast.js loads
  */
+import { DOMUtils } from '../../core/DOMUtils.js';
 
 // Access Toast functions from global (set by Toast.js)
 const getToast = () => window.Toast || null;
@@ -17,15 +18,15 @@ export class ErrorHandler {
    * @param {string} message - Error message
    */
   static show(elementId, message) {
-    const el = document.getElementById(elementId);
+    const el = DOMUtils.getElement(elementId);
     if (el) {
-      el.textContent = message;
+      DOMUtils.setText(el, message);
       el.classList.remove('hidden');
-      
+
       // Auto hide after 5 seconds
       setTimeout(() => {
         el.classList.add('hidden');
-        el.textContent = '';
+        DOMUtils.setText(el, '');
       }, 5000);
     }
   }
@@ -35,9 +36,9 @@ export class ErrorHandler {
    * @param {string} elementId - Element ID to hide
    */
   static hide(elementId) {
-    const el = document.getElementById(elementId);
+    const el = DOMUtils.getElement(elementId);
     if (el) {
-      el.textContent = '';
+      DOMUtils.setText(el, '');
       el.classList.add('hidden');
     }
   }

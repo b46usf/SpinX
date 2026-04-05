@@ -1,7 +1,9 @@
+import { DOMUtils } from '../../core/DOMUtils.js';
+
 function resolveElement(target) {
   if (!target) return null;
   if (typeof target === 'string') {
-    return document.getElementById(target);
+    return DOMUtils.getElement(target);
   }
   return target;
 }

@@ -7,8 +7,10 @@
 
 import { authGuard } from '../core/AuthGuard.js';
 import { themeManager } from '../core/ThemeManager.js';
+import { initSectionNavigation, switchSection } from '../core/NavigationUtils.js';
+import { DOMUtils } from '../core/DOMUtils.js';
+import { ToastUtils } from '../core/ToastUtils.js';
 import { authApi } from '../auth/AuthApi.js';
-import { showSuccess, showError, showWarning, showInfo } from '../components/utils/Toast.js';
 import {
   applyTextSkeleton,
   clearTextSkeleton,
@@ -293,12 +295,12 @@ class SiswaDashboard {
       return;
     }
     
-    document.getElementById('kelas-name').textContent = this.currentUser.kelas || '-';
-    document.getElementById('student-name').textContent = this.currentUser.name;
-    document.getElementById('student-kelas').textContent = this.currentUser.kelas;
-    document.getElementById('school-name').textContent = this.currentUser.schoolName || 'Sekolah';
-    document.getElementById('profile-name').textContent = this.currentUser.name;
-    document.getElementById('profile-email').textContent = this.currentUser.email;
+    DOMUtils.setText('kelas-name', this.currentUser.kelas || '-');
+    DOMUtils.setText('student-name', this.currentUser.name);
+    DOMUtils.setText('student-kelas', this.currentUser.kelas);
+    DOMUtils.setText('school-name', this.currentUser.schoolName || 'Sekolah');
+    DOMUtils.setText('profile-name', this.currentUser.name);
+    DOMUtils.setText('profile-email', this.currentUser.email);
 
     // Setup UI
     themeManager.init();
@@ -313,15 +315,19 @@ class SiswaDashboard {
   }
 
   showSuccess(title, message = '') {
-    return showSuccess(title, message);
+    return ToastUtils.success(title, message);
   }
 
   showError(title, message = '') {
-    return showError(title, message);
+    return ToastUtils.error(title, message);
   }
 
   showWarning(title, message = '') {
-    return showWarning(title, message);
+    return ToastUtils.warning(title, message);
+  }
+
+  showInfo(title, message = '') {
+    return ToastUtils.info(title, message);
   }
 
   showInitialSkeletons() {
@@ -548,11 +554,13 @@ class SiswaDashboard {
    * Setup navigation
    */
   setupNavigation() {
-    document.querySelectorAll('.bottom-nav-item').forEach(item => {
-      item.addEventListener('click', (e) => {
-        this.switchSection(e.currentTarget.dataset.section);
-      });
-    });
+    initSectionNavigation(
+      (section) => this.switchSection(section),
+      {
+        activeClasses: ['active', 'text-purple-400'],
+        inactiveClasses: ['text-gray-400']
+      }
+    );
 
     // Pesanan tabs
     document.querySelectorAll('.pesanan-tab').forEach(btn => {

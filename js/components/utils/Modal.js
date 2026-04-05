@@ -536,9 +536,3 @@ if (typeof window !== 'undefined') {
 }
 
 export default ModalApi;
-export {
-  showSubscriptionModal,
-  showConfirmModal,
-  showAlertModal,
-  showCustomModal
-};

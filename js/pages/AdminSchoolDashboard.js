@@ -5,6 +5,8 @@
  */
 import { authGuard } from '../core/AuthGuard.js';
 import { themeManager } from '../core/ThemeManager.js';
+import { initSectionNavigation, switchSection, initTabNavigation, switchTab } from '../core/NavigationUtils.js';
+import { DOMUtils } from '../core/DOMUtils.js';
 import { authApi } from '../auth/AuthApi.js';
 import {
   applyTextSkeleton,
@@ -35,21 +37,19 @@ const TEXT_SKELETON_TARGETS = [
 ];
 
 function getElement(id) {
-  return document.getElementById(id);
+  return DOMUtils.getElement(id);
 }
 
 function setText(id, value) {
-  const element = getElement(id);
-  if (element) element.textContent = value;
+  DOMUtils.setText(id, value);
 }
 
 function setHidden(id, hidden) {
-  const element = getElement(id);
-  if (element) element.classList.toggle('hidden', hidden);
+  DOMUtils.toggleVisibility(id, !hidden);
 }
 
 function bindClick(id, handler) {
-  getElement(id)?.addEventListener('click', handler);
+  DOMUtils.bindClick(id, handler);
 }
 
 export class AdminSchoolDashboard {
@@ -461,17 +461,27 @@ export class AdminSchoolDashboard {
   }
 
   setupNavigation() {
-    document.querySelectorAll('.bottom-nav-item').forEach(item => {
-      item.addEventListener('click', () => this.switchSection(item.dataset.section));
-    });
+    initSectionNavigation(
+      (section) => this.switchSection(section),
+      {
+        activeClasses: ['active', 'text-indigo-400'],
+        inactiveClasses: ['text-gray-400']
+      }
+    );
 
     document.querySelectorAll('.user-tab-btn').forEach(button => {
       button.addEventListener('click', () => this.switchUserTab(button.dataset.tab));
     });
 
-    document.querySelectorAll('.reward-tab-btn').forEach(button => {
-      button.addEventListener('click', () => this.switchRewardTab(button.dataset.tab));
-    });
+    initTabNavigation(
+      (tab) => this.switchRewardTab(tab),
+      {
+        tabSelector: '.reward-tab-btn',
+        activeClasses: ['active', 'bg-purple-500/20', 'text-purple-400'],
+        inactiveClasses: ['bg-white/5', 'text-gray-400'],
+        contentPrefix: 'reward-'
+      }
+    );
   }
 
   setupEventListeners() {
@@ -494,15 +504,10 @@ export class AdminSchoolDashboard {
   switchSection(section) {
     this.currentSection = section;
 
-    document.querySelectorAll('.bottom-nav-item').forEach(item => {
-      const isActive = item.dataset.section === section;
-      item.classList.toggle('active', isActive);
-      item.classList.toggle('text-indigo-400', isActive);
-      item.classList.toggle('text-gray-400', !isActive);
-    });
-
-    document.querySelectorAll('.section-content').forEach(content => {
-      content.classList.toggle('hidden', content.id !== `section-${section}`);
+    switchSection(section, {
+      activeClasses: ['active', 'text-indigo-400'],
+      inactiveClasses: ['text-gray-400'],
+      sectionPrefix: 'section-'
     });
 
     this.orchestrator?.loadSection(section);
@@ -532,17 +537,13 @@ export class AdminSchoolDashboard {
   }
 
   switchRewardTab(tab) {
-    document.querySelectorAll('.reward-tab-btn').forEach(button => {
-      const isActive = button.dataset.tab === tab;
-      button.classList.toggle('active', isActive);
-      button.classList.toggle('bg-purple-500/20', isActive);
-      button.classList.toggle('text-purple-400', isActive);
-      button.classList.toggle('bg-white/5', !isActive);
-      button.classList.toggle('text-gray-400', !isActive);
-    });
-
-    document.querySelectorAll('.reward-content').forEach(content => {
-      content.classList.toggle('hidden', content.id !== `reward-${tab}`);
+    switchTab(tab, {
+      tabSelector: '.reward-tab-btn',
+      contentSelector: '.reward-content',
+      activeClasses: ['active', 'bg-purple-500/20', 'text-purple-400'],
+      inactiveClasses: ['bg-white/5', 'text-gray-400'],
+      contentPrefix: 'reward-',
+      hiddenClass: 'hidden'
     });
   }
 

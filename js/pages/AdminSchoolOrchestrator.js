@@ -12,14 +12,10 @@ import { renderUserList } from './components/UserListRenderer.js';
 import { renderStats, renderUserStats, renderSchoolInfo } from './components/DashboardStats.js';
 import { getRoleColor, getUserSecondaryText, getUserSearchText } from './utils/role.js';
 import { clearContainerSkeleton } from '../components/utils/DashboardSkeleton.js';
+import { DOMUtils } from '../core/DOMUtils.js';
+import { ToastUtils } from '../core/ToastUtils.js';
 
-const Toast = new Proxy({}, {
-  get(_, prop) {
-    if (prop === 'fire') return (...args) => window.Toast?.Swal?.fire?.(...args);
-    const value = window.Toast?.[prop];
-    return typeof value === 'function' ? value.bind(window.Toast) : value;
-  }
-});
+const Toast = ToastUtils;
 
 export class AdminSchoolOrchestrator {
   constructor(dashboard, authApi, schoolId) {
@@ -106,7 +102,7 @@ export class AdminSchoolOrchestrator {
   }
 
   setupInfiniteScroll(role, loadMoreFn) {
-    const container = document.getElementById(`${role}-list`);
+    const container = DOMUtils.getElement(`${role}-list`);
     if (container && !this.infiniteScrolls[role]) {
       this.infiniteScrolls[role] = new InfiniteScroll(container, loadMoreFn);
     }
@@ -164,16 +160,16 @@ export class AdminSchoolOrchestrator {
   }
 
   renderTopStudents(students) {
-    const container = document.getElementById('top-siswa-list');
+    const container = DOMUtils.getElement('top-siswa-list');
     if (!container) return;
     clearContainerSkeleton(container);
 
     if (students.length === 0) {
-      container.innerHTML = '<div class="text-center py-4 text-gray-500"><i class="fas fa-trophy text-lg mb-2"></i><p class="text-xs">Belum ada data</p></div>';
+      DOMUtils.setHTML(container, '<div class="text-center py-4 text-gray-500"><i class="fas fa-trophy text-lg mb-2"></i><p class="text-xs">Belum ada data</p></div>');
       return;
     }
 
-    container.innerHTML = students.slice(0, 5).map((student, idx) => `
+    DOMUtils.setHTML(container, students.slice(0, 5).map((student, idx) => `
       <div class="flex items-center gap-3 p-2 bg-white/5 rounded-lg">
         <div class="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white flex items-center justify-center text-sm font-bold">${idx + 1}</div>
         <div class="flex-1 min-w-0">
@@ -182,20 +178,20 @@ export class AdminSchoolOrchestrator {
         </div>
         <div class="text-xs text-purple-400 font-medium">${student.spins || 0} spin</div>
       </div>
-    `).join('');
+    `).join(''));
   }
 
   renderRecentActivity(activities) {
-    const container = document.getElementById('activity-list');
+    const container = DOMUtils.getElement('activity-list');
     if (!container) return;
     clearContainerSkeleton(container);
 
     if (activities.length === 0) {
-      container.innerHTML = '<div class="text-center py-4 text-gray-500"><i class="fas fa-history text-lg mb-2"></i><p class="text-xs">Belum ada aktivitas</p></div>';
+      DOMUtils.setHTML(container, '<div class="text-center py-4 text-gray-500"><i class="fas fa-history text-lg mb-2"></i><p class="text-xs">Belum ada aktivitas</p></div>');
       return;
     }
 
-    container.innerHTML = activities.slice(0, 10).map(activity => `
+    DOMUtils.setHTML(container, activities.slice(0, 10).map(activity => `
       <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
         <div class="w-8 h-8 rounded-full ${this.roleUtils.getRoleColor(activity.role)} flex items-center justify-center">
           <i class="fas fa-user text-xs"></i>
@@ -206,7 +202,7 @@ export class AdminSchoolOrchestrator {
         </div>
         <div class="text-xs text-gray-500">${this.formatTimeAgo(new Date(activity.timestamp))}</div>
       </div>
-    `).join('');
+    `).join(''));
   }
 
   formatTimeAgo(date) {

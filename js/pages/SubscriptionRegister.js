@@ -6,6 +6,8 @@
 
 import { authApi } from '../auth/AuthApi.js';
 import AuthRouter from '../auth/utils/AuthRouter.js';
+import { DOMUtils } from '../core/DOMUtils.js';
+import { ToastUtils } from '../core/ToastUtils.js';
 
 class SubscriptionRegister {
   constructor(options = {}) {
@@ -25,20 +27,14 @@ class SubscriptionRegister {
    */
   show() {
     this.isVisible = true;
-    const container = document.getElementById(this.containerId);
-    if (container) {
-      container.classList.remove('hidden');
-      container.classList.add('animate-slide-in');
-    }
+    DOMUtils.removeClass(this.containerId, 'hidden');
+    DOMUtils.addClass(this.containerId, 'animate-slide-in');
   }
 
   hide() {
     this.isVisible = false;
-    const container = document.getElementById(this.containerId);
-    if (container) {
-      container.classList.add('hidden');
-      container.classList.remove('animate-slide-in');
-    }
+    DOMUtils.addClass(this.containerId, 'hidden');
+    DOMUtils.removeClass(this.containerId, 'animate-slide-in');
     this.resetForm();
   }
 
@@ -58,47 +54,32 @@ class SubscriptionRegister {
    */
   bindEvents() {
     // Form submit
-    const form = document.getElementById('school-register-form');
-    if (form) {
-      form.addEventListener('submit', (e) => this.handleSubmit(e));
-    }
+    DOMUtils.bindSubmit('school-register-form', (e) => this.handleSubmit(e));
 
     // Close button
-    const closeBtn = document.getElementById('close-school-register');
-    if (closeBtn) {
-      closeBtn.addEventListener('click', () => this.hide());
-    }
+    DOMUtils.bindClick('close-school-register', () => this.hide());
 
     // Plan selector
-    const planSelect = document.getElementById('school-plan');
-    if (planSelect) {
-      planSelect.addEventListener('change', (e) => this.togglePaymentProof(e.target.value));
-    }
+    DOMUtils.bindChange('school-plan', (e) => this.togglePaymentProof(e.target.value));
 
     // Drive help link
-    const driveHelp = document.getElementById('drive-help');
-    if (driveHelp) {
-      driveHelp.addEventListener('click', (e) => {
-        e.preventDefault();
-        window.open(this.driveFolderUrl, '_blank');
-      });
-    }
+    DOMUtils.bindClick('drive-help', (e) => {
+      e.preventDefault();
+      window.open(this.driveFolderUrl, '_blank');
+    });
   }
 
   /**
    * Toggle payment proof field (non-starter plans)
    */
   togglePaymentProof(plan) {
-    const buktiField = document.getElementById('bukti-tf-field');
     const isPaidPlan = plan !== 'starter';
     
-    if (buktiField) {
-      if (isPaidPlan) {
-        buktiField.classList.remove('hidden');
-      } else {
-        buktiField.classList.add('hidden');
-        document.getElementById('buktiTF_link').value = '';
-      }
+    if (isPaidPlan) {
+      DOMUtils.removeClass('bukti-tf-field', 'hidden');
+    } else {
+      DOMUtils.addClass('bukti-tf-field', 'hidden');
+      DOMUtils.setValue('buktiTF_link', '');
     }
   }
 
@@ -107,11 +88,11 @@ class SubscriptionRegister {
    */
   getFormData() {
     return {
-      schoolName: document.getElementById('school-name')?.value.trim() || '',
-      email: document.getElementById('school-email')?.value.trim() || '',
-      noWa: document.getElementById('school-nowa')?.value.trim() || '',
-      plan: document.getElementById('school-plan')?.value || 'starter',
-      buktiTF_link: document.getElementById('buktiTF_link')?.value.trim() || ''
+      schoolName: DOMUtils.getValue('school-name'),
+      email: DOMUtils.getValue('school-email'),
+      noWa: DOMUtils.getValue('school-nowa'),
+      plan: DOMUtils.getValue('school-plan', 'starter'),
+      buktiTF_link: DOMUtils.getValue('buktiTF_link')
     };
   }
 
@@ -145,8 +126,7 @@ class SubscriptionRegister {
     const validation = this.validateForm(data);
     
     if (!validation.valid) {
-      const Toast = window.Toast;
-      Toast?.error('Data Tidak Lengkap', validation.errors.join(', '));
+      ToastUtils.error('Data Tidak Lengkap', validation.errors.join(', '));
       return;
     }
 
@@ -159,8 +139,7 @@ class SubscriptionRegister {
       const result = await authApi.registerSchoolPending(data, false);
       
       if (result.success) {
-        const Toast = window.Toast;
-        Toast?.success('Pendaftaran Berhasil', result.message || 'Sekolah Anda sedang menunggu persetujuan admin');
+        ToastUtils.success('Pendaftaran Berhasil', result.message || 'Sekolah Anda sedang menunggu persetujuan admin');
         this.hide();
         window.setTimeout(() => AuthRouter.routeToLogin('admin-sekolah'), 300);
       }
@@ -176,8 +155,7 @@ class SubscriptionRegister {
    * Reset form
    */
   resetForm() {
-    const form = document.getElementById('school-register-form');
-    if (form) form.reset();
+    DOMUtils.resetForm('school-register-form');
     this.togglePaymentProof('starter');
   }
 }

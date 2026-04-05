@@ -6,6 +6,9 @@
 
 import { authGuard } from '../core/AuthGuard.js';
 import { themeManager } from '../core/ThemeManager.js';
+import { initSectionNavigation, switchSection, initTabNavigation, switchTab } from '../core/NavigationUtils.js';
+import { DOMUtils } from '../core/DOMUtils.js';
+import { ToastUtils } from '../core/ToastUtils.js';
 import { authApi } from '../auth/AuthApi.js';
 import {
   applyTextSkeleton,
@@ -14,16 +17,7 @@ import {
   clearContainerSkeleton
 } from '../components/utils/DashboardSkeleton.js';
 
-const Toast = new Proxy({}, {
-  get(_, prop) {
-    if (prop === 'fire') {
-      return (...args) => window.Toast?.Swal?.fire?.(...args);
-    }
-
-    const value = window.Toast?.[prop];
-    return typeof value === 'function' ? value.bind(window.Toast) : value;
-  }
-});
+const Toast = ToastUtils;
 
 class GuruDashboard {
   constructor() {
@@ -315,66 +309,65 @@ class GuruDashboard {
     this.setCurrentDate();
     this.showInitialSkeletons();
     
-    document.getElementById('kelas-name').textContent = this.currentUser.kelasName || 'Kelas';
+    DOMUtils.setText('kelas-name', this.currentUser.kelasName || 'Kelas');
 
     await this.loadDashboardData();
     await this.loadAkunData();
   }
 
   setupProfile() {
-    const avatar = document.getElementById('user-avatar');
+    const avatar = DOMUtils.getElement('user-avatar');
     if (avatar) {
       avatar.src = this.currentUser.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.currentUser.name)}&background=random`;
     }
 
-    const profileAvatar = document.getElementById('profile-avatar');
+    const profileAvatar = DOMUtils.getElement('profile-avatar');
     if (profileAvatar) profileAvatar.src = avatar.src;
 
-    document.getElementById('profile-name').textContent = this.currentUser.name;
-    document.getElementById('profile-email').textContent = this.currentUser.email;
+    DOMUtils.setText('profile-name', this.currentUser.name);
+    DOMUtils.setText('profile-email', this.currentUser.email);
   }
 
   setupNavigation() {
-    document.querySelectorAll('.bottom-nav-item').forEach(item => {
-      item.addEventListener('click', () => this.switchSection(item.dataset.section));
-    });
+    initSectionNavigation(
+      (section) => this.switchSection(section),
+      {
+        activeClasses: ['active', 'text-purple-400'],
+        inactiveClasses: ['text-gray-400']
+      }
+    );
   }
 
   switchSection(section) {
     this.currentSection = section;
 
-    document.querySelectorAll('.bottom-nav-item').forEach(item => {
-      item.classList.toggle('active', item.dataset.section === section);
-    });
-
-    document.querySelectorAll('.section-content').forEach(sec => {
-      sec.classList.toggle('hidden', sec.id !== `section-${section}`);
+    switchSection(section, {
+      activeClasses: ['active', 'text-purple-400'],
+      inactiveClasses: ['text-gray-400']
     });
 
     this.loadSectionData(section);
   }
 
   setupEventListeners() {
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) logoutBtn.addEventListener('click', () => this.handleLogout());
+    DOMUtils.bindClick('logout-btn', () => this.handleLogout());
 
     document.querySelectorAll('.reward-tab-btn').forEach(btn => {
       btn.addEventListener('click', () => this.switchRewardTab(btn.dataset.tab));
     });
 
-    const siswaSearch = document.getElementById('siswa-search');
-    if (siswaSearch) siswaSearch.addEventListener('input', (e) => this.filterSiswa(e.target.value));
+    DOMUtils.bindInput('siswa-search', (e) => this.filterSiswa(e.target.value));
 
     // Reward buttons (placeholders - implement API calls)
-    document.getElementById('beri-spin-btn')?.addEventListener('click', () => this.giveReward('spin'));
-    document.getElementById('beri-voucher-btn')?.addEventListener('click', () => this.giveReward('voucher'));
-    document.getElementById('beri-poin-btn')?.addEventListener('click', () => this.giveReward('poin'));
+    DOMUtils.bindClick('beri-spin-btn', () => this.giveReward('spin'));
+    DOMUtils.bindClick('beri-voucher-btn', () => this.giveReward('voucher'));
+    DOMUtils.bindClick('beri-poin-btn', () => this.giveReward('poin'));
   }
 
   setCurrentDate() {
-    document.getElementById('current-date').textContent = new Date().toLocaleDateString('id-ID', {
+    DOMUtils.setText('current-date', new Date().toLocaleDateString('id-ID', {
       weekday: 'long', day: 'numeric', month: 'long'
-    });
+    }));
   }
 
   showInitialSkeletons() {
@@ -391,8 +384,14 @@ class GuruDashboard {
   }
 
   switchRewardTab(tab) {
-    document.querySelectorAll('.reward-tab-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tab));
-    document.querySelectorAll('.reward-content').forEach(content => content.classList.toggle('hidden', content.id !== `reward-${tab}`));
+    switchTab(tab, {
+      tabSelector: '.reward-tab-btn',
+      contentSelector: '.reward-content',
+      activeClasses: ['active'],
+      inactiveClasses: [],
+      contentPrefix: 'reward-',
+      hiddenClass: 'hidden'
+    });
   }
 
   filterSiswa(query) {
@@ -460,11 +459,11 @@ async loadDashboardData() {
       'stat-siswa-aktif',
       'stat-hadir'
     ]);
-    document.getElementById('stat-siswa-kelas').textContent = stats.siswaKelas || 0;
-    document.getElementById('stat-spin-kelas').textContent = stats.spinKelas || 0;
-    document.getElementById('stat-voucher-kelas').textContent = stats.voucherKelas || 0;
-    document.getElementById('stat-siswa-aktif').textContent = stats.siswaAktif || 0;
-    document.getElementById('stat-hadir').textContent = stats.hadir || 0;
+    DOMUtils.setText('stat-siswa-kelas', stats.siswaKelas || 0);
+    DOMUtils.setText('stat-spin-kelas', stats.spinKelas || 0);
+    DOMUtils.setText('stat-voucher-kelas', stats.voucherKelas || 0);
+    DOMUtils.setText('stat-siswa-aktif', stats.siswaAktif || 0);
+    DOMUtils.setText('stat-hadir', stats.hadir || 0);
   }
 
   renderTopSiswa(siswa) {

@@ -6,6 +6,8 @@
 
 import { authGuard } from '../core/AuthGuard.js';
 import { themeManager } from '../core/ThemeManager.js';
+import { initSectionNavigation, switchSection } from '../core/NavigationUtils.js';
+import { DOMUtils } from '../core/DOMUtils.js';
 import { authApi } from '../auth/AuthApi.js';
 import {
   showConfirm,
@@ -369,37 +371,30 @@ class AdminSystemDashboard {
     if (!user) return;
 
     // Set profile avatar
-    const profileAvatar = document.getElementById('profile-avatar');
+    const profileAvatar = DOMUtils.getElement('profile-avatar');
     if (profileAvatar) {
-      profileAvatar.src = user.picture || user.foto || 
+      profileAvatar.src = user.picture || user.foto ||
         `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'A')}&background=random`;
     }
 
     // Set profile name
-    const profileName = document.getElementById('profile-name');
-    if (profileName) {
-      profileName.textContent = user.name || '-';
-    }
+    DOMUtils.setText('profile-name', user.name || '-');
 
     // Set profile email
-    const profileEmail = document.getElementById('profile-email');
-    if (profileEmail) {
-      profileEmail.textContent = user.email || '-';
-    }
+    DOMUtils.setText('profile-email', user.email || '-');
   }
 
   /**
    * Setup bottom navigation
    */
   setupNavigation() {
-    const navItems = document.querySelectorAll('.bottom-nav-item');
-    
-    navItems.forEach(item => {
-      item.addEventListener('click', () => {
-        const section = item.dataset.section;
-        this.switchSection(section);
-      });
-    });
+    initSectionNavigation(
+      (section) => this.switchSection(section),
+      {
+        activeClasses: ['active', 'text-indigo-400'],
+        inactiveClasses: ['text-gray-400']
+      }
+    );
   }
 
   /**
@@ -409,28 +404,9 @@ class AdminSystemDashboard {
   switchSection(section) {
     this.currentSection = section;
 
-    // Update nav items
-    const navItems = document.querySelectorAll('.bottom-nav-item');
-    navItems.forEach(item => {
-      if (item.dataset.section === section) {
-        item.classList.add('active', 'text-indigo-400');
-        item.classList.remove('text-gray-400');
-      } else {
-        item.classList.remove('active', 'text-indigo-400');
-        item.classList.add('text-gray-400');
-      }
-    });
-
-    // Update section visibility
-    const sections = document.querySelectorAll('.section-content');
-    sections.forEach(sec => {
-      if (sec.id === `section-${section}`) {
-        sec.classList.remove('hidden');
-        // Add animation
-        sec.classList.add('animate-fade-in-up');
-      } else {
-        sec.classList.add('hidden');
-      }
+    switchSection(section, {
+      activeClasses: ['active', 'text-indigo-400'],
+      inactiveClasses: ['text-gray-400']
     });
 
     // Load section data if needed
