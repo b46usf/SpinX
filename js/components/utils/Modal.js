@@ -237,7 +237,7 @@ export async function showSubscriptionRenewalModal(subscriptionData = {}, availa
 
         <div class="modal-info-note">
           <i class="fas fa-lightbulb"></i>
-          <span>Setelah memilih plan, Anda akan diarahkan ke halaman registrasi untuk menyelesaikan pembayaran.</span>
+          <span>Pilih paket yang diinginkan. Paket ini akan digunakan untuk perpanjangan dan dilanjutkan ke form bukti transfer.</span>
         </div>
       </div>
     </div>

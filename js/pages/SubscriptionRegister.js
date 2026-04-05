@@ -61,14 +61,14 @@ class SubscriptionRegister {
     const descEl = document.querySelector('.register-description');
     
     if (titleEl) {
-      titleEl.textContent = 'Perpanjang Subscription Sekolah';
+      titleEl.textContent = 'Perpanjangan Paket Subscription';
     }
     
     if (descEl) {
       descEl.innerHTML = `
         <div class="renewal-notice">
           <i class="fas fa-info-circle text-blue-400"></i>
-          <span>Perpanjang subscription untuk <strong>${this.renewalData.selectedPlan.name}</strong></span>
+          <span>Perpanjang paket <strong>${this.renewalData.selectedPlan.name}</strong> melalui bukti transfer.</span>
         </div>
       `;
     }
@@ -78,6 +78,16 @@ class SubscriptionRegister {
     if (planSelect && this.renewalData.selectedPlan.id) {
       planSelect.value = this.renewalData.selectedPlan.id;
       this.togglePaymentProof(this.renewalData.selectedPlan.id);
+    }
+
+    const submitBtn = document.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.textContent = 'Kirim Perpanjangan Paket';
+    }
+
+    const paymentNote = document.querySelector('.payment-note');
+    if (paymentNote) {
+      paymentNote.textContent = 'Transfer ke BCA 3250883497 a.n. Bagus Farouktiawan dan upload bukti transfer.';
     }
   }
 

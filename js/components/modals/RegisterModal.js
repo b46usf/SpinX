@@ -137,9 +137,9 @@ export async function showRenewalRegisterModal(renewalData = {}, options = {}) {
   const planName = `${selectedPlan.name || 'Unknown'} - ${selectedPlan.price ? `Rp ${selectedPlan.price.toLocaleString('id-ID')}` : 'N/A'}`;
 
   const result = await showCustomModal({
-    title: 'Perpanjang Subscription Sekolah',
+    title: 'Perpanjangan Paket Subscription',
     html: generateRenewalRegisterHTML(planName, renewalData),
-    confirmButtonText: 'Kirim Data Perpanjangan',
+    confirmButtonText: 'Kirim Perpanjangan Paket',
     showCancelButton: true,
     cancelButtonText: 'Batal',
     allowEscapeKey: true,
@@ -251,7 +251,8 @@ function generateRenewalRegisterHTML(planName = 'Unknown Plan', renewalData = {}
           required
           class="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-700"
         >
-        <p class="text-xs text-gray-400 mt-1">Upload bukti transfer pembayaran perpanjangan</p>
+        <p class="text-xs text-gray-400 mt-1">Upload bukti transfer pembayaran perpanjangan.
+        Transfer ke BCA 3250883497 a.n. Bagus Farouktiawan.</p>
       </div>
     </form>
   `;
