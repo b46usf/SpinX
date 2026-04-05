@@ -153,8 +153,10 @@ export async function showRenewalRegisterModal(renewalData = {}, options = {}) {
     onError = null
   } = options;
 
-  const selectedPlanId = selectedPlan.id || inferPlanId(selectedPlan.name || 'starter');
-  const planName = `${selectedPlan.name || 'Unknown'} - ${selectedPlan.price ? `Rp ${selectedPlan.price.toLocaleString('id-ID')}` : 'N/A'}`;
+  const selectedPlanId = selectedPlan.id || selectedPlan.plan || inferPlanId(selectedPlan.name || 'starter');
+  const selectedPlanName = selectedPlan.name || selectedPlan.title || selectedPlanId || 'Unknown';
+  const selectedPlanPrice = Number(selectedPlan.price || 0);
+  const planName = `${selectedPlanName} - ${selectedPlanPrice > 0 ? `Rp ${selectedPlanPrice.toLocaleString('id-ID')}` : 'Gratis'}`;
 
   const result = await showCustomModal({
     title: 'Perpanjangan Paket Subscription',
@@ -222,7 +224,23 @@ function generateRenewalRegisterHTML(planName = 'Unknown Plan', renewalData = {}
   const isPaidPlan = planId !== 'starter';
   const buktiTransferField = isPaidPlan ? `
       <div class="form-group">
-        <label class="block text-sm font-medium text-gray-300 mb-2">Bukti Transfer</label>
+        <label class="block text-sm font-medium text-gray-300 mb-2">Paket yang dipilih</label>
+        <div class="px-3 py-2 bg-blue-500/20 border border-blue-500/30 rounded-lg text-blue-300 text-sm font-500">
+          <i class="fas fa-check-circle mr-2"></i>${planName}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="block text-sm font-medium text-gray-300 mb-2">Transfer Pembayaran Renewal</label>
+        <div class="rounded-lg border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+          <div class="font-semibold text-amber-200">Bank BCA</div>
+          <div>No. Rekening 3250883497</div>
+          <div>a.n. Bagus Farouktiawan</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="block text-sm font-medium text-gray-300 mb-2">Upload Bukti Transfer Renewal</label>
         <input
           type="file"
           id="bukti-transfer"
@@ -230,8 +248,15 @@ function generateRenewalRegisterHTML(planName = 'Unknown Plan', renewalData = {}
           required
           class="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-700"
         >
-        <p class="text-xs text-gray-400 mt-1">Upload bukti transfer pembayaran perpanjangan.
-        Transfer ke BCA 3250883497 a.n. Bagus Farouktiawan.</p>
+        <p class="text-xs text-gray-400 mt-1">Upload gambar atau PDF bukti transfer pembayaran renewal untuk paket berbayar.</p>
+      </div>` : '';
+
+  const selectedPlanField = !isPaidPlan ? `
+      <div class="form-group">
+        <label class="block text-sm font-medium text-gray-300 mb-2">Paket yang dipilih</label>
+        <div class="px-3 py-2 bg-blue-500/20 border border-blue-500/30 rounded-lg text-blue-300 text-sm font-500">
+          <i class="fas fa-check-circle mr-2"></i>${planName}
+        </div>
       </div>` : '';
 
   return `
@@ -280,6 +305,7 @@ function generateRenewalRegisterHTML(planName = 'Unknown Plan', renewalData = {}
           class="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-400"
         >
       </div>
+      ${selectedPlanField}
       ${buktiTransferField}
     </form>
   `;
@@ -318,7 +344,9 @@ async function handleRenewalSubmit(formData, options = {}) {
     fireToast('info', 'Memproses perpanjangan...', 'Mohon tunggu sebentar');
 
     // Convert file to base64 for upload
-    const buktiTransferBase64 = await fileToBase64(formData.buktiTransfer);
+    const buktiTransferBase64 = formData.buktiTransfer
+      ? await fileToBase64(formData.buktiTransfer)
+      : '';
 
     const registerData = {
       schoolName: formData.schoolName,

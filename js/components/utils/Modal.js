@@ -197,7 +197,7 @@ export async function showSubscriptionRenewalModal(subscriptionData = {}, availa
           </div>
         `).join('') || ''}
       </div>
-      <button type="button" class="btn btn-primary btn-sm select-plan-btn" data-plan-id="${plan.id}">
+      <button type="button" class="btn btn-primary btn-sm renewal-select-plan-btn" data-plan-id="${plan.id}">
         Pilih Plan Ini
       </button>
     </div>
@@ -256,14 +256,15 @@ export async function showSubscriptionRenewalModal(subscriptionData = {}, availa
       popup: 'swal-modal-popup-renewal',
       htmlContainer: 'swal-modal-html'
     },
-    willOpen: () => {
+    willOpen: (popup) => {
       appendModalStyles();
 
       // Add event listeners for plan selection
-      const planButtons = document.querySelectorAll('.select-plan-btn');
+      const planButtons = popup?.querySelectorAll('.renewal-select-plan-btn') || [];
       planButtons.forEach(button => {
         button.addEventListener('click', (e) => {
           e.preventDefault();
+          e.stopPropagation();
           const planId = button.dataset.planId;
           const selectedPlan = renewalPlans.find(p => p.id === planId);
 

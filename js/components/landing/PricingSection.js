@@ -369,6 +369,7 @@ export const PricingSection = {
     
     // Show register modal with selected plan
     showRegisterModal(planDisplay, {
+      planId: plan.id,
       onSuccess: (title, message) => {
         console.log('Registration success:', message);
       },
@@ -385,6 +386,7 @@ export const PricingSection = {
     document.addEventListener('click', (event) => {
       const button = event.target.closest('.select-plan-btn');
       if (!button) return;
+      if (!button.dataset.plan) return;
 
       this.openPlanModal(button.dataset.plan);
     });
