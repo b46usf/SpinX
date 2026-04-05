@@ -2,10 +2,13 @@
  * Admin Dashboard Module
  * Modular dashboard logic for admin role
  * Clean, DRY, best practice
+ * Integrated with AdminSystemDashboard via shared utilities
  */
 
 import { authGuard } from '../core/AuthGuard.js';
 import { themeManager } from '../core/ThemeManager.js';
+import { DashboardUtils } from '../core/DashboardUtils.js';
+import { DashboardIntegration } from '../core/DashboardIntegration.js';
 import { authApi } from '../auth/AuthApi.js';
 
 class AdminDashboard {
@@ -16,12 +19,13 @@ class AdminDashboard {
       guru: 0,
       today: 0
     };
+    this.user = null;
   }
 
   /**
    * Initialize admin dashboard
    */
-  init() {
+  async init() {
     // Auth protection - accept both admin-system and admin-sekolah roles
     if (!authGuard.init('admin-system', {
       avatarId: 'user-avatar',
@@ -35,9 +39,28 @@ class AdminDashboard {
     // Initialize theme
     themeManager.init();
 
+    // Check if user should go to AdminSystemDashboard instead
+    this.user = authGuard.getUser();
+    if (this.user?.role === 'admin-system') {
+      // User is system admin - offer navigation to system dashboard
+      this.setupSystemAdminLinks();
+    }
+
     // Load data
     this.loadStats();
     this.loadRecentActivity();
+  }
+
+  /**
+   * Setup navigation for system admin
+   */
+  setupSystemAdminLinks() {
+    const navBtn = document.querySelector('[data-section="system-admin"]');
+    if (navBtn) {
+      navBtn.addEventListener('click', () => {
+        DashboardIntegration.navigateToDashboard('admin-system');
+      });
+    }
   }
 
   /**
@@ -95,7 +118,7 @@ class AdminDashboard {
   }
 
   /**
-   * Render activity table
+   * Render activity table - uses DashboardUtils for consistency
    * @param {Array} activities - Activity list
    */
   renderActivityTable(activities) {
@@ -104,10 +127,10 @@ class AdminDashboard {
 
     tableBody.innerHTML = activities.map(activity => `
       <tr class="border-b border-white/10 hover:bg-white/5">
-        <td class="py-3 text-sm">${this.formatTime(activity.waktu)}</td>
+        <td class="py-3 text-sm">${DashboardUtils.formatDate(activity.waktu, 'datetime')}</td>
         <td class="py-3 text-sm">${activity.email}</td>
         <td class="py-3">
-          <span class="badge badge-${this.getRoleBadge(activity.role)}">${activity.role}</span>
+          <span class="badge badge-${DashboardUtils.getRoleBadge(activity.role)}">${activity.role}</span>
         </td>
         <td class="py-3 text-sm">${activity.aktivitas}</td>
       </tr>
@@ -129,37 +152,6 @@ class AdminDashboard {
         </td>
       </tr>
     `;
-  }
-
-  /**
-   * Format time ago
-   * @param {string} waktu - Time string
-   * @returns {string}
-   */
-  formatTime(waktu) {
-    if (!waktu) return '-';
-    const date = new Date(waktu);
-    return date.toLocaleString('id-ID', {
-      day: '2-digit',
-      month: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  }
-
-  /**
-   * Get role badge class
-   * @param {string} role - User role
-   * @returns {string}
-   */
-  getRoleBadge(role) {
-    const badges = {
-      'admin': 'danger',
-      'siswa': 'primary',
-      'mitra': 'success',
-      'guru': 'warning'
-    };
-    return badges[role] || 'secondary';
   }
 }
 
