@@ -46,32 +46,36 @@ export class LoginComponent {
     // Import modal functions dynamically to avoid circular dependencies
     import('./utils/Modal.js').then((module) => {
       const Modal = module.default || module.Modal || module;
+      const userRole = result.role || result.user?.role || '';
       const subscriptionData = {
         schoolName: result.school?.schoolName || 'Sekolah Anda',
         currentPlan: result.school?.plan || 'Starter',
-        expiresAt: result.details?.expiresAt || new Date()
+        expiresAt: result.details?.expiresAt || new Date(),
+        daysRemaining: result.details?.daysRemaining || 0
       };
 
-      // Check if we have available plans data
-      if (window._pricingCache && window._pricingCache.plans) {
-        // Show renewal modal with plan selection
-        Modal.subscriptionRenewal(subscriptionData, window._pricingCache.plans, {
-          onSelectPlan: async (selectedPlan) => {
-            // Open renewal registration modal with selected plan
-            await this.openRenewalRegisterModal(selectedPlan, result.school);
-          },
-          onClose: () => {
-            // Optional: handle modal close
-          }
-        });
+      if (userRole === 'admin-sekolah') {
+        if (window._pricingCache && window._pricingCache.plans) {
+          Modal.subscriptionRenewal(subscriptionData, window._pricingCache.plans, {
+            onSelectPlan: async (selectedPlan) => {
+              await this.openRenewalRegisterModal(selectedPlan, result.school);
+            },
+            onClose: () => {}
+          });
+        } else {
+          Modal.subscription(subscriptionData, {
+            onContact: () => {
+              const schoolName = subscriptionData.schoolName.replace(/\s+/g, '%20');
+              window.open(
+                `https://wa.me/85161609575?text=Hi%20Admin%20${schoolName}%2C%20subscription%20expired`,
+                '_blank'
+              );
+            },
+            onClose: () => {}
+          });
+        }
       } else {
-        // Fallback to old modal if no plans data
-        Modal.subscription({
-          schoolName: result.school?.schoolName || 'Sekolah Anda',
-          plan: result.school?.plan || 'Starter',
-          expiresAt: result.details?.expiresAt || new Date(),
-          daysRemaining: result.details?.daysRemaining || 0
-        }, {
+        Modal.subscription(subscriptionData, {
           onContact: () => {
             const schoolName = subscriptionData.schoolName.replace(/\s+/g, '%20');
             window.open(
