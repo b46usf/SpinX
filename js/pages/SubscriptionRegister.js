@@ -89,6 +89,10 @@ class SubscriptionRegister {
     if (paymentNote) {
       paymentNote.textContent = 'Transfer ke BCA 3250883497 a.n. Bagus Farouktiawan dan upload bukti transfer.';
     }
+
+    if (!submitBtn) {
+      window.requestAnimationFrame(() => this.setupRenewalUI());
+    }
   }
 
   /**

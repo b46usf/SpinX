@@ -23,8 +23,8 @@ export const RegisterModal = {
                 <span class="landing-eyebrow__dot"></span>
                 Tinggal satu langkah menuju aktivasi
               </span>
-              <h3>Lengkapi data admin sekolah</h3>
-              <p>Isi data berikut, nanti tim kami bantu lanjutkan proses aktivasinya.</p>
+              <h3>Perpanjangan Paket Subscription</h3>
+              <p>Isi data berikut dan unggah bukti transfer untuk melanjutkan perpanjangan paket.</p>
             </div>
 
             <button
@@ -68,14 +68,19 @@ export const RegisterModal = {
             </label>
 
             <div class="landing-field">
-              <span>Paket yang dipilih</span>
+              <span>Paket perpanjangan</span>
               <div id="selected-plan-badge" class="landing-chip">${planName}</div>
               <input type="hidden" id="selected-plan" value="starter">
             </div>
 
+            <div class="landing-field landing-field--note">
+              <span>Transfer ke</span>
+              <div class="landing-note">BCA 3250883497 a.n. Bagus Farouktiawan</div>
+            </div>
+
             <button type="submit" class="landing-btn landing-btn--primary landing-btn--block">
               <i class="fas fa-paper-plane"></i>
-              <span>Kirim Data Sekolah</span>
+              <span>Kirim Perpanjangan Paket</span>
             </button>
           </form>
         </div>
@@ -123,7 +128,7 @@ export const RegisterModal = {
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
-          submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i><span>Kirim Data Sekolah</span>';
+          submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i><span>Kirim Perpanjangan Paket</span>';
         }
       }
     });
