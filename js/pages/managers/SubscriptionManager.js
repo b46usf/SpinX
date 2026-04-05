@@ -4,9 +4,9 @@
  * Decoupled from main dashboard for reusability
  */
 
-import { DashboardUtils } from '../core/DashboardUtils.js';
-import { authApi } from '../auth/AuthApi.js';
-import { clearContainerSkeleton, renderListSkeleton, clearTextSkeleton } from '../components/utils/DashboardSkeleton.js';
+import { DashboardUtils } from '../../core/DashboardUtils.js';
+import { authApi } from '../../auth/AuthApi.js';
+import { clearContainerSkeleton, renderListSkeleton, clearTextSkeleton } from '../../components/utils/DashboardSkeleton.js';
 
 class SubscriptionManager {
   constructor(options = {}) {

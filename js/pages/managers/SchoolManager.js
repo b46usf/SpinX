@@ -4,10 +4,10 @@
  * Decoupled from main dashboard for reusability
  */
 
-import { DashboardUtils } from '../core/DashboardUtils.js';
-import { authApi } from '../auth/AuthApi.js';
-import { showConfirm, showError, showSuccess, showLoading, closeLoading } from '../components/utils/Toast.js';
-import { clearContainerSkeleton, renderCardSkeleton, clearTextSkeleton } from '../components/utils/DashboardSkeleton.js';
+import { DashboardUtils } from '../../core/DashboardUtils.js';
+import { authApi } from '../../auth/AuthApi.js';
+import { showConfirm, showError, showSuccess, showLoading, closeLoading } from '../../components/utils/Toast.js';
+import { clearContainerSkeleton, renderCardSkeleton, clearTextSkeleton } from '../../components/utils/DashboardSkeleton.js';
 
 class SchoolManager {
   constructor(options = {}) {
