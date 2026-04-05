@@ -2,9 +2,11 @@
 /**
  * Login Component
  * Handles login UI rendering and events
+ * Now uses reusable Modal component for subscription expiry modal
  */
 
 import { LoginTemplates } from './templates/LoginTemplates.js';
+import Modal from './utils/Modal.js';
 
 export class LoginComponent {
   constructor(options = {}) {
@@ -32,51 +34,48 @@ export class LoginComponent {
         }
       });
     }
-
-    // NEW: Subscription Modal Events
-    const modalClose = document.getElementById('modal-close-btn');
-    const modalCloseAction = document.getElementById('modal-close-action');
-    if (modalClose) modalClose.addEventListener('click', () => this.hideSubscriptionModal());
-    if (modalCloseAction) modalClose.addEventListener('click', () => this.hideSubscriptionModal());
-    
-    const modalContact = document.getElementById('modal-contact-admin');
-    if (modalContact) {
-      modalContact.addEventListener('click', () => {
-        this.hideSubscriptionModal();
-        window.open('https://wa.me/85161609575?text=Hi%20Admin%20SMA%20Hang%20Tuah%202%20Sidoarjo%2C%20subscription%20expired', '_blank');
-      });
-    }
   }
 
   /**
-   * NEW: Show subscription expiry modal
+   * Show subscription expiry modal using reusable Modal component
+   * @param {Object} result - Subscription result data from API
+   * @param {Object} result.school - School information { schoolName, plan }
+   * @param {Object} result.details - Subscription details { expiresAt, daysRemaining }
    */
   showSubscriptionModal(result) {
-    const modal = document.getElementById('subscription-expiry-modal');
-    const schoolNameEl = document.getElementById('modal-school-name');
-    const planEl = document.getElementById('modal-plan');
-    const expiresEl = document.getElementById('modal-expires');
-    const daysEl = document.getElementById('modal-days-remaining');
-    
-    if (!modal) return;
+    const subscriptionData = {
+      schoolName: result.school?.schoolName || 'Sekolah Anda',
+      plan: result.school?.plan || 'Starter',
+      expiresAt: result.details?.expiresAt || new Date(),
+      daysRemaining: result.details?.daysRemaining || 0
+    };
 
-    // Populate data
-    schoolNameEl.textContent = result.school?.schoolName || 'Sekolah Anda';
-    planEl.textContent = result.school?.plan?.toUpperCase() || 'STARTER';
-    expiresEl.textContent = new Date(result.details.expiresAt).toLocaleDateString('id-ID', { 
-      year: 'numeric', month: 'long', day: 'numeric' 
-    });
-    daysEl.textContent = `Expired ${Math.abs(result.details.daysRemaining)} hari`;
+    const modalOptions = {
+      onContact: () => {
+        // Contact admin via WhatsApp
+        const schoolName = subscriptionData.schoolName.replace(/\s+/g, '%20');
+        window.open(
+          `https://wa.me/85161609575?text=Hi%20Admin%20${schoolName}%2C%20subscription%20expired`,
+          '_blank'
+        );
+      },
+      onClose: () => {
+        // Modal automatically closes
+      }
+    };
 
-    modal.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
+    Modal.subscription(subscriptionData, modalOptions);
   }
 
+  /**
+   * Hide subscription modal (for backward compatibility)
+   * Note: Modal component handles closing automatically, kept for API compatibility
+   */
   hideSubscriptionModal() {
-    const modal = document.getElementById('subscription-expiry-modal');
-    if (modal) {
-      modal.classList.add('hidden');
-      document.body.style.overflow = '';
+    // Modal component handles closing via SweetAlert2
+    const swal = window.Swal || window.SweetAlert2;
+    if (swal) {
+      swal.close();
     }
   }
 

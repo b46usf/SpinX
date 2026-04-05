@@ -115,7 +115,7 @@ export class AdminSchoolOrchestrator {
   async handleImportPreview(file) {
     try {
       const rows = await this.importService.parseFile(file);
-      this.dashboard.renderPreview(rows.slice(0,5));
+      // File preview is now handled by ImportModal component
       return true;
     } catch(e) {
       Toast.error('Preview failed', e.message);
@@ -130,7 +130,7 @@ export class AdminSchoolOrchestrator {
       if (result.success) {
         Toast.success('Import success', `${result.stats?.total || 0} records`);
         await this.loadUsers(role, false);
-        this.dashboard.closeImportModal();
+        // Modal closes automatically via ImportModal component
       } else {
         Toast.error('Import failed', result.error);
       }

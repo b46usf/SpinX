@@ -379,64 +379,6 @@
       </button>
     </div>
   </nav>
-  <!-- Modal Container -->
-  <div id="modal-container">
-    <!-- Import XLS Modal -->
-    <div id="import-modal" class="fixed inset-0 z-[9999] hidden flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-      <div class="glass-card w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl p-6">
-        <div class="flex items-center justify-between mb-6">
-          <h3 id="import-title" class="text-lg font-bold text-white">Import Siswa XLS</h3>
-          <button id="close-import-modal" class="text-gray-400 hover:text-white text-xl">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-        
-        <div class="space-y-4 mb-6">
-          <!-- Template Download -->
-          <div class="bg-blue-500/10 p-4 rounded-xl border border-blue-500/30">
-            <div class="flex items-center gap-2 mb-2">
-              <i class="fas fa-download text-blue-400"></i>
-              <span class="font-medium text-sm">Download Template</span>
-            </div>
-            <p class="text-xs text-gray-400 mb-3">Download template format TSV untuk import (tab-separated)</p>
-            <button id="download-template-btn" class="w-full btn btn-red text-xs py-2">
-              <i class="fas fa-file-pdf mr-1 text-red-400"></i>Download Template PDF
-            </button>
-          </div>
-          
-          <!-- File Upload -->
-          <div class="bg-white/5 p-4 rounded-xl border-2 border-dashed border-white/20 hover:border-purple-400 transition-colors">
-            <input type="file" id="import-file-input" accept=".xls,.xlsx,.csv,text/tab-separated-values" class="hidden">
-            <label for="import-file-input" class="cursor-pointer flex flex-col items-center gap-2 w-full h-24">
-              <i class="fas fa-cloud-upload-alt text-2xl text-gray-400"></i>
-              <div>
-                <p class="text-sm font-medium">Pilih atau drop XLS file</p>
-                <p class="text-xs text-gray-500">Max 5MB</p>
-              </div>
-            </label>
-            <div id="file-preview" class="mt-3 hidden">
-              <div class="text-xs text-gray-400 mb-1">Preview (max 5 rows):</div>
-              <div id="preview-table" class="max-h-24 overflow-y-auto bg-white/5 rounded text-xs"></div>
-            </div>
-          </div>
-          
-          <div id="import-info" class="text-xs text-gray-400 hidden">
-            <i class="fas fa-info-circle mr-1"></i>
-            Header Wajib: nis/nama/kelas/etc.
-          </div>
-        </div>
-        
-        <div class="flex gap-3 pt-4 border-t border-white/10">
-          <button id="confirm-import-btn" class="flex-1 btn btn-primary text-sm py-2" disabled>
-            <i class="fas fa-check mr-1"></i>Import Data
-          </button>
-          <button id="cancel-import-btn" class="btn btn-secondary text-sm py-2 px-4">
-            Batal
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
 
 <!-- jsPDF 2.5.1 + autoTable 3.5.29 (fixed loading issue) -->
   <script onload="console.log('jsPDF 2.5.1 loaded')" src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>

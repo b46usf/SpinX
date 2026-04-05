@@ -12,6 +12,7 @@ import {
   renderInfoSkeleton
 } from '../components/utils/DashboardSkeleton.js';
 import { createOrchestrator } from './AdminSchoolOrchestrator.js';
+import { showImportModal } from '../components/modals/ImportModal.js';
 
 const Toast = window.Toast;
 
@@ -147,16 +148,6 @@ export class AdminSchoolDashboard {
       this.showImportModal(event.currentTarget?.dataset?.role || this.getActiveUserTab());
     });
 
-    bindClick('close-import-modal', () => this.closeImportModal());
-    bindClick('cancel-import-btn', () => this.closeImportModal());
-    bindClick('download-template-btn', () => this.downloadTemplate());
-
-    getElement('import-file-input')?.addEventListener('change', event => {
-      this.handleFilePreview(event.target.files?.[0]);
-    });
-
-    bindClick('confirm-import-btn', () => this.confirmImport());
-
     document.querySelectorAll('.menu-item').forEach(item => {
       item.addEventListener('click', () => this.handleMenuAction(item.dataset.action));
     });
@@ -245,70 +236,33 @@ export class AdminSchoolDashboard {
     console.log(`[Dashboard] ${event}`);
   }
 
-  renderPreview(rows) {
-    const previewTable = getElement('preview-table');
-    if (!previewTable) return;
-
-    previewTable.innerHTML = rows
-      .map(row => `
-        <div class="grid grid-cols-6 gap-1 p-1 bg-white/10 rounded mb-1">
-          ${Object.values(row)
-            .slice(0, 6)
-            .map(value => `<div class="text-xs">${value ?? ''}</div>`)
-            .join('')}
-        </div>
-      `)
-      .join('');
-
-    setHidden('file-preview', false);
-
-    const confirmButton = getElement('confirm-import-btn');
-    if (confirmButton) confirmButton.disabled = false;
-  }
-
-  showImportModal(role = 'siswa') {
+  async showImportModal(role = 'siswa') {
     this.currentImportRole = role;
-
-    setHidden('import-modal', false);
-    setText('import-title', `Import ${role.toUpperCase()}`);
-
-    const fileInput = getElement('import-file-input');
-    if (fileInput) fileInput.value = '';
-
-    setHidden('file-preview', true);
-
-    const confirmButton = getElement('confirm-import-btn');
-    if (confirmButton) confirmButton.disabled = true;
+    
+    await showImportModal(role, {
+      onConfirm: (data) => this.handleImportConfirm(data),
+      onCancel: () => this.handleImportCancel(),
+      onDownload: (role) => this.downloadTemplate(role)
+    });
   }
 
-  closeImportModal() {
-    setHidden('import-modal', true);
-
-    const fileInput = getElement('import-file-input');
-    if (fileInput) fileInput.value = '';
-
-    setHidden('file-preview', true);
-
-    const confirmButton = getElement('confirm-import-btn');
-    if (confirmButton) confirmButton.disabled = true;
-  }
-
-  async handleFilePreview(file) {
-    if (!file || !this.orchestrator) return;
-    await this.orchestrator.handleImportPreview(file);
-  }
-
-  async confirmImport() {
-    const file = getElement('import-file-input')?.files?.[0];
+  async handleImportConfirm(data) {
+    const { file, role } = data;
     if (!file || !this.orchestrator) return;
 
-    await this.orchestrator.handleImportConfirm(file, this.currentImportRole);
-    this.loadedUserTabs[this.currentImportRole] = false;
+    await this.orchestrator.handleImportConfirm(file, role);
+    this.loadedUserTabs[role] = false;
   }
 
-  async downloadTemplate() {
-    if (!this.orchestrator) return;
-    await this.orchestrator.handlePDFDownload(this.currentImportRole);
+  handleImportCancel() {
+    // Optional: Handle cancel action if needed
+    console.log('Import cancelled');
+  }
+
+  async downloadTemplate(role) {
+    if (!this.orchestrator || !role) return;
+    this.currentImportRole = role;
+    await this.orchestrator.handlePDFDownload(role);
   }
 
   filterUsers(query) {

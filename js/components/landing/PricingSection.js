@@ -9,6 +9,8 @@ import {
   mapPlanToDisplay
 } from './utils/planUtils.js';
 
+import { showRegisterModal } from '../modals/RegisterModal.js';
+
 const pricingHighlights = [
   {
     icon: 'fa-bolt',
@@ -360,21 +362,20 @@ export const PricingSection = {
   openPlanModal(planId = 'starter') {
     const fallbackPlan = this.sortPlans(this.getNormalizedPlans())[0];
     const plan = this.findPlanById(planId) || fallbackPlan;
-    const modal = document.getElementById('register-modal');
-    const badge = document.getElementById('selected-plan-badge');
-    const planInput = document.getElementById('selected-plan');
 
-    if (!modal || !plan) return;
+    if (!plan) return;
 
-    if (badge) {
-      badge.textContent = `${plan.name} - ${plan.fullPriceDisplay}`;
-    }
-
-    if (planInput) {
-      planInput.value = plan.id;
-    }
-
-    modal.classList.remove('hidden');
+    const planDisplay = `${plan.name} - ${plan.fullPriceDisplay}`;
+    
+    // Show register modal with selected plan
+    showRegisterModal(planDisplay, {
+      onSuccess: (title, message) => {
+        console.log('Registration success:', message);
+      },
+      onError: (title, message) => {
+        console.error('Registration error:', message);
+      }
+    });
   },
 
   initEvents() {

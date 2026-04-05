@@ -20,6 +20,9 @@ const ensureSwalInstance = () => {
   return swal;
 };
 
+// Export these for Modal.js and other components
+export { ensureSwalInstance, getSwalInstance };
+
 if (typeof document !== 'undefined' && !document.getElementById('swal-above-import-style')) {
   const style = document.createElement('style');
   style.id = 'swal-above-import-style';
@@ -54,6 +57,9 @@ function fireToast(options = {}) {
     ...options
   });
 }
+
+// Export for Modal.js
+export { fireToast };
 
 /**
  * Show success toast

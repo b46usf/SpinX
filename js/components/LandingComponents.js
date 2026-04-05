@@ -12,5 +12,4 @@ export { PricingSection } from './landing/PricingSection.js';
 export { TestimonialsSection } from './landing/TestimonialsSection.js';
 export { CTASection } from './landing/CTASection.js';
 export { Footer } from './landing/Footer.js';
-export { RegisterModal } from './landing/RegisterModal.js';
 

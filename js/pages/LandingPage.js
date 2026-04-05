@@ -10,8 +10,7 @@ import {
   PricingSection,
   TestimonialsSection,
   CTASection,
-  Footer,
-  RegisterModal
+  Footer
 } from '../components/landing/index.js';
 import AuthRouter from '../auth/utils/AuthRouter.js';
 import Toast from '../components/utils/Toast.js';
@@ -82,7 +81,6 @@ class LandingPage {
         ${Navbar.render()}
         ${HeroSection.render()}
         ${this.sectionDefinitions.map((section) => this.renderLazyHost(section)).join('')}
-        ${RegisterModal.render()}
       </div>
     `;
   }
@@ -217,11 +215,6 @@ class LandingPage {
 
     PricingSection.initEvents();
 
-    RegisterModal.initEvents({
-      onSuccess: (title, message) => Toast.show('success', title, message),
-      onError: (title, message) => Toast.show('error', title, message)
-    });
-
     this.initLazySections();
   }
 
@@ -315,11 +308,6 @@ class LandingPage {
 
   handleLogin(role = '') {
     AuthRouter.routeToLogin(role);
-  }
-
-  closeRegisterModal() {
-    const modal = document.getElementById('register-modal');
-    if (modal) modal.classList.add('hidden');
   }
 }
 
