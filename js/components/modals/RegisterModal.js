@@ -16,12 +16,27 @@ import AuthRouter from '../../auth/utils/AuthRouter.js';
 import { showCustomModal } from '../utils/Modal.js';
 import { fireToast } from '../utils/Toast.js';
 
+function inferPlanId(planName = '') {
+  const normalized = String(planName).toLowerCase();
+  if (normalized.includes('starter') || normalized.includes('gratis') || normalized.includes('free')) {
+    return 'starter';
+  }
+  if (normalized.includes('pro')) {
+    return 'pro';
+  }
+  if (normalized.includes('enterprise')) {
+    return 'enterprise';
+  }
+  return normalized.replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'starter';
+}
+
 /**
  * Generate registration form HTML
  * @param {string} planName - Selected plan name
+ * @param {string} planId - Plan identifier
  * @returns {string} HTML form content
  */
-function generateRegisterHTML(planName = 'Starter - Gratis') {
+function generateRegisterHTML(planName = 'Starter - Gratis', planId = 'starter') {
   return `
     <form id="register-form" class="space-y-4">
       <div class="form-group">
@@ -62,7 +77,7 @@ function generateRegisterHTML(planName = 'Starter - Gratis') {
         <div class="px-3 py-2 bg-blue-500/20 border border-blue-500/30 rounded-lg text-blue-300 text-sm font-500">
           <i class="fas fa-check-circle mr-2"></i>${planName}
         </div>
-        <input type="hidden" id="selected-plan" value="starter">
+        <input type="hidden" id="selected-plan" value="${planId}">
       </div>
     </form>
   `;
@@ -77,12 +92,16 @@ function generateRegisterHTML(planName = 'Starter - Gratis') {
 export async function showRegisterModal(planName = 'Starter - Gratis', options = {}) {
   const {
     onSuccess = null,
-    onError = null
+    onError = null,
+    planId = inferPlanId(planName)
   } = options;
+
+  const selectedPlanId = planId || inferPlanId(planName);
+  const planDisplayName = typeof planName === 'string' ? planName : 'Starter - Gratis';
 
   const result = await showCustomModal({
     title: 'Lengkapi Data Admin Sekolah',
-    html: generateRegisterHTML(planName),
+    html: generateRegisterHTML(planDisplayName, selectedPlanId),
     confirmButtonText: 'Kirim Data Sekolah',
     showCancelButton: true,
     cancelButtonText: 'Batal',
@@ -94,7 +113,7 @@ export async function showRegisterModal(planName = 'Starter - Gratis', options =
     preConfirm: async () => {
       const schoolName = document.getElementById('school-name')?.value;
       const email = document.getElementById('school-email')?.value;
-      const phone = document.getElementById('school-phone')?.value;
+      const noWa = document.getElementById('school-phone')?.value;
 
       if (!schoolName) {
         return Promise.reject('Nama sekolah harus diisi');
@@ -102,15 +121,15 @@ export async function showRegisterModal(planName = 'Starter - Gratis', options =
       if (!email) {
         return Promise.reject('Email harus diisi');
       }
-      if (!phone) {
+      if (!noWa) {
         return Promise.reject('No. WhatsApp harus diisi');
       }
 
       return {
         schoolName,
         email,
-        phone,
-        plan: 'starter'
+        noWa,
+        plan: selectedPlanId
       };
     }
   });
@@ -134,11 +153,12 @@ export async function showRenewalRegisterModal(renewalData = {}, options = {}) {
     onError = null
   } = options;
 
+  const selectedPlanId = selectedPlan.id || inferPlanId(selectedPlan.name || 'starter');
   const planName = `${selectedPlan.name || 'Unknown'} - ${selectedPlan.price ? `Rp ${selectedPlan.price.toLocaleString('id-ID')}` : 'N/A'}`;
 
   const result = await showCustomModal({
     title: 'Perpanjangan Paket Subscription',
-    html: generateRenewalRegisterHTML(planName, renewalData),
+    html: generateRenewalRegisterHTML(planName, renewalData, selectedPlanId),
     confirmButtonText: 'Kirim Perpanjangan Paket',
     showCancelButton: true,
     cancelButtonText: 'Batal',
@@ -154,7 +174,7 @@ export async function showRenewalRegisterModal(renewalData = {}, options = {}) {
     preConfirm: async () => {
       const schoolName = document.getElementById('school-name')?.value;
       const email = document.getElementById('school-email')?.value;
-      const phone = document.getElementById('school-phone')?.value;
+      const noWa = document.getElementById('school-phone')?.value;
       const buktiTransfer = document.getElementById('bukti-transfer')?.files[0];
 
       if (!schoolName) {
@@ -163,7 +183,7 @@ export async function showRenewalRegisterModal(renewalData = {}, options = {}) {
       if (!email) {
         return Promise.reject('Email harus diisi');
       }
-      if (!phone) {
+      if (!noWa) {
         return Promise.reject('No. WhatsApp harus diisi');
       }
       if (!buktiTransfer) {
@@ -173,8 +193,9 @@ export async function showRenewalRegisterModal(renewalData = {}, options = {}) {
       return {
         schoolName,
         email,
-        phone,
-        plan: selectedPlan.id || 'unknown',
+        noWa,
+        phone: noWa,
+        plan: selectedPlanId,
         buktiTransfer,
         isRenewal: true,
         previousPlan: renewalData.currentPlan
@@ -195,7 +216,7 @@ export async function showRenewalRegisterModal(renewalData = {}, options = {}) {
  * @param {Object} renewalData - Renewal context
  * @returns {string} HTML form content
  */
-function generateRenewalRegisterHTML(planName = 'Unknown Plan', renewalData = {}) {
+function generateRenewalRegisterHTML(planName = 'Unknown Plan', renewalData = {}, planId = 'starter') {
   return `
     <div class="renewal-notice">
       <div class="notice-icon">
@@ -209,6 +230,7 @@ function generateRenewalRegisterHTML(planName = 'Unknown Plan', renewalData = {}
     </div>
 
     <form id="register-form" class="space-y-4">
+      <input type="hidden" id="selected-plan" value="${planId}">
       <div class="form-group">
         <label class="block text-sm font-medium text-gray-300 mb-2">Nama Sekolah</label>
         <input

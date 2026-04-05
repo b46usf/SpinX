@@ -115,7 +115,7 @@ export async function showSubscriptionModal(subscriptionData = {}, options = {})
     </div>
   `;
 
-  const result = await swal.fire({
+  const result = await showCustomModal({
     ...ModalDefaults,
     ...theme,
     html: htmlContent,
@@ -392,7 +392,7 @@ export async function showSubscriptionRenewalDetailModal(school = {}, options = 
     </div>
   `;
 
-  const result = await swal.fire({
+  const result = await showCustomModal({
     ...ModalDefaults,
     ...theme,
     html: htmlContent,
@@ -495,7 +495,7 @@ export async function showAlertModal(
     onClose = null
   } = options;
 
-  const result = await swal.fire({
+  const result = await showCustomModal({
     ...ModalDefaults,
     ...theme,
     title,
