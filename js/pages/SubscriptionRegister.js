@@ -19,7 +19,66 @@ class SubscriptionRegister {
   }
 
   init() {
+    this.checkRenewalContext();
     this.bindEvents();
+  }
+
+  /**
+   * Check if this is a renewal registration
+   */
+  checkRenewalContext() {
+    try {
+      const renewalData = sessionStorage.getItem('subscriptionRenewal');
+      if (renewalData) {
+        const renewal = JSON.parse(renewalData);
+        
+        // Check if renewal data is still valid (within 1 hour)
+        const isValid = renewal.timestamp && (Date.now() - renewal.timestamp) < (60 * 60 * 1000);
+        
+        if (isValid && renewal.isRenewal && renewal.selectedPlan) {
+          this.isRenewal = true;
+          this.renewalData = renewal;
+          
+          // Update UI for renewal
+          this.setupRenewalUI();
+        } else {
+          // Clear expired renewal data
+          sessionStorage.removeItem('subscriptionRenewal');
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to parse renewal context:', error);
+      sessionStorage.removeItem('subscriptionRenewal');
+    }
+  }
+
+  /**
+   * Setup UI for renewal registration
+   */
+  setupRenewalUI() {
+    // Update page title and description
+    const titleEl = document.querySelector('.register-title');
+    const descEl = document.querySelector('.register-description');
+    
+    if (titleEl) {
+      titleEl.textContent = 'Perpanjang Subscription Sekolah';
+    }
+    
+    if (descEl) {
+      descEl.innerHTML = `
+        <div class="renewal-notice">
+          <i class="fas fa-info-circle text-blue-400"></i>
+          <span>Perpanjang subscription untuk <strong>${this.renewalData.selectedPlan.name}</strong></span>
+        </div>
+      `;
+    }
+
+    // Pre-select the renewal plan
+    const planSelect = document.getElementById('school-plan');
+    if (planSelect && this.renewalData.selectedPlan.id) {
+      planSelect.value = this.renewalData.selectedPlan.id;
+      this.togglePaymentProof(this.renewalData.selectedPlan.id);
+    }
   }
 
   /**
@@ -136,19 +195,75 @@ class SubscriptionRegister {
     submitBtn.disabled = true;
 
     try {
-      const result = await authApi.registerSchoolPending(data, false);
+      let result;
+      
+      if (this.isRenewal) {
+        // Handle renewal registration
+        result = await this.handleRenewalSubmit(data);
+      } else {
+        // Handle regular registration
+        result = await authApi.registerSchoolPending(data, false);
+      }
       
       if (result.success) {
-        ToastUtils.success('Pendaftaran Berhasil', result.message || 'Sekolah Anda sedang menunggu persetujuan admin');
+        const successMessage = this.isRenewal 
+          ? 'Data perpanjangan berhasil dikirim. Admin akan memproses dalam 1-2 hari kerja.'
+          : (result.message || 'Sekolah Anda sedang menunggu persetujuan admin');
+          
+        ToastUtils.success('Berhasil', successMessage);
         this.hide();
-        window.setTimeout(() => AuthRouter.routeToLogin('admin-sekolah'), 300);
+        
+        if (!this.isRenewal) {
+          window.setTimeout(() => AuthRouter.routeToLogin('admin-sekolah'), 300);
+        } else {
+          // For renewal, redirect to login or show success message
+          window.setTimeout(() => AuthRouter.routeToLogin('admin-sekolah'), 300);
+        }
       }
     } catch (error) {
       console.error('Registration failed:', error);
+      ToastUtils.error('Gagal', 'Terjadi kesalahan saat mengirim data');
     } finally {
       submitBtn.innerHTML = originalText;
       submitBtn.disabled = false;
     }
+  }
+
+  /**
+   * Handle renewal submission
+   */
+  async handleRenewalSubmit(data) {
+    // For renewal, we need to include the bukti transfer file
+    const buktiFile = document.getElementById('buktiTF_file')?.files[0];
+    
+    if (!buktiFile) {
+      throw new Error('Bukti transfer harus diupload untuk perpanjangan');
+    }
+
+    // Convert file to base64
+    const buktiTransferBase64 = await this.fileToBase64(buktiFile);
+
+    const renewalData = {
+      ...data,
+      buktiTransfer: buktiTransferBase64,
+      isRenewal: true,
+      selectedPlan: this.renewalData.selectedPlan,
+      previousPlan: 'starter' // Assuming renewal from starter
+    };
+
+    return await authApi.registerSchoolRenewal(renewalData);
+  }
+
+  /**
+   * Convert file to base64
+   */
+  fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = error => reject(error);
+    });
   }
 
   /**

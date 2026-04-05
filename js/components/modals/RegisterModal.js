@@ -123,6 +123,224 @@ export async function showRegisterModal(planName = 'Starter - Gratis', options =
 }
 
 /**
+ * Show renewal registration modal for expired subscriptions
+ * @param {Object} renewalData - Renewal context data
+ * @param {Object} options - Modal options
+ */
+export async function showRenewalRegisterModal(renewalData = {}, options = {}) {
+  const {
+    selectedPlan = {},
+    onSuccess = null,
+    onError = null
+  } = options;
+
+  const planName = `${selectedPlan.name || 'Unknown'} - ${selectedPlan.price ? `Rp ${selectedPlan.price.toLocaleString('id-ID')}` : 'N/A'}`;
+
+  const result = await showCustomModal({
+    title: 'Perpanjang Subscription Sekolah',
+    html: generateRenewalRegisterHTML(planName, renewalData),
+    confirmButtonText: 'Kirim Data Perpanjangan',
+    showCancelButton: true,
+    cancelButtonText: 'Batal',
+    allowEscapeKey: true,
+    allowOutsideClick: false,
+    didOpen: (modal) => {
+      setupFormValidation(modal);
+      // Pre-fill form if we have school data
+      if (renewalData.schoolData) {
+        prefillRenewalForm(renewalData.schoolData);
+      }
+    },
+    preConfirm: async () => {
+      const schoolName = document.getElementById('school-name')?.value;
+      const email = document.getElementById('school-email')?.value;
+      const phone = document.getElementById('school-phone')?.value;
+      const buktiTransfer = document.getElementById('bukti-transfer')?.files[0];
+
+      if (!schoolName) {
+        return Promise.reject('Nama sekolah harus diisi');
+      }
+      if (!email) {
+        return Promise.reject('Email harus diisi');
+      }
+      if (!phone) {
+        return Promise.reject('No. WhatsApp harus diisi');
+      }
+      if (!buktiTransfer) {
+        return Promise.reject('Bukti transfer harus diupload');
+      }
+
+      return {
+        schoolName,
+        email,
+        phone,
+        plan: selectedPlan.id || 'unknown',
+        buktiTransfer,
+        isRenewal: true,
+        previousPlan: renewalData.currentPlan
+      };
+    }
+  });
+
+  if (result.isConfirmed && result.value) {
+    await handleRenewalSubmit(result.value, { onSuccess, onError });
+  }
+
+  return result;
+}
+
+/**
+ * Generate renewal registration form HTML
+ * @param {string} planName - Selected plan name
+ * @param {Object} renewalData - Renewal context
+ * @returns {string} HTML form content
+ */
+function generateRenewalRegisterHTML(planName = 'Unknown Plan', renewalData = {}) {
+  return `
+    <div class="renewal-notice">
+      <div class="notice-icon">
+        <i class="fas fa-sync-alt"></i>
+      </div>
+      <div class="notice-text">
+        <h4>Perpanjang Subscription</h4>
+        <p>Plan sebelumnya: <strong>${renewalData.currentPlan || 'Unknown'}</strong></p>
+        <p>Plan baru: <strong>${planName}</strong></p>
+      </div>
+    </div>
+
+    <form id="register-form" class="space-y-4">
+      <div class="form-group">
+        <label class="block text-sm font-medium text-gray-300 mb-2">Nama Sekolah</label>
+        <input
+          type="text"
+          id="school-name"
+          required
+          placeholder="SMA Negeri 1 Jakarta"
+          class="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-400"
+        >
+      </div>
+
+      <div class="form-group">
+        <label class="block text-sm font-medium text-gray-300 mb-2">Email Admin</label>
+        <input
+          type="email"
+          id="school-email"
+          required
+          placeholder="admin@sekolah.sch.id"
+          class="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-400"
+        >
+      </div>
+
+      <div class="form-group">
+        <label class="block text-sm font-medium text-gray-300 mb-2">No. WhatsApp</label>
+        <input
+          type="tel"
+          id="school-phone"
+          required
+          placeholder="081234567890"
+          class="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-blue-400"
+        >
+      </div>
+
+      <div class="form-group">
+        <label class="block text-sm font-medium text-gray-300 mb-2">Bukti Transfer</label>
+        <input
+          type="file"
+          id="bukti-transfer"
+          accept="image/*,.pdf"
+          required
+          class="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-700"
+        >
+        <p class="text-xs text-gray-400 mt-1">Upload bukti transfer pembayaran perpanjangan</p>
+      </div>
+    </form>
+  `;
+}
+
+/**
+ * Pre-fill renewal form with existing school data
+ * @param {Object} schoolData - Existing school data
+ */
+function prefillRenewalForm(schoolData) {
+  if (schoolData.schoolName) {
+    const nameInput = document.getElementById('school-name');
+    if (nameInput) nameInput.value = schoolData.schoolName;
+  }
+
+  if (schoolData.email) {
+    const emailInput = document.getElementById('school-email');
+    if (emailInput) emailInput.value = schoolData.email;
+  }
+
+  if (schoolData.noWa) {
+    const phoneInput = document.getElementById('school-phone');
+    if (phoneInput) phoneInput.value = schoolData.noWa;
+  }
+}
+
+/**
+ * Handle renewal form submission
+ * @param {Object} formData - Form data
+ * @param {Object} options - Submit options
+ */
+async function handleRenewalSubmit(formData, options = {}) {
+  const { onSuccess, onError } = options;
+
+  try {
+    fireToast('info', 'Memproses perpanjangan...', 'Mohon tunggu sebentar');
+
+    // Convert file to base64 for upload
+    const buktiTransferBase64 = await fileToBase64(formData.buktiTransfer);
+
+    const registerData = {
+      schoolName: formData.schoolName,
+      email: formData.email,
+      phone: formData.phone,
+      plan: formData.plan,
+      buktiTransfer: buktiTransferBase64,
+      isRenewal: true,
+      previousPlan: formData.previousPlan
+    };
+
+    const result = await authApi.registerSchoolRenewal(registerData);
+
+    if (result.success) {
+      fireToast('success', 'Berhasil!', 'Data perpanjangan telah dikirim. Admin akan memproses dalam 1-2 hari kerja.');
+
+      // Clear renewal context
+      sessionStorage.removeItem('subscriptionRenewal');
+
+      if (onSuccess) {
+        onSuccess(result);
+      }
+    } else {
+      throw new Error(result.message || 'Pendaftaran gagal');
+    }
+  } catch (error) {
+    console.error('Renewal registration error:', error);
+    fireToast('error', 'Gagal', error.message || 'Terjadi kesalahan saat mengirim data');
+
+    if (onError) {
+      onError(error);
+    }
+  }
+}
+
+/**
+ * Convert file to base64
+ * @param {File} file - File to convert
+ * @returns {Promise<string>} Base64 string
+ */
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
+  });
+}
+
+/**
  * Setup form validation and interactions
  * @private
  */
@@ -228,5 +446,6 @@ async function handleFormSubmit(formData, callbacks = {}) {
 }
 
 export default {
-  showRegisterModal
+  showRegisterModal,
+  showRenewalRegisterModal
 };

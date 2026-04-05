@@ -149,6 +149,283 @@ export async function showSubscriptionModal(subscriptionData = {}, options = {})
 }
 
 /**
+ * Show subscription renewal modal with plan selection
+ * @param {Object} subscriptionData - { schoolName, currentPlan, expiresAt }
+ * @param {Array} availablePlans - Array of available plans from SUBSCRIPTION_PLANS
+ * @param {Object} options - { onSelectPlan, onClose }
+ */
+export async function showSubscriptionRenewalModal(subscriptionData = {}, availablePlans = [], options = {}) {
+  const swal = ensureSwalInstance();
+  const theme = getModalTheme();
+
+  const {
+    schoolName = 'Sekolah Anda',
+    currentPlan = 'Starter',
+    expiresAt = new Date()
+  } = subscriptionData;
+
+  const {
+    onSelectPlan = null,
+    onClose = null
+  } = options;
+
+  const expiryDate = new Date(expiresAt).toLocaleDateString('id-ID', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+
+  // Filter out starter plan and current plan
+  const renewalPlans = availablePlans.filter(plan =>
+    plan.id !== 'starter' && plan.id !== currentPlan.toLowerCase()
+  );
+
+  const plansHTML = renewalPlans.map(plan => `
+    <div class="renewal-plan-card" data-plan-id="${plan.id}">
+      <div class="plan-header">
+        <h4 class="plan-name">${plan.name}</h4>
+        <div class="plan-price">
+          <span class="price-amount">Rp ${plan.price?.toLocaleString('id-ID') || 'N/A'}</span>
+          <span class="price-period">/${plan.period || 'bulan'}</span>
+        </div>
+      </div>
+      <div class="plan-features">
+        ${plan.features?.slice(0, 3).map(feature => `
+          <div class="plan-feature">
+            <i class="fas fa-check"></i>
+            <span>${feature.text || feature}</span>
+          </div>
+        `).join('') || ''}
+      </div>
+      <button type="button" class="btn btn-primary btn-sm select-plan-btn" data-plan-id="${plan.id}">
+        Pilih Plan Ini
+      </button>
+    </div>
+  `).join('');
+
+  const htmlContent = `
+    <div class="modal-subscription-renewal-wrapper">
+      <div class="modal-section-header">
+        <div class="modal-icon-group">
+          <div class="modal-icon-primary">
+            <i class="fas fa-sync-alt"></i>
+          </div>
+        </div>
+        <div class="modal-text-group">
+          <h3 class="modal-title">Perpanjang Subscription</h3>
+          <p class="modal-subtitle">${schoolName}</p>
+        </div>
+      </div>
+
+      <div class="modal-section-content">
+        <div class="modal-info-box modal-info-current">
+          <div class="modal-info-icon">
+            <i class="fas fa-info-circle"></i>
+          </div>
+          <div class="modal-info-text">
+            <span class="modal-info-label">Plan Saat Ini</span>
+            <span class="modal-info-value">${currentPlan.toUpperCase()} - Expired ${expiryDate}</span>
+          </div>
+        </div>
+
+        <div class="modal-plans-section">
+          <h4 class="plans-title">Pilih Plan Perpanjangan</h4>
+          <div class="plans-grid">
+            ${plansHTML}
+          </div>
+        </div>
+
+        <div class="modal-info-note">
+          <i class="fas fa-lightbulb"></i>
+          <span>Setelah memilih plan, Anda akan diarahkan ke halaman registrasi untuk menyelesaikan pembayaran.</span>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const result = await swal.fire({
+    ...ModalDefaults,
+    ...theme,
+    html: htmlContent,
+    showConfirmButton: false,
+    showCancelButton: true,
+    cancelButtonText: 'Batal',
+    cancelButtonColor: '#6b7280',
+    customClass: {
+      container: 'swal-modal-container',
+      popup: 'swal-modal-popup-renewal',
+      htmlContainer: 'swal-modal-html'
+    },
+    willOpen: () => {
+      appendModalStyles();
+
+      // Add event listeners for plan selection
+      const planButtons = document.querySelectorAll('.select-plan-btn');
+      planButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+          e.preventDefault();
+          const planId = button.dataset.planId;
+          const selectedPlan = renewalPlans.find(p => p.id === planId);
+
+          if (selectedPlan && onSelectPlan) {
+            // Close modal first
+            swal.close();
+            // Call callback with selected plan
+            onSelectPlan(selectedPlan);
+          }
+        });
+      });
+    }
+  });
+
+  if (result.isDismissed && onClose) {
+    onClose();
+  }
+
+  return result;
+}
+
+/**
+ * Show subscription renewal detail modal for admin approval
+ * @param {Object} school - School data with subscription details
+ * @param {Object} options - { onApprove, onReject }
+ */
+export async function showSubscriptionRenewalDetailModal(school = {}, options = {}) {
+  const swal = ensureSwalInstance();
+  const theme = getModalTheme();
+
+  const {
+    onApprove = null,
+    onReject = null
+  } = options;
+
+  const schoolName = school.nama || school.name || school.schoolName || 'Sekolah';
+  const currentPlan = school.plan || 'Starter';
+  const expiresAt = school.expiresAt ? new Date(school.expiresAt).toLocaleDateString('id-ID') : 'N/A';
+  const buktiTransfer = school.buktiTFLink || school.buktiTransfer;
+
+  const htmlContent = `
+    <div class="modal-subscription-renewal-detail-wrapper">
+      <div class="modal-section-header">
+        <div class="modal-icon-group">
+          <div class="modal-icon-primary">
+            <i class="fas fa-sync-alt"></i>
+          </div>
+        </div>
+        <div class="modal-text-group">
+          <h3 class="modal-title">Detail Perpanjangan Subscription</h3>
+          <p class="modal-subtitle">${schoolName}</p>
+        </div>
+      </div>
+
+      <div class="modal-section-content">
+        <div class="modal-info-grid">
+          <div class="modal-info-box">
+            <div class="modal-info-icon">
+              <i class="fas fa-school"></i>
+            </div>
+            <div class="modal-info-text">
+              <span class="modal-info-label">Nama Sekolah</span>
+              <span class="modal-info-value">${schoolName}</span>
+            </div>
+          </div>
+
+          <div class="modal-info-box">
+            <div class="modal-info-icon">
+              <i class="fas fa-crown"></i>
+            </div>
+            <div class="modal-info-text">
+              <span class="modal-info-label">Plan Baru</span>
+              <span class="modal-info-value">${currentPlan.toUpperCase()}</span>
+            </div>
+          </div>
+
+          <div class="modal-info-box">
+            <div class="modal-info-icon">
+              <i class="fas fa-calendar-times"></i>
+            </div>
+            <div class="modal-info-text">
+              <span class="modal-info-label">Expired Sebelumnya</span>
+              <span class="modal-info-value">${expiresAt}</span>
+            </div>
+          </div>
+
+          <div class="modal-info-box">
+            <div class="modal-info-icon">
+              <i class="fas fa-users"></i>
+            </div>
+            <div class="modal-info-text">
+              <span class="modal-info-label">Max Users</span>
+              <span class="modal-info-value">${school.maxUsers || 50}</span>
+            </div>
+          </div>
+        </div>
+
+        ${buktiTransfer ? `
+          <div class="modal-bukti-section">
+            <h4 class="bukti-title">
+              <i class="fas fa-file-invoice-dollar"></i>
+              Bukti Transfer
+            </h4>
+            <div class="bukti-preview">
+              ${buktiTransfer.startsWith('data:') ? 
+                `<img src="${buktiTransfer}" alt="Bukti Transfer" class="bukti-image" />` :
+                `<a href="${buktiTransfer}" target="_blank" class="bukti-link">
+                  <i class="fas fa-external-link-alt"></i>
+                  Lihat Bukti Transfer
+                </a>`
+              }
+            </div>
+          </div>
+        ` : `
+          <div class="modal-warning-box">
+            <div class="modal-warning-icon">
+              <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="modal-warning-text">
+              <h4>Perhatian</h4>
+              <p>Bukti transfer belum diupload. Pastikan admin sekolah telah mengupload bukti transfer sebelum menyetujui perpanjangan.</p>
+            </div>
+          </div>
+        `}
+      </div>
+    </div>
+  `;
+
+  const result = await swal.fire({
+    ...ModalDefaults,
+    ...theme,
+    html: htmlContent,
+    showConfirmButton: true,
+    showCancelButton: true,
+    showDenyButton: buktiTransfer ? true : false,
+    confirmButtonText: '<i class="fas fa-check mr-2"></i>Setujui Perpanjangan',
+    cancelButtonText: 'Batal',
+    denyButtonText: '<i class="fas fa-times mr-2"></i>Tolak',
+    confirmButtonColor: '#10b981',
+    denyButtonColor: '#ef4444',
+    cancelButtonColor: '#6b7280',
+    reverseButtons: true,
+    customClass: {
+      container: 'swal-modal-container',
+      popup: 'swal-modal-popup-detail',
+      htmlContainer: 'swal-modal-html'
+    },
+    willOpen: () => {
+      appendModalStyles();
+    }
+  });
+
+  if (result.isConfirmed && onApprove) {
+    onApprove();
+  } else if (result.isDenied && onReject) {
+    onReject();
+  }
+
+  return result;
+}
+
+/**
  * Show confirmation modal
  * @param {string} title - Modal title
  * @param {string} message - Modal message
@@ -438,6 +715,218 @@ function appendModalStyles() {
       color: #fbbf24;
     }
 
+    /* Subscription Renewal Modal Styles */
+    .modal-subscription-renewal-wrapper {
+      color: #ffffff;
+    }
+
+    .modal-subscription-renewal-wrapper .modal-title {
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .modal-info-current .modal-info-icon {
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+    }
+
+    .modal-plans-section {
+      margin-top: 1.5rem;
+    }
+
+    .plans-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .plans-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .renewal-plan-card {
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .renewal-plan-card:hover {
+      border-color: rgba(59, 130, 246, 0.5);
+      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .plan-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+
+    .plan-name {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #ffffff;
+      margin: 0;
+    }
+
+    .plan-price {
+      text-align: right;
+    }
+
+    .price-amount {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #3b82f6;
+      display: block;
+    }
+
+    .price-period {
+      font-size: 0.875rem;
+      color: #9ca3af;
+    }
+
+    .plan-features {
+      margin-bottom: 1.5rem;
+    }
+
+    .plan-feature {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+      color: #d1d5db;
+    }
+
+    .plan-feature i {
+      color: #10b981;
+      width: 1rem;
+      flex-shrink: 0;
+    }
+
+    .select-plan-btn {
+      width: 100%;
+      padding: 0.75rem;
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      border: none;
+      border-radius: 0.5rem;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .select-plan-btn:hover {
+      background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .modal-info-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      background: rgba(251, 191, 36, 0.1);
+      border: 1px solid rgba(251, 191, 36, 0.3);
+      font-size: 0.875rem;
+      color: #fbbf24;
+    }
+
+    .modal-info-note i {
+      color: #fbbf24;
+      flex-shrink: 0;
+      margin-top: 0.125rem;
+    }
+
+    .swal-modal-popup-renewal {
+      max-width: 800px;
+    }
+
+    /* Subscription Renewal Detail Modal Styles */
+    .modal-subscription-renewal-detail-wrapper {
+      color: #ffffff;
+    }
+
+    .modal-subscription-renewal-detail-wrapper .modal-title {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .modal-info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-bukti-section {
+      margin-top: 1.5rem;
+      padding: 1.5rem;
+      border-radius: 0.75rem;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      background: rgba(16, 185, 129, 0.1);
+    }
+
+    .bukti-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #10b981;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .bukti-preview {
+      display: flex;
+      justify-content: center;
+    }
+
+    .bukti-image {
+      max-width: 100%;
+      max-height: 300px;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .bukti-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      color: white;
+      text-decoration: none;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .bukti-link:hover {
+      background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .swal-modal-popup-detail {
+      max-width: 900px;
+    }
+
     /* SweetAlert2 Modal Container Customization */
     .swal-modal-container {
       z-index: 9999;
@@ -524,6 +1013,8 @@ function appendModalStyles() {
  */
 const ModalApi = {
   subscription: showSubscriptionModal,
+  subscriptionRenewal: showSubscriptionRenewalModal,
+  subscriptionRenewalDetail: showSubscriptionRenewalDetailModal,
   confirm: showConfirmModal,
   alert: showAlertModal,
   custom: showCustomModal,

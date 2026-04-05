@@ -533,8 +533,12 @@ class AdminSystemDashboard {
       let result;
       if (primaryAction.type === 'approve' || primaryAction.type === 'sync') {
         result = await authApi.approveSchool(schoolId);
-      } else if (primaryAction.type === 'activate' || primaryAction.type === 'reactivate') {
+      } else if (primaryAction.type === 'activate') {
         result = await authApi.upgradeSchoolPlan(schoolId, school.plan);
+      } else if (primaryAction.type === 'reactivate') {
+        // Show subscription renewal modal instead of direct upgrade
+        result = await this.showSubscriptionRenewalModal(school);
+        return; // Don't continue with normal flow
       }
 
       if (result?.success) {
@@ -586,11 +590,40 @@ class AdminSystemDashboard {
   }
 
   /**
-   * Open custom school modal
+   * Show subscription renewal modal for admin approval
    */
-  async openAddCustomSchoolModal() {
-    // Minimal modal for now - can be extracted to separate module later
-    showInfo('Custom School', 'Feature untuk menambahkan sekolah custom sedang dalam pengembangan');
+  async showSubscriptionRenewalModal(school) {
+    const modalOptions = {
+      onApprove: async () => {
+        try {
+          showLoading('Memproses perpanjangan...');
+          
+          // Update school status to active and set new expiry
+          const result = await authApi.upgradeSchoolPlan(school.id || school.schoolId, school.plan);
+          
+          if (result?.success) {
+            closeLoading();
+            await this.refreshAllData();
+            showSuccess('Berhasil', 'Subscription berhasil diperpanjang');
+          } else {
+            closeLoading();
+            showError('Gagal', result?.message || 'Gagal memperpanjang subscription');
+          }
+        } catch (error) {
+          closeLoading();
+          console.error('Renewal approval error:', error);
+          showError('Gagal', 'Terjadi kesalahan saat memproses perpanjangan');
+        }
+      },
+      onReject: () => {
+        // Optional: handle rejection
+      }
+    };
+
+    // Import modal dynamically
+    const module = await import('../components/utils/Modal.js');
+    const Modal = module.default || module.Modal || module;
+    Modal.subscriptionRenewalDetail(school, modalOptions);
   }
 
   /**
@@ -686,6 +719,20 @@ class AdminSystemDashboard {
           primaryAction: {
             type: 'approve',
             label: 'Approve'
+          }
+        },
+        {
+          key: 'PENDING_RENEWAL',
+          value: 'pending_renewal',
+          label: 'Pending Renewal',
+          badge: 'info',
+          icon: 'fa-sync-alt',
+          iconBg: 'bg-blue-500/20',
+          iconColor: 'text-blue-300',
+          filterLabel: 'Pending Renewal',
+          primaryAction: {
+            type: 'reactivate',
+            label: 'Proses Perpanjangan'
           }
         },
         {

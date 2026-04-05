@@ -43,28 +43,83 @@ export class LoginComponent {
    * @param {Object} result.details - Subscription details { expiresAt, daysRemaining }
    */
   showSubscriptionModal(result) {
-    const subscriptionData = {
-      schoolName: result.school?.schoolName || 'Sekolah Anda',
-      plan: result.school?.plan || 'Starter',
-      expiresAt: result.details?.expiresAt || new Date(),
-      daysRemaining: result.details?.daysRemaining || 0
-    };
+    // Import modal functions dynamically to avoid circular dependencies
+    import('./utils/Modal.js').then((module) => {
+      const Modal = module.default || module.Modal || module;
+      const subscriptionData = {
+        schoolName: result.school?.schoolName || 'Sekolah Anda',
+        currentPlan: result.school?.plan || 'Starter',
+        expiresAt: result.details?.expiresAt || new Date()
+      };
 
-    const modalOptions = {
-      onContact: () => {
-        // Contact admin via WhatsApp
-        const schoolName = subscriptionData.schoolName.replace(/\s+/g, '%20');
-        window.open(
-          `https://wa.me/85161609575?text=Hi%20Admin%20${schoolName}%2C%20subscription%20expired`,
-          '_blank'
-        );
-      },
-      onClose: () => {
-        // Modal automatically closes
+      // Check if we have available plans data
+      if (window._pricingCache && window._pricingCache.plans) {
+        // Show renewal modal with plan selection
+        Modal.subscriptionRenewal(subscriptionData, window._pricingCache.plans, {
+          onSelectPlan: async (selectedPlan) => {
+            // Open renewal registration modal with selected plan
+            await this.openRenewalRegisterModal(selectedPlan, result.school);
+          },
+          onClose: () => {
+            // Optional: handle modal close
+          }
+        });
+      } else {
+        // Fallback to old modal if no plans data
+        Modal.subscription({
+          schoolName: result.school?.schoolName || 'Sekolah Anda',
+          plan: result.school?.plan || 'Starter',
+          expiresAt: result.details?.expiresAt || new Date(),
+          daysRemaining: result.details?.daysRemaining || 0
+        }, {
+          onContact: () => {
+            const schoolName = subscriptionData.schoolName.replace(/\s+/g, '%20');
+            window.open(
+              `https://wa.me/85161609575?text=Hi%20Admin%20${schoolName}%2C%20subscription%20expired`,
+              '_blank'
+            );
+          },
+          onClose: () => {}
+        });
       }
-    };
+    }).catch(error => {
+      console.error('Failed to load modal:', error);
+      // Fallback error handling
+      this.showError('Terjadi kesalahan saat memuat modal');
+    });
+  }
 
-    Modal.subscription(subscriptionData, modalOptions);
+  /**
+   * Open renewal registration modal with selected plan
+   * @param {Object} selectedPlan - The selected plan for renewal
+   * @param {Object} school - Existing school data
+   */
+  async openRenewalRegisterModal(selectedPlan, school = {}) {
+    try {
+      const module = await import('./modals/RegisterModal.js');
+      const modal = module.default || module;
+
+      await modal.showRenewalRegisterModal({
+        currentPlan: school.plan || 'Starter',
+        schoolData: {
+          schoolName: school.schoolName || school.name || '',
+          email: school.email || '',
+          noWa: school.noWa || school.no_wa || ''
+        }
+      }, {
+        selectedPlan: selectedPlan,
+        onSuccess: () => {
+          // Optionally reload or redirect after successful renewal submission
+          window.location.reload();
+        },
+        onError: (error) => {
+          console.error('Renewal modal error:', error);
+        }
+      });
+    } catch (error) {
+      console.error('Failed to open renewal register modal:', error);
+      this.showError('Terjadi kesalahan saat membuka form perpanjangan');
+    }
   }
 
   /**

@@ -386,6 +386,13 @@ class AuthApi {
   }
 
   /**
+   * Register school renewal (for expired subscriptions)
+   */
+  async registerSchoolRenewal(payload, showToast = true) {
+    return this.call('registerschoolrenewal', payload, showToast);
+  }
+
+  /**
    * Approve pending school (admin-system only)
    */
   async approveSchool(schoolId) {
