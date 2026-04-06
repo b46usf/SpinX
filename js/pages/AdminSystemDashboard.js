@@ -31,7 +31,7 @@ import {
 class AdminSystemDashboard {
   constructor() {
     this.currentSection = 'dashboard';
-    this.driveFolderUrl = 'https://drive.google.com/drive/folders/1KpR4CoefAn1_Wq6rk3jhXWhBwvE_-cZj?usp=sharing';
+    this.driveFolderUrl = 'https://drive.google.com/drive/folders/1LO3doxMITY5QJN0Z3s5Ar9iczGEqcaxh?usp=sharing';
     
     // Initialize managers
     this.subscriptionStatusConfig = this.getDefaultSubscriptionStatusConfig();

@@ -49,11 +49,13 @@ class SchoolManager {
         this.applyFilters();
         this.updateStats();
       } else {
-        this.renderEmpty();
+        this.schools = [];
+        this.renderEmpty(result.message || result.error || '');
       }
     } catch (error) {
       console.error('Failed to load schools:', error);
-      this.renderEmpty();
+      this.schools = [];
+      this.renderEmpty(error.message || 'Gagal memuat data sekolah.');
     }
   }
 
@@ -290,14 +292,15 @@ class SchoolManager {
    * Render empty state
    * @private
    */
-  renderEmpty() {
+  renderEmpty(message = '') {
     const container = document.getElementById(this.listContainerId);
     if (!container) return;
     clearContainerSkeleton(container);
 
     DashboardUtils.renderEmptyState(container, {
       icon: 'fa-school',
-      title: 'Belum ada sekolah',
+      title: message ? 'Gagal memuat daftar sekolah' : 'Belum ada sekolah',
+      subtitle: message || '',
       action: { label: 'Tambah Sekolah Custom' }
     });
   }

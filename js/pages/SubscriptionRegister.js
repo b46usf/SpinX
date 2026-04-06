@@ -8,11 +8,12 @@ import { authApi } from '../auth/AuthApi.js';
 import AuthRouter from '../auth/utils/AuthRouter.js';
 import { DOMUtils } from '../core/DOMUtils.js';
 import { ToastUtils } from '../core/ToastUtils.js';
+import { uploadPaymentProof } from '../upload.js';
 
 class SubscriptionRegister {
   constructor(options = {}) {
-    this.driveFolderId = '1KpR4CoefAn1_Wq6rk3jhXWhBwvE_-cZj';
-    this.driveFolderUrl = 'https://drive.google.com/drive/folders/1KpR4CoefAn1_Wq6rk3jhXWhBwvE_-cZj?usp=sharing';
+    this.driveFolderId = '1LO3doxMITY5QJN0Z3s5Ar9iczGEqcaxh';
+    this.driveFolderUrl = 'https://drive.google.com/drive/folders/1LO3doxMITY5QJN0Z3s5Ar9iczGEqcaxh?usp=sharing';
     this.containerId = options.containerId || 'subscription-register';
     this.isVisible = false;
     this.init();
@@ -165,8 +166,15 @@ class SubscriptionRegister {
       email: DOMUtils.getValue('school-email'),
       noWa: DOMUtils.getValue('school-nowa'),
       plan: DOMUtils.getValue('school-plan', 'starter'),
-      buktiTF_link: DOMUtils.getValue('buktiTF_link')
+      buktiTF_link: DOMUtils.getValue('buktiTF_link'),
+      buktiTransferFile: this.getPaymentProofFile()
     };
+  }
+
+  getPaymentProofFile() {
+    return document.getElementById('buktiTF_file')?.files[0]
+      || document.getElementById('payment-proof')?.files[0]
+      || null;
   }
 
   /**
@@ -179,7 +187,7 @@ class SubscriptionRegister {
     if (!data.email || !data.email.includes('@')) errors.push('Email tidak valid');
     if (!data.noWa || !/^\d{10,15}$/.test(data.noWa.replace(/[^0-9]/g, ''))) errors.push('No. WhatsApp tidak valid');
     
-    if (data.plan !== 'starter' && !data.buktiTF_link) {
+    if (data.plan !== 'starter' && !data.buktiTF_link && !data.buktiTransferFile) {
       errors.push('Bukti transfer wajib diisi untuk plan berbayar');
     }
 
@@ -216,7 +224,14 @@ class SubscriptionRegister {
         result = await this.handleRenewalSubmit(data);
       } else {
         // Handle regular registration
-        result = await authApi.registerSchoolPending(data, false);
+        const buktiTransfer = await this.resolvePaymentProofLink(data, 'landing');
+        result = await authApi.registerSchoolPending({
+          schoolName: data.schoolName,
+          email: data.email,
+          noWa: data.noWa,
+          plan: data.plan,
+          buktiTransfer
+        }, false);
       }
       
       if (result.success) {
@@ -247,37 +262,43 @@ class SubscriptionRegister {
    * Handle renewal submission
    */
   async handleRenewalSubmit(data) {
-    // For renewal, we need to include the bukti transfer file
-    const buktiFile = document.getElementById('buktiTF_file')?.files[0];
-    
-    if (!buktiFile) {
+    const buktiTransfer = await this.resolvePaymentProofLink(data, 'renewal');
+
+    if (!buktiTransfer) {
       throw new Error('Bukti transfer harus diupload untuk perpanjangan');
     }
 
-    // Convert file to base64
-    const buktiTransferBase64 = await this.fileToBase64(buktiFile);
-
     const renewalData = {
-      ...data,
-      buktiTransfer: buktiTransferBase64,
+      schoolName: data.schoolName,
+      email: data.email,
+      noWa: data.noWa,
+      plan: data.plan,
+      buktiTransfer,
       isRenewal: true,
       selectedPlan: this.renewalData.selectedPlan,
       previousPlan: 'starter' // Assuming renewal from starter
     };
 
-    return await authApi.registerSchoolRenewal(renewalData);
+    return await authApi.registerSchoolRenewal(renewalData, false);
   }
 
-  /**
-   * Convert file to base64
-   */
-  fileToBase64(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = error => reject(error);
-    });
+  async resolvePaymentProofLink(data, source) {
+    if (data.plan === 'starter') {
+      return '';
+    }
+
+    if (data.buktiTransferFile) {
+      const uploadResult = await uploadPaymentProof({
+        file: data.buktiTransferFile,
+        source,
+        schoolName: data.schoolName,
+        email: data.email,
+        plan: data.plan
+      });
+      return uploadResult?.fileUrl || '';
+    }
+
+    return data.buktiTF_link || '';
   }
 
   /**

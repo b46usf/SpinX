@@ -41,14 +41,17 @@ class SubscriptionManager {
         this.payments = paymentsResult?.invoices || paymentsResult?.payments || [];
         this.updateStats();
         this.renderInvoices(this.invoices);
-        this.renderPayments(this.payments);
+        this.renderPayments(
+          this.payments,
+          paymentsResult?.success === false ? (paymentsResult.message || paymentsResult.error || '') : ''
+        );
       } else {
         this.subscriptions = {};
         this.invoices = [];
         this.payments = [];
         this.updateStats();
-        this.renderEmptyInvoices();
-        this.renderEmptyPayments();
+        this.renderEmptyInvoices(result.message || result.error || '');
+        this.renderEmptyPayments(result.message || result.error || '');
       }
     } catch (error) {
       console.error('Failed to load subscriptions:', error);
@@ -56,8 +59,8 @@ class SubscriptionManager {
       this.invoices = [];
       this.payments = [];
       this.updateStats();
-      this.renderEmptyInvoices();
-      this.renderEmptyPayments();
+      this.renderEmptyInvoices(error.message || 'Gagal memuat invoice subscription.');
+      this.renderEmptyPayments(error.message || 'Gagal memuat pembayaran subscription.');
     }
   }
 
@@ -97,13 +100,13 @@ class SubscriptionManager {
   /**
    * Render payments list
    */
-  renderPayments(payments) {
+  renderPayments(payments, emptyMessage = '') {
     const container = document.getElementById(this.paymentCounterId);
     if (!container) return;
     clearContainerSkeleton(container);
 
     if (!payments.length) {
-      this.renderEmptyPayments();
+      this.renderEmptyPayments(emptyMessage);
       return;
     }
 
@@ -226,14 +229,15 @@ class SubscriptionManager {
    * Render empty invoices state
    * @private
    */
-  renderEmptyInvoices() {
+  renderEmptyInvoices(message = '') {
     const container = document.getElementById(this.invoiceCounterId);
     if (!container) return;
     clearContainerSkeleton(container);
 
     DashboardUtils.renderEmptyState(container, {
       icon: 'fa-file-invoice',
-      title: 'Belum ada invoice'
+      title: message ? 'Gagal memuat invoice' : 'Belum ada invoice',
+      subtitle: message || ''
     });
   }
 
@@ -241,14 +245,15 @@ class SubscriptionManager {
    * Render empty payments state
    * @private
    */
-  renderEmptyPayments() {
+  renderEmptyPayments(message = '') {
     const container = document.getElementById(this.paymentCounterId);
     if (!container) return;
     clearContainerSkeleton(container);
 
     DashboardUtils.renderEmptyState(container, {
       icon: 'fa-money-bill-wave',
-      title: 'Belum ada pembayaran'
+      title: message ? 'Gagal memuat pembayaran' : 'Belum ada pembayaran',
+      subtitle: message || ''
     });
   }
 
