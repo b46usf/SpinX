@@ -385,6 +385,7 @@ class SchoolManager {
           if (handlers.onActionClick) {
             handlers.onActionClick(schoolId);
           }
+          return;
         }
 
         const emptyActionBtn = event.target.closest('[data-action="open-add-school-modal"]');
@@ -393,6 +394,12 @@ class SchoolManager {
           if (handlers.onAddClick) {
             handlers.onAddClick();
           }
+          return;
+        }
+
+        const schoolCard = event.target.closest('[data-id]');
+        if (schoolCard && handlers.onCardClick) {
+          handlers.onCardClick(schoolCard.dataset.id);
         }
       });
     }

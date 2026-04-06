@@ -395,15 +395,23 @@ class AuthApi {
   /**
    * Approve pending school (admin-system only)
    */
-  async approveSchool(schoolId) {
-    return this.call('approveschool', { schoolId: schoolId });
+  async approveSchool(schoolIdOrPayload) {
+    const payload = typeof schoolIdOrPayload === 'object' && schoolIdOrPayload !== null
+      ? schoolIdOrPayload
+      : { schoolId: schoolIdOrPayload };
+
+    return this.call('approveschool', payload);
   }
 
   /**
    * Reactivate or extend school subscription using current/new plan
    */
-  async upgradeSchoolPlan(schoolId, plan) {
-    return this.call('upgradeplan', { schoolId, plan });
+  async upgradeSchoolPlan(schoolIdOrPayload, plan) {
+    const payload = typeof schoolIdOrPayload === 'object' && schoolIdOrPayload !== null
+      ? schoolIdOrPayload
+      : { schoolId: schoolIdOrPayload, plan };
+
+    return this.call('upgradeplan', payload);
   }
 
   // ==================== Admin Actions ====================

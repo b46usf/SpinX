@@ -13,6 +13,7 @@
 
 import { authApi } from '../../auth/AuthApi.js';
 import AuthRouter from '../../auth/utils/AuthRouter.js';
+import { uploadPaymentProof } from '../../upload.js';
 import { showCustomModal } from '../utils/Modal.js';
 import { fireToast } from '../utils/Toast.js';
 
@@ -371,27 +372,46 @@ async function handleRenewalSubmit(formData, options = {}) {
   const { onSuccess, onError } = options;
 
   try {
-    fireToast('info', 'Memproses perpanjangan...', 'Mohon tunggu sebentar');
+    fireToast({
+      title: 'Memproses perpanjangan...',
+      html: 'Mengupload bukti transfer dan menyiapkan data renewal.',
+      didOpen: () => {
+        const swal = window.SweetAlert2 || window.Swal;
+        swal?.showLoading();
+      },
+      allowOutsideClick: false,
+      showConfirmButton: false
+    });
 
-    // Convert file to base64 for upload
-    const buktiTransferBase64 = formData.buktiTransfer
-      ? await fileToBase64(formData.buktiTransfer)
-      : '';
+    const uploadedProof = formData.buktiTransfer
+      ? await uploadPaymentProof({
+          file: formData.buktiTransfer,
+          source: 'renewal',
+          schoolName: formData.schoolName,
+          email: formData.email,
+          plan: formData.plan
+        })
+      : null;
 
     const registerData = {
       schoolName: formData.schoolName,
       email: formData.email,
       phone: formData.phone,
       plan: formData.plan,
-      buktiTransfer: buktiTransferBase64,
+      buktiTransfer: uploadedProof?.fileUrl || '',
       isRenewal: true,
       previousPlan: formData.previousPlan
     };
 
-    const result = await authApi.registerSchoolRenewal(registerData);
+    const result = await authApi.registerSchoolRenewal(registerData, false);
 
     if (result.success) {
-      fireToast('success', 'Berhasil!', 'Data perpanjangan telah dikirim. Admin akan memproses dalam 1-2 hari kerja.');
+      fireToast({
+        title: 'Berhasil!',
+        html: 'Data perpanjangan telah dikirim. Admin akan memproses dalam 1-2 hari kerja.',
+        icon: 'success',
+        timer: 2500
+      });
 
       // Clear renewal context
       sessionStorage.removeItem('subscriptionRenewal');
@@ -404,26 +424,17 @@ async function handleRenewalSubmit(formData, options = {}) {
     }
   } catch (error) {
     console.error('Renewal registration error:', error);
-    fireToast('error', 'Gagal', error.message || 'Terjadi kesalahan saat mengirim data');
+    fireToast({
+      title: 'Gagal',
+      html: error.message || 'Terjadi kesalahan saat mengirim data',
+      icon: 'error',
+      timer: 3000
+    });
 
     if (onError) {
       onError(error);
     }
   }
-}
-
-/**
- * Convert file to base64
- * @param {File} file - File to convert
- * @returns {Promise<string>} Base64 string
- */
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = error => reject(error);
-  });
 }
 
 /**
@@ -480,13 +491,19 @@ async function handleFormSubmit(formData, callbacks = {}) {
   const { onSuccess, onError } = callbacks;
 
   try {
-    const buktiTransferBase64 = formData.buktiTransfer
-      ? await fileToBase64(formData.buktiTransfer)
-      : '';
+    const uploadedProof = formData.buktiTransfer
+      ? await uploadPaymentProof({
+          file: formData.buktiTransfer,
+          source: 'landing',
+          schoolName: formData.schoolName,
+          email: formData.email,
+          plan: formData.plan
+        })
+      : null;
 
     const payload = {
       ...formData,
-      buktiTransfer: buktiTransferBase64
+      buktiTransfer: uploadedProof?.fileUrl || ''
     };
 
     const result = await authApi.registerSchoolPending(payload, false);

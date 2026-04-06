@@ -345,6 +345,7 @@ class AdminSystemDashboard {
     // Setup manager listeners
     this.schoolManager.setupEventListeners({
       onActionClick: (schoolId) => this.handleSchoolAction(schoolId),
+      onCardClick: (schoolId) => this.handleSchoolAction(schoolId),
       onAddClick: () => this.openAddCustomSchoolModal()
     });
 
@@ -516,29 +517,36 @@ class AdminSystemDashboard {
     const schoolName = school.nama || school.name || school.schoolName || 'Sekolah';
     const planLabel = this.formatPlanName(school.plan);
 
-    const confirmed = await showConfirm(
-      this.getActionDialogTitle(primaryAction),
-      this.getActionDialogMessage(primaryAction, schoolName, planLabel),
-      this.getActionConfirmLabel(primaryAction),
-      'Batal',
-      'info'
-    );
-
-    if (!confirmed) return;
-
     try {
       this.schoolManager.approvingSchoolId = schoolId;
       this.schoolManager.applyFilters();
 
+      if (primaryAction.type === 'approve' || primaryAction.type === 'activate') {
+        await this.showSchoolRegistrationApprovalModal(school);
+        return;
+      }
+
+      if (primaryAction.type === 'reactivate') {
+        await this.showSubscriptionRenewalModal(school);
+        return;
+      }
+
+      const confirmed = await showConfirm(
+        this.getActionDialogTitle(primaryAction),
+        this.getActionDialogMessage(primaryAction, schoolName, planLabel),
+        this.getActionConfirmLabel(primaryAction),
+        'Batal',
+        'info'
+      );
+
+      if (!confirmed) return;
+
       let result;
-      if (primaryAction.type === 'approve' || primaryAction.type === 'sync') {
-        result = await authApi.approveSchool(schoolId);
-      } else if (primaryAction.type === 'activate') {
-        result = await authApi.upgradeSchoolPlan(schoolId, school.plan);
-      } else if (primaryAction.type === 'reactivate') {
-        // Show subscription renewal modal instead of direct upgrade
-        result = await this.showSubscriptionRenewalModal(school);
-        return; // Don't continue with normal flow
+      if (primaryAction.type === 'sync') {
+        result = await authApi.approveSchool({
+          schoolId,
+          plan: school.plan
+        });
       }
 
       if (result?.success) {
@@ -554,6 +562,39 @@ class AdminSystemDashboard {
       this.schoolManager.approvingSchoolId = null;
       this.schoolManager.applyFilters();
     }
+  }
+
+  async showSchoolRegistrationApprovalModal(school) {
+    const modalOptions = {
+      onApprove: async () => {
+        try {
+          showLoading('Memproses approval sekolah...');
+
+          const result = await authApi.approveSchool({
+            schoolId: school.id || school.schoolId,
+            plan: school.plan
+          });
+
+          closeLoading();
+
+          if (result?.success) {
+            await this.refreshAllData();
+            showSuccess('Berhasil', 'Sekolah berhasil di-approve dan diaktifkan');
+          } else {
+            showError('Gagal', result?.message || 'Gagal mengaktifkan sekolah');
+          }
+        } catch (error) {
+          closeLoading();
+          console.error('School approval error:', error);
+          showError('Gagal', 'Terjadi kesalahan saat memproses approval sekolah');
+        }
+      },
+      onReject: () => {}
+    };
+
+    const module = await import('../components/utils/Modal.js');
+    const Modal = module.default || module.Modal || module;
+    Modal.schoolRegistrationDetail(school, modalOptions);
   }
 
   /**
@@ -598,8 +639,10 @@ class AdminSystemDashboard {
         try {
           showLoading('Memproses perpanjangan...');
           
-          // Update school status to active and set new expiry
-          const result = await authApi.upgradeSchoolPlan(school.id || school.schoolId, school.plan);
+          const result = await authApi.upgradeSchoolPlan({
+            schoolId: school.id || school.schoolId,
+            plan: school.plan
+          });
           
           if (result?.success) {
             closeLoading();

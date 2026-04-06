@@ -286,6 +286,159 @@ export async function showSubscriptionRenewalModal(subscriptionData = {}, availa
   return result;
 }
 
+function renderPaymentProofSection(buktiTransfer, emptyMessage) {
+  if (buktiTransfer) {
+    return `
+      <div class="modal-bukti-section">
+        <h4 class="bukti-title">
+          <i class="fas fa-file-invoice-dollar"></i>
+          Bukti Transfer
+        </h4>
+        <div class="bukti-preview">
+          ${buktiTransfer.startsWith('data:')
+            ? `<img src="${buktiTransfer}" alt="Bukti Transfer" class="bukti-image" />`
+            : `<a href="${buktiTransfer}" target="_blank" class="bukti-link">
+                <i class="fas fa-external-link-alt"></i>
+                Lihat Bukti Transfer
+              </a>`
+          }
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="modal-warning-box">
+      <div class="modal-warning-icon">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      <div class="modal-warning-text">
+        <h4>Perhatian</h4>
+        <p>${emptyMessage}</p>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Show school registration detail modal for admin approval
+ * @param {Object} school - School data awaiting approval
+ * @param {Object} options - { onApprove, onReject }
+ */
+export async function showSchoolRegistrationDetailModal(school = {}, options = {}) {
+  const theme = getModalTheme();
+  const {
+    onApprove = null,
+    onReject = null
+  } = options;
+
+  const schoolName = school.nama || school.name || school.schoolName || 'Sekolah';
+  const selectedPlan = (school.plan || 'starter').toUpperCase();
+  const adminEmail = school.email || '-';
+  const adminPhone = school.noWa || school.phone || '-';
+  const buktiTransfer = school.buktiTFLink || school.buktiTransfer;
+  const isPaidPlan = (school.plan || 'starter') !== 'starter';
+
+  const htmlContent = `
+    <div class="modal-subscription-renewal-detail-wrapper">
+      <div class="modal-section-header">
+        <div class="modal-icon-group">
+          <div class="modal-icon-primary">
+            <i class="fas fa-school"></i>
+          </div>
+        </div>
+        <div class="modal-text-group">
+          <h3 class="modal-title">Detail Pendaftaran Sekolah</h3>
+          <p class="modal-subtitle">${schoolName}</p>
+        </div>
+      </div>
+
+      <div class="modal-section-content">
+        <div class="modal-info-grid">
+          <div class="modal-info-box">
+            <div class="modal-info-icon">
+              <i class="fas fa-school"></i>
+            </div>
+            <div class="modal-info-text">
+              <span class="modal-info-label">Nama Sekolah</span>
+              <span class="modal-info-value">${schoolName}</span>
+            </div>
+          </div>
+
+          <div class="modal-info-box">
+            <div class="modal-info-icon">
+              <i class="fas fa-crown"></i>
+            </div>
+            <div class="modal-info-text">
+              <span class="modal-info-label">Plan Dipilih</span>
+              <span class="modal-info-value">${selectedPlan}</span>
+            </div>
+          </div>
+
+          <div class="modal-info-box">
+            <div class="modal-info-icon">
+              <i class="fas fa-envelope"></i>
+            </div>
+            <div class="modal-info-text">
+              <span class="modal-info-label">Email Admin</span>
+              <span class="modal-info-value">${adminEmail}</span>
+            </div>
+          </div>
+
+          <div class="modal-info-box">
+            <div class="modal-info-icon">
+              <i class="fas fa-phone"></i>
+            </div>
+            <div class="modal-info-text">
+              <span class="modal-info-label">No. WhatsApp</span>
+              <span class="modal-info-value">${adminPhone}</span>
+            </div>
+          </div>
+        </div>
+
+        ${renderPaymentProofSection(
+          buktiTransfer,
+          isPaidPlan
+            ? 'Bukti transfer belum diupload. Pastikan sekolah mengupload bukti transfer sebelum approval.'
+            : 'Plan starter tidak membutuhkan bukti transfer. Anda bisa lanjut approve jika data sekolah sudah benar.'
+        )}
+      </div>
+    </div>
+  `;
+
+  const result = await showCustomModal({
+    ...ModalDefaults,
+    ...theme,
+    html: htmlContent,
+    showConfirmButton: true,
+    showCancelButton: true,
+    showDenyButton: buktiTransfer ? true : false,
+    confirmButtonText: '<i class="fas fa-check mr-2"></i>Setujui Sekolah',
+    cancelButtonText: 'Batal',
+    denyButtonText: '<i class="fas fa-times mr-2"></i>Tolak',
+    confirmButtonColor: '#10b981',
+    denyButtonColor: '#ef4444',
+    cancelButtonColor: '#6b7280',
+    reverseButtons: true,
+    customClass: {
+      container: 'swal-modal-container',
+      popup: 'swal-modal-popup-detail',
+      htmlContainer: 'swal-modal-html'
+    },
+    willOpen: () => {
+      appendModalStyles();
+    }
+  });
+
+  if (result.isConfirmed && onApprove) {
+    onApprove();
+  } else if (result.isDenied && onReject) {
+    onReject();
+  }
+
+  return result;
+}
+
 /**
  * Show subscription renewal detail modal for admin approval
  * @param {Object} school - School data with subscription details
@@ -362,33 +515,10 @@ export async function showSubscriptionRenewalDetailModal(school = {}, options = 
           </div>
         </div>
 
-        ${buktiTransfer ? `
-          <div class="modal-bukti-section">
-            <h4 class="bukti-title">
-              <i class="fas fa-file-invoice-dollar"></i>
-              Bukti Transfer
-            </h4>
-            <div class="bukti-preview">
-              ${buktiTransfer.startsWith('data:') ? 
-                `<img src="${buktiTransfer}" alt="Bukti Transfer" class="bukti-image" />` :
-                `<a href="${buktiTransfer}" target="_blank" class="bukti-link">
-                  <i class="fas fa-external-link-alt"></i>
-                  Lihat Bukti Transfer
-                </a>`
-              }
-            </div>
-          </div>
-        ` : `
-          <div class="modal-warning-box">
-            <div class="modal-warning-icon">
-              <i class="fas fa-exclamation-triangle"></i>
-            </div>
-            <div class="modal-warning-text">
-              <h4>Perhatian</h4>
-              <p>Bukti transfer belum diupload. Pastikan admin sekolah telah mengupload bukti transfer sebelum menyetujui perpanjangan.</p>
-            </div>
-          </div>
-        `}
+        ${renderPaymentProofSection(
+          buktiTransfer,
+          'Bukti transfer belum diupload. Pastikan admin sekolah telah mengupload bukti transfer sebelum menyetujui perpanjangan.'
+        )}
       </div>
     </div>
   `;
@@ -1015,6 +1145,7 @@ function appendModalStyles() {
 const ModalApi = {
   subscription: showSubscriptionModal,
   subscriptionRenewal: showSubscriptionRenewalModal,
+  schoolRegistrationDetail: showSchoolRegistrationDetailModal,
   subscriptionRenewalDetail: showSubscriptionRenewalDetailModal,
   confirm: showConfirmModal,
   alert: showAlertModal,
