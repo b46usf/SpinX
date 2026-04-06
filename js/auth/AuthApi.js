@@ -431,6 +431,17 @@ class AuthApi {
   }
 
   /**
+   * Reject pending school registration or renewal
+   */
+  async rejectSchool(schoolIdOrPayload) {
+    const payload = typeof schoolIdOrPayload === 'object' && schoolIdOrPayload !== null
+      ? schoolIdOrPayload
+      : { schoolId: schoolIdOrPayload };
+
+    return this.call('rejectschool', payload);
+  }
+
+  /**
    * Reactivate or extend school subscription using current/new plan
    */
   async upgradeSchoolPlan(schoolIdOrPayload, plan) {

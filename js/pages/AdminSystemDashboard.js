@@ -423,25 +423,40 @@ class AdminSystemDashboard {
       if (el) el.textContent = value;
     });
 
-    this.renderRevenueChart(data.revenue || data.revenueSaaS || 0);
+    this.renderRevenueChart(data.revenueByPlan || {});
   }
 
   /**
    * Render revenue chart
    */
-  renderRevenueChart(totalRevenue = 0) {
+  renderRevenueChart(revenueByPlan = {}) {
     const container = document.getElementById('revenue-chart');
     if (!container) return;
 
-    const seed = Math.max(Number(totalRevenue) || 0, 1);
-    const bars = [0.38, 0.54, 0.47, 0.7, 0.62, 0.84, 1].map((ratio, index) => {
-      const variance = ((seed / (index + 3)) % 17) / 100;
-      return Math.min(1, Math.max(0.22, ratio - variance));
-    });
+    const plans = [
+      { id: 'starter', label: 'Starter', tone: 'from-slate-400/80 to-slate-200/80' },
+      { id: 'pro', label: 'Pro', tone: 'from-indigo-500 to-cyan-400' },
+      { id: 'enterprise', label: 'Enterprise', tone: 'from-amber-400 to-orange-500' }
+    ].map((plan) => ({
+      ...plan,
+      value: Number(revenueByPlan?.[plan.id]) || 0
+    }));
 
-    container.innerHTML = bars.map((height, index) => `
-      <div class="flex-1 rounded-t ${index === bars.length - 1 ? 'bg-gradient-to-t from-indigo-500 to-pink-500' : 'bg-indigo-500/35'}" style="height:${Math.round(height * 100)}%"></div>
-    `).join('');
+    const maxValue = Math.max(...plans.map((plan) => plan.value), 1);
+
+    container.innerHTML = plans.map((plan) => {
+      const height = plan.value > 0 ? Math.max(8, Math.round((plan.value / maxValue) * 100)) : 0;
+
+      return `
+        <div class="flex-1 h-full flex flex-col items-center justify-end gap-2">
+          <div class="text-[10px] font-medium text-gray-400">${this.formatCompactCurrency(plan.value)}</div>
+          <div class="w-full h-full rounded-xl bg-white/5 border border-white/10 overflow-hidden flex items-end">
+            <div class="w-full rounded-xl bg-gradient-to-t ${plan.tone} transition-all duration-500" style="height:${height}%"></div>
+          </div>
+          <div class="text-[10px] uppercase tracking-[0.18em] text-gray-500">${plan.label}</div>
+        </div>
+      `;
+    }).join('');
   }
 
   /**
@@ -589,7 +604,9 @@ class AdminSystemDashboard {
           showError('Gagal', 'Terjadi kesalahan saat memproses approval sekolah');
         }
       },
-      onReject: () => {}
+      onReject: () => {
+        this.handleSchoolRejection(school, 'pendaftaran sekolah');
+      }
     };
 
     const module = await import('../components/utils/Modal.js');
@@ -659,7 +676,7 @@ class AdminSystemDashboard {
         }
       },
       onReject: () => {
-        // Optional: handle rejection
+        this.handleSchoolRejection(school, 'perpanjangan subscription');
       }
     };
 
@@ -667,6 +684,30 @@ class AdminSystemDashboard {
     const module = await import('../components/utils/Modal.js');
     const Modal = module.default || module.Modal || module;
     Modal.subscriptionRenewalDetail(school, modalOptions);
+  }
+
+  async handleSchoolRejection(school, label = 'permintaan sekolah') {
+    try {
+      showLoading('Memproses penolakan...');
+
+      const result = await authApi.rejectSchool({
+        schoolId: school.id || school.schoolId,
+        plan: school.plan
+      });
+
+      closeLoading();
+
+      if (result?.success) {
+        await this.refreshAllData();
+        showSuccess('Berhasil', `${label} ditolak dan status diubah menjadi CANCELLED`);
+      } else {
+        showError('Gagal', result?.message || 'Gagal menolak permintaan sekolah');
+      }
+    } catch (error) {
+      closeLoading();
+      console.error('School rejection error:', error);
+      showError('Gagal', 'Terjadi kesalahan saat memproses penolakan');
+    }
   }
 
   /**
@@ -680,6 +721,14 @@ class AdminSystemDashboard {
       custom: 'Custom'
     };
     return labels[plan] || plan;
+  }
+
+  formatCompactCurrency(amount) {
+    const value = Number(amount) || 0;
+    if (value <= 0) return 'Rp 0';
+    if (value >= 1000000) return `Rp ${(value / 1000000).toFixed(value % 1000000 === 0 ? 0 : 1)} jt`;
+    if (value >= 1000) return `Rp ${(value / 1000).toFixed(value % 1000 === 0 ? 0 : 1)} rb`;
+    return DashboardUtils.formatCurrency(value);
   }
 
   /**
