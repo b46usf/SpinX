@@ -120,29 +120,33 @@ export async function showSubscriptionModal(subscriptionData = {}, options = {})
     ...theme,
     html: htmlContent,
     showConfirmButton: true,
-    showCancelButton: true,
-    confirmButtonText: '<i class="fas fa-phone mr-2"></i>Hubungi Admin',
-    cancelButtonText: 'Tutup',
-    confirmButtonColor: '#4f46e5',
-    cancelButtonColor: '#6b7280',
+    showCancelButton: false,
+    showDenyButton: Boolean(onContact),
+    confirmButtonText: 'Tutup',
+    denyButtonText: '<i class="fas fa-phone mr-2"></i>Hubungi Admin',
+    confirmButtonColor: '#6b7280',
+    denyButtonColor: '#4f46e5',
     reverseButtons: true,
+    focusConfirm: true,
+    returnFocus: false,
     customClass: {
       container: 'swal-modal-container',
       popup: 'swal-modal-popup',
       htmlContainer: 'swal-modal-html',
       confirmButton: 'swal-modal-button-confirm',
-      cancelButton: 'swal-modal-button-cancel'
+      denyButton: 'swal-modal-button-cancel'
     },
     willOpen: () => {
       appendModalStyles();
     }
   });
 
-  if (result.isConfirmed && onContact) {
-    onContact();
-  }
-  if (result.isDismissed && onClose) {
+  if ((result.isDismissed || result.isConfirmed) && onClose) {
     onClose();
+  }
+
+  if (result.isDenied && onContact) {
+    onContact();
   }
 
   return result;

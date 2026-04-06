@@ -138,6 +138,10 @@ export function showLoading(message = 'Memproses...') {
     allowOutsideClick: false,
     timer: 15000, // Auto close after 15 seconds
     timerProgressBar: true,
+    customClass: {
+      container: 'swal-above-import',
+      popup: 'swal-loading-popup'
+    },
     didOpen: () => {
       swal.showLoading();
     }
@@ -148,7 +152,16 @@ export function showLoading(message = 'Memproses...') {
  * Close loading toast
  */
 export function closeLoading() {
-  getSwalInstance()?.close();
+  const swal = getSwalInstance();
+  if (!swal) return;
+
+  const isLoading = typeof swal.isLoading === 'function' ? swal.isLoading() : false;
+  const popup = typeof swal.getPopup === 'function' ? swal.getPopup() : null;
+  const hasLoadingPopup = Boolean(popup && popup.classList.contains('swal-loading-popup'));
+
+  if (isLoading || hasLoadingPopup) {
+    swal.close();
+  }
 }
 
 /**
@@ -257,4 +270,3 @@ if (typeof window !== 'undefined') {
 }
 
 export default ToastApi;
-

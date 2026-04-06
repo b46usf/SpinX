@@ -97,13 +97,15 @@ class GoogleAuth {
         sub: userInfo.sub
       };
 
-      // Use AuthApi for backend validation (AuthApi will show toast)
-      const authResult = await authApi.login(userInfo);
+      // Close loading first, then surface follow-up toast/modal explicitly.
+      const authResult = await authApi.login(userInfo, false);
       
       // Close loading toast
       if (Toast) {
         Toast.closeLoading();
       }
+
+      authApi.showResponseToast(authResult, 'login');
       
       if (authResult.needVerification) {
         if (authResult.telegramLinked) {
@@ -176,13 +178,15 @@ class GoogleAuth {
       Toast.loading('Sedang mendaftar...');
     }
     
-    // Use AuthApi for registration (AuthApi will show toast)
-    const result = await authApi.register(this.googleUser, userData);
+    // Close loading first, then surface follow-up toast/modal explicitly.
+    const result = await authApi.register(this.googleUser, userData, false);
     
     // Close loading toast
     if (Toast) {
       Toast.closeLoading();
     }
+
+    authApi.showResponseToast(result, 'register');
     
     // Check result - toast already shown by AuthApi
     if (result.success) {

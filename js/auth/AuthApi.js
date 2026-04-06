@@ -293,13 +293,13 @@ class AuthApi {
    * Login user
    * @param {Object} userInfo - User info from Google
    */
-  async login(userInfo) {
+  async login(userInfo, showToast = true) {
     return this.call('login', {
       email: userInfo.email,
       name: userInfo.name,
       sub: userInfo.sub,
       device: 'web'
-    });
+    }, showToast);
   }
 
   /**
@@ -307,7 +307,7 @@ class AuthApi {
    * @param {Object} googleUser - Google user info
    * @param {Object} userData - Registration data
    */
-  async register(googleUser, userData) {
+  async register(googleUser, userData, showToast = true) {
     return this.call('register', {
       email: googleUser.email,
       name: userData.name,
@@ -317,7 +317,7 @@ class AuthApi {
       kelas: userData.kelas || '',
       sekolah: userData.sekolah || '',
       foto: googleUser.picture || ''
-    });
+    }, showToast);
   }
 
   /**
