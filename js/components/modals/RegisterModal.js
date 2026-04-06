@@ -37,6 +37,29 @@ function inferPlanId(planName = '') {
  * @returns {string} HTML form content
  */
 function generateRegisterHTML(planName = 'Starter - Gratis', planId = 'starter') {
+  const isPaidPlan = planId !== 'starter';
+  const paymentField = isPaidPlan ? `
+      <div class="form-group">
+        <label class="block text-sm font-medium text-gray-300 mb-2">Transfer Pembayaran</label>
+        <div class="rounded-lg border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+          <div class="font-semibold text-amber-200">Bank BCA</div>
+          <div>No. Rekening 3250883497</div>
+          <div>a.n. Bagus Farouktiawan</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="block text-sm font-medium text-gray-300 mb-2">Upload Bukti Transfer</label>
+        <input
+          type="file"
+          id="payment-proof"
+          accept="image/*,.pdf"
+          required
+          class="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-600 file:text-white hover:file:bg-blue-700"
+        >
+        <p class="text-xs text-gray-400 mt-1">Upload gambar atau PDF bukti transfer pembayaran untuk paket berbayar.</p>
+      </div>` : '';
+
   return `
     <form id="register-form" class="space-y-4">
       <div class="form-group">
@@ -79,6 +102,7 @@ function generateRegisterHTML(planName = 'Starter - Gratis', planId = 'starter')
         </div>
         <input type="hidden" id="selected-plan" value="${planId}">
       </div>
+      ${paymentField}
     </form>
   `;
 }
@@ -114,6 +138,8 @@ export async function showRegisterModal(planName = 'Starter - Gratis', options =
       const schoolName = document.getElementById('school-name')?.value;
       const email = document.getElementById('school-email')?.value;
       const noWa = document.getElementById('school-phone')?.value;
+      const buktiTransfer = document.getElementById('payment-proof')?.files[0];
+      const isPaidPlan = selectedPlanId !== 'starter';
 
       if (!schoolName) {
         return Promise.reject('Nama sekolah harus diisi');
@@ -124,12 +150,16 @@ export async function showRegisterModal(planName = 'Starter - Gratis', options =
       if (!noWa) {
         return Promise.reject('No. WhatsApp harus diisi');
       }
+      if (isPaidPlan && !buktiTransfer) {
+        return Promise.reject('Bukti transfer harus diupload untuk paket berbayar');
+      }
 
       return {
         schoolName,
         email,
         noWa,
-        plan: selectedPlanId
+        plan: selectedPlanId,
+        buktiTransfer: isPaidPlan ? buktiTransfer : null
       };
     }
   });
@@ -450,7 +480,16 @@ async function handleFormSubmit(formData, callbacks = {}) {
   const { onSuccess, onError } = callbacks;
 
   try {
-    const result = await authApi.registerSchoolPending(formData, false);
+    const buktiTransferBase64 = formData.buktiTransfer
+      ? await fileToBase64(formData.buktiTransfer)
+      : '';
+
+    const payload = {
+      ...formData,
+      buktiTransfer: buktiTransferBase64
+    };
+
+    const result = await authApi.registerSchoolPending(payload, false);
 
     if (result.success) {
       // Show success toast
