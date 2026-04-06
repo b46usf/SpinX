@@ -301,12 +301,15 @@ export async function showSchoolStatusModal(statusData = {}, options = {}) {
     ...theme,
     html: htmlContent,
     showConfirmButton: true,
-    showCancelButton: Boolean(onContact),
+    showCancelButton: false,
+    showDenyButton: Boolean(onContact),
     confirmButtonText: 'Mengerti',
-    cancelButtonText: '<i class="fas fa-phone mr-2"></i>Hubungi Admin',
+    denyButtonText: '<i class="fas fa-phone mr-2"></i>Hubungi Admin',
     confirmButtonColor: meta.accent,
-    cancelButtonColor: '#6b7280',
+    denyButtonColor: '#6b7280',
     reverseButtons: true,
+    focusConfirm: true,
+    returnFocus: false,
     customClass: {
       container: 'swal-modal-container',
       popup: 'swal-modal-popup',
@@ -317,15 +320,11 @@ export async function showSchoolStatusModal(statusData = {}, options = {}) {
     }
   });
 
-  if (result.isDismissed && onClose) {
+  if ((result.isDismissed || result.isConfirmed) && onClose) {
     onClose();
   }
 
-  if (result.isConfirmed && onClose) {
-    onClose();
-  }
-
-  if (result.dismiss === 'cancel' && onContact) {
+  if (result.isDenied && onContact) {
     onContact();
   }
 
