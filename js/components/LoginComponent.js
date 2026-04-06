@@ -94,6 +94,35 @@ export class LoginComponent {
   }
 
   /**
+   * Show school status modal for pending approval / pending renewal / inactive school.
+   * @param {Object} result - Status result data from API
+   */
+  showSchoolStatusModal(result) {
+    import('./utils/Modal.js').then((module) => {
+      const Modal = module.default || module.Modal || module;
+      const school = result.school || {};
+
+      Modal.schoolStatus({
+        schoolStatus: result.schoolStatus || school.rawStatus || school.status || result.reason || 'inactive',
+        school,
+        message: result.message || ''
+      }, {
+        onContact: () => {
+          const schoolName = (school.schoolName || school.name || 'Sekolah').replace(/\s+/g, '%20');
+          window.open(
+            `https://wa.me/85161609575?text=Halo%20Admin%2C%20saya%20ingin%20menanyakan%20status%20sekolah%20${schoolName}.`,
+            '_blank'
+          );
+        },
+        onClose: () => {}
+      });
+    }).catch(error => {
+      console.error('Failed to load school status modal:', error);
+      this.showError(result.message || 'Status sekolah belum aktif.');
+    });
+  }
+
+  /**
    * Open renewal registration modal with selected plan
    * @param {Object} selectedPlan - The selected plan for renewal
    * @param {Object} school - Existing school data

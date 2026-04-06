@@ -149,6 +149,190 @@ export async function showSubscriptionModal(subscriptionData = {}, options = {})
 }
 
 /**
+ * Show school status information modal for pending approval / renewal pending / inactive states.
+ * @param {Object} statusData - { schoolStatus, school, message }
+ * @param {Object} options - { onContact, onClose }
+ */
+export async function showSchoolStatusModal(statusData = {}, options = {}) {
+  const theme = getModalTheme();
+  const school = statusData.school || {};
+  const schoolStatus = (
+    statusData.schoolStatus ||
+    school.rawStatus ||
+    school.status ||
+    statusData.reason ||
+    'inactive'
+  ).toString().toLowerCase();
+
+  const {
+    onContact = null,
+    onClose = null
+  } = options;
+
+  const statusMetaMap = {
+    pending_school: {
+      title: 'Menunggu Approval Admin Sistem',
+      subtitle: 'Data sekolah sudah diterima dan sedang diverifikasi.',
+      icon: 'fa-hourglass-half',
+      accent: '#f59e0b',
+      actionLabel: 'Langkah Selanjutnya',
+      actionMessage: 'Silakan tunggu persetujuan admin sistem sebelum melanjutkan registrasi admin sekolah.'
+    },
+    pending_renewal: {
+      title: 'Perpanjangan Sedang Diproses',
+      subtitle: 'Bukti transfer renewal sudah dikirim dan sedang dicek.',
+      icon: 'fa-receipt',
+      accent: '#3b82f6',
+      actionLabel: 'Status Renewal',
+      actionMessage: 'Admin sistem sedang memverifikasi pembayaran renewal. Setelah disetujui, akses sekolah akan aktif kembali.'
+    },
+    inactive: {
+      title: 'Status Sekolah Belum Aktif',
+      subtitle: 'Akses sekolah belum dapat digunakan.',
+      icon: 'fa-circle-info',
+      accent: '#6b7280',
+      actionLabel: 'Informasi',
+      actionMessage: 'Hubungi admin sistem untuk bantuan aktivasi sekolah.'
+    }
+  };
+
+  const meta = statusMetaMap[schoolStatus] || statusMetaMap.inactive;
+  const displayDate = school.updatedAt || school.createdAt || '';
+  const submittedAt = displayDate
+    ? new Date(displayDate).toLocaleDateString('id-ID', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+    : '-';
+  const planLabel = (school.plan || 'starter').toString().toUpperCase();
+  const schoolName = school.schoolName || school.name || 'Sekolah Anda';
+  const schoolEmail = school.email || '-';
+  const schoolPhone = school.noWa || school.no_wa || '-';
+  const proofLink = school.buktiTFLink || school.buktiTransfer || '';
+  const message = statusData.message || meta.actionMessage;
+
+  const htmlContent = `
+    <div class="modal-subscription-wrapper">
+      <div class="modal-section-header">
+        <div class="modal-icon-group">
+          <div class="modal-icon-primary" style="background:${meta.accent}20;color:${meta.accent};">
+            <i class="fas ${meta.icon}"></i>
+          </div>
+        </div>
+        <div class="modal-text-group">
+          <h3 class="modal-title">${meta.title}</h3>
+          <p class="modal-subtitle">${schoolName}</p>
+        </div>
+      </div>
+
+      <div class="modal-section-content">
+        <div class="modal-info-box">
+          <div class="modal-info-icon">
+            <i class="fas fa-layer-group"></i>
+          </div>
+          <div class="modal-info-text">
+            <span class="modal-info-label">Plan</span>
+            <span class="modal-info-value">${planLabel}</span>
+          </div>
+        </div>
+
+        <div class="modal-info-box">
+          <div class="modal-info-icon">
+            <i class="fas fa-envelope"></i>
+          </div>
+          <div class="modal-info-text">
+            <span class="modal-info-label">Email Sekolah</span>
+            <span class="modal-info-value">${schoolEmail}</span>
+          </div>
+        </div>
+
+        <div class="modal-info-box">
+          <div class="modal-info-icon">
+            <i class="fas fa-phone"></i>
+          </div>
+          <div class="modal-info-text">
+            <span class="modal-info-label">No. WhatsApp</span>
+            <span class="modal-info-value">${schoolPhone}</span>
+          </div>
+        </div>
+
+        <div class="modal-info-box">
+          <div class="modal-info-icon">
+            <i class="fas fa-calendar-day"></i>
+          </div>
+          <div class="modal-info-text">
+            <span class="modal-info-label">Tanggal Pengajuan</span>
+            <span class="modal-info-value">${submittedAt}</span>
+          </div>
+        </div>
+
+        ${proofLink ? `
+          <div class="modal-info-box">
+            <div class="modal-info-icon">
+              <i class="fas fa-file-invoice"></i>
+            </div>
+            <div class="modal-info-text">
+              <span class="modal-info-label">Bukti Transfer</span>
+              <span class="modal-info-value">
+                <a href="${proofLink}" target="_blank" rel="noopener noreferrer" style="color:${meta.accent};text-decoration:underline;">
+                  Lihat Bukti Transfer
+                </a>
+              </span>
+            </div>
+          </div>
+        ` : ''}
+
+        <div class="modal-warning-box">
+          <div class="modal-warning-icon">
+            <i class="fas fa-circle-info"></i>
+          </div>
+          <div class="modal-warning-text">
+            <h4>${meta.actionLabel}</h4>
+            <p>${message}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const result = await showCustomModal({
+    ...ModalDefaults,
+    ...theme,
+    html: htmlContent,
+    showConfirmButton: true,
+    showCancelButton: Boolean(onContact),
+    confirmButtonText: 'Mengerti',
+    cancelButtonText: '<i class="fas fa-phone mr-2"></i>Hubungi Admin',
+    confirmButtonColor: meta.accent,
+    cancelButtonColor: '#6b7280',
+    reverseButtons: true,
+    customClass: {
+      container: 'swal-modal-container',
+      popup: 'swal-modal-popup',
+      htmlContainer: 'swal-modal-html'
+    },
+    didOpen: () => {
+      appendModalStyles();
+    }
+  });
+
+  if (result.isDismissed && onClose) {
+    onClose();
+  }
+
+  if (result.isConfirmed && onClose) {
+    onClose();
+  }
+
+  if (result.dismiss === 'cancel' && onContact) {
+    onContact();
+  }
+
+  return result;
+}
+
+/**
  * Show subscription renewal modal with plan selection
  * @param {Object} subscriptionData - { schoolName, currentPlan, expiresAt }
  * @param {Array} availablePlans - Array of available plans from SUBSCRIPTION_PLANS
@@ -1144,6 +1328,7 @@ function appendModalStyles() {
  */
 const ModalApi = {
   subscription: showSubscriptionModal,
+  schoolStatus: showSchoolStatusModal,
   subscriptionRenewal: showSubscriptionRenewalModal,
   schoolRegistrationDetail: showSchoolRegistrationDetailModal,
   subscriptionRenewalDetail: showSubscriptionRenewalDetailModal,

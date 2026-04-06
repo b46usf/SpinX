@@ -60,6 +60,14 @@ class AuthApi {
   showResponseToast(result, action) {
     const Toast = getToast();
     if (!Toast) return;
+    const schoolStatus = (result.schoolStatus || result.school?.rawStatus || result.school?.status || result.reason || '').toString().toLowerCase();
+    const hasSchoolStatusModal = window.loginComponent && window.loginComponent.showSchoolStatusModal;
+    const shouldShowSchoolStatusModal = (
+      result.error === 'SCHOOL_PENDING_APPROVAL' ||
+      result.error === 'SCHOOL_RENEWAL_PENDING' ||
+      schoolStatus === 'pending_school' ||
+      schoolStatus === 'pending_renewal'
+    );
 
     if (action === 'login' && result.registered === false) {
       if (result.registerRole === 'admin-sekolah') {
@@ -95,9 +103,26 @@ class AuthApi {
       };
       
       const message = errorMessages[action] || result.message || 'Terjadi kesalahan';
+
+      if (shouldShowSchoolStatusModal) {
+        if (hasSchoolStatusModal) {
+          window.loginComponent.showSchoolStatusModal(result);
+        } else {
+          Toast.info('Status Sekolah', message);
+        }
+        return;
+      }
       
       // NEW: School subscription invalid → Custom modal
       if (result.error === 'SCHOOL_SUBSCRIPTION_INVALID') {
+        if (schoolStatus === 'pending_school' || schoolStatus === 'pending_renewal') {
+          if (hasSchoolStatusModal) {
+            window.loginComponent.showSchoolStatusModal(result);
+          } else {
+            Toast.info('Status Sekolah', message);
+          }
+          return;
+        }
         // Don't show toast - use custom modal instead
         if (window.loginComponent && window.loginComponent.showSubscriptionModal) {
           window.loginComponent.showSubscriptionModal(result);
@@ -114,6 +139,8 @@ class AuthApi {
         Toast.warning('Verifikasi Diperlukan', message);
       } else if (result.error === 'SCHOOL_PENDING_APPROVAL') {
         Toast.info('Akun Belum Approved', message);
+      } else if (result.error === 'SCHOOL_RENEWAL_PENDING') {
+        Toast.info('Renewal Sedang Diproses', message);
       } else if (result.error === 'SCHOOL_INACTIVE') {
         Toast.warning('Status Sekolah Belum Aktif', message);
       } else if (result.error === 'OTP_EXPIRED') {
