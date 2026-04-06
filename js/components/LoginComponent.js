@@ -13,6 +13,95 @@ export class LoginComponent {
     this.googleAuth = options.googleAuth || window.GoogleAuth;
   }
 
+  normalizeWhatsAppNumber(rawNumber = '') {
+    const digits = String(rawNumber || '').replace(/\D/g, '');
+    if (!digits) return '';
+    if (digits.startsWith('62')) return digits;
+    if (digits.startsWith('0')) return `62${digits.slice(1)}`;
+    if (digits.startsWith('8')) return `62${digits}`;
+    return digits;
+  }
+
+  getSchoolStatusLabel(status = '') {
+    const normalized = String(status || '').toLowerCase();
+    const labels = {
+      pending_school: 'Menunggu Approval Admin Sistem',
+      pending_renewal: 'Perpanjangan Sedang Diproses',
+      renewal_pending: 'Perpanjangan Sedang Diproses',
+      inactive: 'Status Sekolah Belum Aktif',
+      expired: 'Subscription Expired'
+    };
+
+    return labels[normalized] || 'Status Sekolah';
+  }
+
+  formatSubmissionDate(value) {
+    if (!value) return '-';
+
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      return '-';
+    }
+
+    return parsed.toLocaleDateString('id-ID', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+
+  openAdminWhatsApp(result = {}, message = '') {
+    const adminContact = result.adminContact || {};
+    const adminWa = this.normalizeWhatsAppNumber(adminContact.noWa || adminContact.no_wa || '');
+
+    if (!adminWa) {
+      this.showError('Nomor WhatsApp admin sistem belum tersedia.');
+      return;
+    }
+
+    window.open(
+      `https://wa.me/${adminWa}?text=${encodeURIComponent(message || 'Halo Admin Sistem.')}`,
+      '_blank'
+    );
+  }
+
+  buildSchoolStatusMessage(result = {}, school = {}) {
+    const schoolStatus = result.schoolStatus || school.rawStatus || school.status || result.reason || 'inactive';
+    const proofLink = school.buktiTFLink || school.buktiTransfer || '-';
+    const lines = [
+      `Halo ${result.adminContact?.name || 'Admin Sistem'},`,
+      '',
+      'Saya ingin menanyakan status sekolah berikut:',
+      `Status: ${this.getSchoolStatusLabel(schoolStatus)}`,
+      `Nama Sekolah: ${school.schoolName || school.name || 'Sekolah'}`,
+      `Plan: ${(school.plan || 'starter').toString().toUpperCase()}`,
+      `Email Sekolah: ${school.email || '-'}`,
+      `No. WhatsApp Sekolah: ${school.noWa || school.no_wa || '-'}`,
+      `Tanggal Pengajuan: ${this.formatSubmissionDate(school.updatedAt || school.createdAt)}`,
+      `Bukti Transfer: ${proofLink}`,
+      '',
+      `Catatan: ${result.message || 'Mohon bantu update status sekolah ini.'}`
+    ];
+
+    return lines.join('\n');
+  }
+
+  buildSubscriptionMessage(result = {}, subscriptionData = {}) {
+    const lines = [
+      `Halo ${result.adminContact?.name || 'Admin Sistem'},`,
+      '',
+      'Saya ingin menanyakan status subscription sekolah berikut:',
+      `Nama Sekolah: ${subscriptionData.schoolName || 'Sekolah Anda'}`,
+      `Plan: ${(subscriptionData.currentPlan || subscriptionData.plan || 'Starter').toString().toUpperCase()}`,
+      `Tanggal Expired: ${this.formatSubmissionDate(subscriptionData.expiresAt)}`,
+      `Sisa Hari: ${subscriptionData.daysRemaining || 0}`,
+      '',
+      'Mohon bantu informasikan langkah selanjutnya.'
+    ];
+
+    return lines.join('\n');
+  }
+
   render() {
     return LoginTemplates.loginSection();
   }
@@ -65,11 +154,7 @@ export class LoginComponent {
         } else {
           Modal.subscription(subscriptionData, {
             onContact: () => {
-              const schoolName = subscriptionData.schoolName.replace(/\s+/g, '%20');
-              window.open(
-                `https://wa.me/85161609575?text=Hi%20Admin%20${schoolName}%2C%20subscription%20expired`,
-                '_blank'
-              );
+              this.openAdminWhatsApp(result, this.buildSubscriptionMessage(result, subscriptionData));
             },
             onClose: () => {}
           });
@@ -77,11 +162,7 @@ export class LoginComponent {
       } else {
         Modal.subscription(subscriptionData, {
           onContact: () => {
-            const schoolName = subscriptionData.schoolName.replace(/\s+/g, '%20');
-            window.open(
-              `https://wa.me/85161609575?text=Hi%20Admin%20${schoolName}%2C%20subscription%20expired`,
-              '_blank'
-            );
+            this.openAdminWhatsApp(result, this.buildSubscriptionMessage(result, subscriptionData));
           },
           onClose: () => {}
         });
@@ -108,11 +189,7 @@ export class LoginComponent {
         message: result.message || ''
       }, {
         onContact: () => {
-          const schoolName = (school.schoolName || school.name || 'Sekolah').replace(/\s+/g, '%20');
-          window.open(
-            `https://wa.me/85161609575?text=Halo%20Admin%2C%20saya%20ingin%20menanyakan%20status%20sekolah%20${schoolName}.`,
-            '_blank'
-          );
+          this.openAdminWhatsApp(result, this.buildSchoolStatusMessage(result, school));
         },
         onClose: () => {}
       });
