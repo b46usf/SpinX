@@ -364,13 +364,6 @@ export async function showSchoolStatusModal(statusData = {}, options = {}) {
     allowEnterKey: true,
     allowOutsideClick: false,
     returnFocus: false,
-    preConfirm: () => {
-      const swal = ensureSwalInstance();
-      if (typeof swal.close === 'function') {
-        swal.close();
-      }
-      return true;
-    },
     customClass: {
       container: 'swal-modal-container',
       popup: 'swal-modal-popup swal-modal-popup-status',
@@ -378,8 +371,27 @@ export async function showSchoolStatusModal(statusData = {}, options = {}) {
       confirmButton: 'swal-modal-button-confirm',
       denyButton: 'swal-modal-button-cancel'
     },
-    didOpen: () => {
+    willOpen: (popup) => {
       appendModalStyles();
+      const swal = ensureSwalInstance();
+      const closeBtn = popup?.querySelector('.swal2-close');
+      const confirmBtn = popup?.querySelector('.swal2-confirm');
+
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+          if (typeof swal.close === 'function') {
+            swal.close();
+          }
+        });
+      }
+
+      if (confirmBtn) {
+        confirmBtn.addEventListener('click', () => {
+          if (typeof swal.close === 'function') {
+            swal.close();
+          }
+        });
+      }
     }
   });
 
