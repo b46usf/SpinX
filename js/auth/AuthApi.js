@@ -104,11 +104,15 @@ class AuthApi {
       
       const message = errorMessages[action] || result.message || 'Terjadi kesalahan';
 
-      if (shouldShowSchoolStatusModal) {
+      if (shouldShowSchoolStatusModal && !window.showingSchoolModal) {
+        window.showingSchoolModal = true;
         if (hasSchoolStatusModal) {
-          window.loginComponent.showSchoolStatusModal(result);
+          window.loginComponent.showSchoolStatusModal(result).finally(() => {
+            window.showingSchoolModal = false;
+          });
         } else {
           Toast.info('Status Sekolah', message);
+          window.showingSchoolModal = false;
         }
         return;
       }
@@ -124,8 +128,11 @@ class AuthApi {
           return;
         }
         // Don't show toast - use custom modal instead
-        if (window.loginComponent && window.loginComponent.showSubscriptionModal) {
-          window.loginComponent.showSubscriptionModal(result);
+        if (window.loginComponent && window.loginComponent.showSubscriptionModal && !window.showingSubscriptionModal) {
+          window.showingSubscriptionModal = true;
+          window.loginComponent.showSubscriptionModal(result).finally(() => {
+            window.showingSubscriptionModal = false;
+          });
         } else {
           Toast.error('Subscription Expired', message);
         }

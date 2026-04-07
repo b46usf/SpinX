@@ -12,6 +12,26 @@
 import { fireToast, ensureSwalInstance } from './Toast.js';
 
 /**
+ * Force close ALL SweetAlert2 modals with timeout + cleanup
+ */
+async function closeAllModals() {
+  const swal = ensureSwalInstance();
+  if (swal && typeof swal.close === 'function') {
+    swal.close();
+  }
+  
+  // Double-check with timeout for stubborn modals/race conditions
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      if (swal && swal.isVisible?.()) {
+        swal.close();
+      }
+      resolve(true);
+    }, 150);
+  });
+}
+
+/**
  * Configuration defaults for modals
  */
 const ModalDefaults = {
@@ -153,6 +173,9 @@ export async function showSubscriptionModal(subscriptionData = {}, options = {})
   if (result.isDenied && onContact) {
     onContact();
   }
+  
+  // Ensure modal fully closed after confirm/dismiss - FIX modal stacking
+  await closeAllModals();
 
   return result;
 }
@@ -165,11 +188,8 @@ export async function showSubscriptionModal(subscriptionData = {}, options = {})
 export async function showSchoolStatusModal(statusData = {}, options = {}) {
   const theme = getModalTheme();
   
-  // Ensure any previous modals are closed before showing this one
-  const swal = ensureSwalInstance();
-  if (swal && typeof swal.close === 'function') {
-    swal.close();
-  }
+  // Force close any existing modals FIRST
+  await closeAllModals();
   
   const school = statusData.school || {};
   const schoolStatus = (
@@ -1367,7 +1387,8 @@ const ModalApi = {
   confirm: showConfirmModal,
   alert: showAlertModal,
   custom: showCustomModal,
-  appendStyles: appendModalStyles
+  appendStyles: appendModalStyles,
+  closeAll: closeAllModals  // NEW: Robust modal cleanup
 };
 
 // Expose to window for non-module scripts

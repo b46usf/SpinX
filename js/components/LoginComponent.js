@@ -131,9 +131,14 @@ export class LoginComponent {
    * @param {Object} result.school - School information { schoolName, plan }
    * @param {Object} result.details - Subscription details { expiresAt, daysRemaining }
    */
-  showSubscriptionModal(result) {
-    // Import modal functions dynamically to avoid circular dependencies
-    import('./utils/Modal.js').then((module) => {
+  async showSubscriptionModal(result) {
+    try {
+      // Defensive close before opening
+      if (window.Modal?.closeAll) {
+        await window.Modal.closeAll();
+      }
+      
+      const module = await import('./utils/Modal.js');
       const Modal = module.default || module.Modal || module;
       const userRole = result.role || result.user?.role || '';
       const subscriptionData = {
@@ -145,58 +150,77 @@ export class LoginComponent {
 
       if (userRole === 'admin-sekolah') {
         if (window._pricingCache && window._pricingCache.plans) {
-          Modal.subscriptionRenewal(subscriptionData, window._pricingCache.plans, {
-            onSelectPlan: async (selectedPlan) => {
+          await Modal.subscriptionRenewal(subscriptionData, window._pricingCache.plans, {
+            async onSelectPlan(selectedPlan) {
               await this.openRenewalRegisterModal(selectedPlan, result.school);
+              if (window.Modal?.closeAll) await window.Modal.closeAll();
             },
-            onClose: () => {}
+            async onClose() {
+              if (window.Modal?.closeAll) await window.Modal.closeAll();
+            }
           });
         } else {
-          Modal.subscription(subscriptionData, {
-            onContact: () => {
+          await Modal.subscription(subscriptionData, {
+            async onContact() {
               this.openAdminWhatsApp(result, this.buildSubscriptionMessage(result, subscriptionData));
+              if (window.Modal?.closeAll) await window.Modal.closeAll();
             },
-            onClose: () => {}
+            async onClose() {
+              if (window.Modal?.closeAll) await window.Modal.closeAll();
+            }
           });
         }
       } else {
-        Modal.subscription(subscriptionData, {
-          onContact: () => {
+        await Modal.subscription(subscriptionData, {
+          async onContact() {
             this.openAdminWhatsApp(result, this.buildSubscriptionMessage(result, subscriptionData));
+            if (window.Modal?.closeAll) await window.Modal.closeAll();
           },
-          onClose: () => {}
+          async onClose() {
+            if (window.Modal?.closeAll) await window.Modal.closeAll();
+          }
         });
       }
-    }).catch(error => {
-      console.error('Failed to load modal:', error);
-      // Fallback error handling
+    } catch (error) {
+      console.error('Failed to load subscription modal:', error);
       this.showError('Terjadi kesalahan saat memuat modal');
-    });
+    }
   }
 
   /**
    * Show school status modal for pending approval / pending renewal / inactive school.
    * @param {Object} result - Status result data from API
    */
-  showSchoolStatusModal(result) {
-    import('./utils/Modal.js').then((module) => {
+  async showSchoolStatusModal(result) {
+    try {
+      // Defensive close before opening
+      if (window.Modal?.closeAll) {
+        await window.Modal.closeAll();
+      }
+      
+      const module = await import('./utils/Modal.js');
       const Modal = module.default || module.Modal || module;
       const school = result.school || {};
 
-      Modal.schoolStatus({
+      await Modal.schoolStatus({
         schoolStatus: result.schoolStatus || school.rawStatus || school.status || result.reason || 'inactive',
         school,
         message: result.message || ''
       }, {
-        onContact: () => {
+        async onContact() {
           this.openAdminWhatsApp(result, this.buildSchoolStatusMessage(result, school));
+          // Close after contact
+          if (window.Modal?.closeAll) await window.Modal.closeAll();
         },
-        onClose: () => {}
+        async onClose() {
+          // Ensure clean close
+          if (window.Modal?.closeAll) await window.Modal.closeAll();
+        }
       });
-    }).catch(error => {
+    } catch (error) {
       console.error('Failed to load school status modal:', error);
       this.showError(result.message || 'Status sekolah belum aktif.');
-    });
+    }
   }
 
   /**
