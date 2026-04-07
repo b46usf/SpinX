@@ -45,6 +45,11 @@ export async function showSubscriptionModal(subscriptionData = {}, options = {})
   const swal = ensureSwalInstance();
   const theme = getModalTheme();
   
+  // Ensure any previous modals are closed before showing this one
+  if (typeof swal.close === 'function') {
+    swal.close();
+  }
+  
   const {
     schoolName = 'Sekolah Anda',
     plan = 'Starter',
@@ -159,6 +164,13 @@ export async function showSubscriptionModal(subscriptionData = {}, options = {})
  */
 export async function showSchoolStatusModal(statusData = {}, options = {}) {
   const theme = getModalTheme();
+  
+  // Ensure any previous modals are closed before showing this one
+  const swal = ensureSwalInstance();
+  if (swal && typeof swal.close === 'function') {
+    swal.close();
+  }
+  
   const school = statusData.school || {};
   const schoolStatus = (
     statusData.schoolStatus ||
@@ -345,6 +357,11 @@ export async function showSubscriptionRenewalModal(subscriptionData = {}, availa
   const swal = ensureSwalInstance();
   const theme = getModalTheme();
 
+  // Ensure any previous modals are closed before showing this one
+  if (typeof swal.close === 'function') {
+    swal.close();
+  }
+
   const {
     schoolName = 'Sekolah Anda',
     currentPlan = 'Starter',
@@ -514,6 +531,13 @@ function renderPaymentProofSection(buktiTransfer, emptyMessage) {
  */
 export async function showSchoolRegistrationDetailModal(school = {}, options = {}) {
   const theme = getModalTheme();
+  
+  // Ensure any previous modals are closed before showing this one
+  const swal = ensureSwalInstance();
+  if (swal && typeof swal.close === 'function') {
+    swal.close();
+  }
+  
   const {
     onApprove = null,
     onReject = null
@@ -634,6 +658,11 @@ export async function showSchoolRegistrationDetailModal(school = {}, options = {
 export async function showSubscriptionRenewalDetailModal(school = {}, options = {}) {
   const swal = ensureSwalInstance();
   const theme = getModalTheme();
+
+  // Ensure any previous modals are closed before showing this one
+  if (typeof swal.close === 'function') {
+    swal.close();
+  }
 
   const {
     onApprove = null,
