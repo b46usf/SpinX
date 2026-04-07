@@ -77,9 +77,7 @@ const getModalTheme = () => {
   
   return {
     background: isDark ? '#1f2937' : '#ffffff',
-    color: isDark ? '#f3f4f6' : '#1f2937',
-    buttonColor: isDark ? '#3b82f6' : '#0066cc',
-    borderColor: isDark ? '#374151' : '#e5e7eb'
+    color: isDark ? '#f3f4f6' : '#1f2937'
   };
 };
 
@@ -371,6 +369,7 @@ export async function showSchoolStatusModal(statusData = {}, options = {}) {
       if (typeof swal.close === 'function') {
         swal.close();
       }
+      return true;
     },
     customClass: {
       container: 'swal-modal-container',
