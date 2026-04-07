@@ -355,6 +355,7 @@ export async function showSchoolStatusModal(statusData = {}, options = {}) {
     html: htmlContent,
     showConfirmButton: true,
     showCancelButton: false,
+    showCloseButton: true,
     showDenyButton: Boolean(onContact),
     confirmButtonText: 'Mengerti',
     denyButtonText: '<i class="fas fa-phone mr-2"></i>Hubungi Admin',
@@ -362,7 +363,15 @@ export async function showSchoolStatusModal(statusData = {}, options = {}) {
     denyButtonColor: '#6b7280',
     reverseButtons: true,
     focusConfirm: true,
+    allowEnterKey: true,
+    allowOutsideClick: false,
     returnFocus: false,
+    preConfirm: () => {
+      const swal = ensureSwalInstance();
+      if (typeof swal.close === 'function') {
+        swal.close();
+      }
+    },
     customClass: {
       container: 'swal-modal-container',
       popup: 'swal-modal-popup swal-modal-popup-status',

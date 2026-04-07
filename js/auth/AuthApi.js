@@ -126,7 +126,10 @@ class AuthApi {
           schoolStatus === 'renewal_pending'
         ) {
           if (hasSchoolStatusModal) {
-            window.loginComponent.showSchoolStatusModal(result);
+            window.showingSchoolModal = true;
+            window.loginComponent.showSchoolStatusModal(result).finally(() => {
+              window.showingSchoolModal = false;
+            });
           } else {
             Toast.info('Status Sekolah', message);
           }
