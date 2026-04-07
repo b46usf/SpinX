@@ -1,7 +1,7 @@
 /**
  * Modal Component - Reusable Modal Dialogs using SweetAlert2
- * Refactored for DRY, modular, and clean code architecture
- * Fixed: Race conditions, event leaks, undefined instances, HTML injection, style duplication, modal close issues
+ * FINAL REFACTOR: Simple, atomic, no state management
+ * Principles: Single source of truth (Swal), No polling, No global state
  */
 
 import { ensureSwalInstance } from './Toast.js';
@@ -67,105 +67,8 @@ const STATUS_META = Object.freeze({
 });
 
 /* ================================
-   GLOBAL STATE MANAGEMENT
+   UTILITY FUNCTIONS
 ================================ */
-
-/**
- * Global modal state to prevent race conditions
- */
-let modalState = {
-  isOpen: false,
-  currentModal: null,
-  eventListeners: new Set(),
-  timeouts: new Set()
-};
-
-/**
- * Clean up all modal state and listeners
- */
-function cleanupModalState() {
-  // Clear all timeouts
-  modalState.timeouts.forEach(timeout => clearTimeout(timeout));
-  modalState.timeouts.clear();
-
-  // Remove all event listeners
-  modalState.eventListeners.forEach(({ element, event, handler }) => {
-    if (element && element.removeEventListener) {
-      element.removeEventListener(event, handler);
-    }
-  });
-  modalState.eventListeners.clear();
-
-  modalState.isOpen = false;
-  modalState.currentModal = null;
-}
-
-/**
- * Add event listener with automatic cleanup tracking
- */
-function addTrackedEventListener(element, event, handler, options = {}) {
-  if (!element || !element.addEventListener) return;
-
-  element.addEventListener(event, handler, options);
-  modalState.eventListeners.add({ element, event, handler });
-
-  return () => {
-    element.removeEventListener(event, handler);
-    modalState.eventListeners.delete({ element, event, handler });
-  };
-}
-
-/**
- * Add timeout with automatic cleanup tracking
- */
-function addTrackedTimeout(callback, delay) {
-  const timeout = setTimeout(() => {
-    modalState.timeouts.delete(timeout);
-    callback();
-  }, delay);
-
-  modalState.timeouts.add(timeout);
-  return timeout;
-}
-
-/* ================================
-   UTILITY FUNCTIONS (REUSABLE LOGIC)
-================================ */
-
-/**
- * Safely close all modals with proper cleanup
- */
-async function closeAllModals() {
-  try {
-    const swal = ensureSwalInstance();
-    if (!swal) return false;
-
-    // Force close if visible
-    if (swal.isVisible && swal.isVisible()) {
-      swal.close();
-    }
-
-    // Wait for modal to actually close
-    await new Promise(resolve => {
-      const checkClosed = () => {
-        if (!swal.isVisible || !swal.isVisible()) {
-          resolve();
-        } else {
-          addTrackedTimeout(checkClosed, 10);
-        }
-      };
-      addTrackedTimeout(checkClosed, 10);
-    });
-
-    // Clean up state
-    cleanupModalState();
-    return true;
-  } catch (error) {
-    console.warn('Error closing modals:', error);
-    cleanupModalState();
-    return false;
-  }
-}
 
 /**
  * Theme detection - returns consistent theme object
@@ -230,7 +133,7 @@ const getStatusMeta = (statusKey) => {
 ================================ */
 
 /**
- * Append modal-specific styles to document (single guard with better check)
+ * Append modal-specific styles to document (single guard)
  */
 function appendModalStyles() {
   const styleId = 'modal-styles-injected';
@@ -239,7 +142,6 @@ function appendModalStyles() {
   try {
     const style = document.createElement('style');
     style.id = styleId;
-    style.setAttribute('data-modal-styles', 'true');
 
     style.textContent = `
       /* Core modal styling */
@@ -566,17 +468,13 @@ const buildSubscriptionRenewalTemplate = (subscriptionData, plans) => {
  */
 export async function showCustomModal(options = {}) {
   try {
-    // Prevent multiple modals
-    if (modalState.isOpen) {
-      await closeAllModals();
-    }
-
     const swal = ensureSwalInstance();
     if (!swal) {
       throw new Error('SweetAlert2 instance not available');
     }
 
     const theme = getModalTheme();
+    appendModalStyles();
 
     const result = await swal.fire({
       ...MODAL_DEFAULTS,
@@ -590,30 +488,12 @@ export async function showCustomModal(options = {}) {
         cancelButton: 'swal-modal-button-cancel',
         denyButton: 'swal-modal-button-cancel',
         ...(options.customClass || {})
-      },
-      willOpen: () => {
-        modalState.isOpen = true;
-        appendModalStyles();
-        if (options.willOpen) options.willOpen();
-      },
-      willClose: () => {
-        modalState.isOpen = false;
-        if (options.willClose) options.willClose();
-      },
-      didOpen: (popup) => {
-        modalState.currentModal = popup;
-        if (options.didOpen) options.didOpen(popup);
-      },
-      didClose: () => {
-        cleanupModalState();
-        if (options.didClose) options.didClose();
       }
     });
 
     return result;
   } catch (error) {
     console.error('Error showing custom modal:', error);
-    cleanupModalState();
     return { isDismissed: true, dismiss: 'error' };
   }
 }
@@ -623,8 +503,6 @@ export async function showCustomModal(options = {}) {
  */
 export async function showSubscriptionModal(data = {}, options = {}) {
   try {
-    await closeAllModals();
-
     const { onContact = null, onClose = null } = options;
     const html = buildSubscriptionTemplate(data);
 
@@ -664,8 +542,6 @@ export async function showSubscriptionModal(data = {}, options = {}) {
  */
 export async function showSchoolStatusModal(data = {}, options = {}) {
   try {
-    await closeAllModals();
-
     const { onContact = null, onClose = null } = options;
     const html = buildSchoolStatusTemplate(data);
     const statusKey = (data.schoolStatus || data.school?.status || 'inactive').toString().toLowerCase();
@@ -708,8 +584,6 @@ export async function showSchoolStatusModal(data = {}, options = {}) {
  */
 export async function showSubscriptionRenewalModal(subscriptionData = {}, plans = [], options = {}) {
   try {
-    await closeAllModals();
-
     const { onSelectPlan = null, onClose = null } = options;
     const html = buildSubscriptionRenewalTemplate(subscriptionData, plans);
 
@@ -724,10 +598,10 @@ export async function showSubscriptionRenewalModal(subscriptionData = {}, plans 
         htmlContainer: 'swal-modal-html'
       },
       didOpen: (popup) => {
-        // Add event listeners with automatic cleanup tracking
+        // Add event listeners
         const planButtons = popup.querySelectorAll('.plan-btn');
         planButtons.forEach(btn => {
-          addTrackedEventListener(btn, 'click', () => {
+          btn.addEventListener('click', () => {
             const planId = btn.dataset.planId;
             const selected = plans.find(p => p.id === planId);
 
@@ -744,7 +618,7 @@ export async function showSubscriptionRenewalModal(subscriptionData = {}, plans 
             } catch (callbackError) {
               console.warn('Error in plan selection callback:', callbackError);
             }
-          }, { once: true });
+          });
         });
       }
     });
@@ -852,7 +726,6 @@ const ModalApi = {
   confirm: showConfirmModal,
   alert: showAlertModal,
   custom: showCustomModal,
-  closeAll: closeAllModals,
   appendStyles: appendModalStyles
 };
 
