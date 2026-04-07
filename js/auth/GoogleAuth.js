@@ -40,13 +40,11 @@ class GoogleAuth {
 
       if (window.google?.accounts?.identity) {
         this.setupGIS();
-        this.setupLoginButton();
         this.initialized = true;
         resolve();
       } else {
         window.addEventListener('load', () => {
           this.setupGIS();
-          this.setupLoginButton();
           this.initialized = true;
           resolve();
         });
@@ -69,15 +67,16 @@ class GoogleAuth {
     });
   }
 
-  setupLoginButton() {
-    const loginBtn = document.getElementById("googleLoginBtn");
-    if (loginBtn) {
-      loginBtn.addEventListener("click", () => {
-        if (window.google?.accounts?.id) {
-          google.accounts.id.prompt();
-        }
-      });
-    }
+  setupLoginButton(buttonEl = null) {
+    const loginBtn = buttonEl || document.getElementById("googleLoginBtn");
+    if (!loginBtn || loginBtn.dataset.googlePromptBound === 'true') return;
+
+    loginBtn.dataset.googlePromptBound = 'true';
+    loginBtn.addEventListener("click", () => {
+      if (window.google?.accounts?.id) {
+        google.accounts.id.prompt();
+      }
+    });
   }
 
   async handleCredentialResponse(response) {

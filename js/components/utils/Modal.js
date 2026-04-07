@@ -16,18 +16,45 @@ import { fireToast, ensureSwalInstance } from './Toast.js';
  */
 async function closeAllModals() {
   const swal = ensureSwalInstance();
-  if (swal && typeof swal.close === 'function') {
+  const activePopup = typeof swal.getPopup === 'function' ? swal.getPopup() : null;
+
+  if (!activePopup || !swal.isVisible?.()) {
+    return true;
+  }
+
+  if (typeof swal.close === 'function') {
     swal.close();
   }
-  
-  // Double-check with timeout for stubborn modals/race conditions
+
   return new Promise((resolve) => {
-    setTimeout(() => {
-      if (swal && swal.isVisible?.()) {
-        swal.close();
+    let settled = false;
+    let rafId = 0;
+
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      if (rafId) {
+        window.cancelAnimationFrame(rafId);
       }
       resolve(true);
-    }, 150);
+    };
+
+    const timeoutId = window.setTimeout(finish, 220);
+    const pollUntilClosed = () => {
+      const currentPopup = typeof swal.getPopup === 'function' ? swal.getPopup() : null;
+      const samePopupStillMounted = currentPopup === activePopup;
+      const popupStillConnected = activePopup.isConnected;
+
+      if (!samePopupStillMounted && !popupStillConnected) {
+        window.clearTimeout(timeoutId);
+        finish();
+        return;
+      }
+
+      rafId = window.requestAnimationFrame(pollUntilClosed);
+    };
+
+    rafId = window.requestAnimationFrame(pollUntilClosed);
   });
 }
 
@@ -62,13 +89,11 @@ const getModalTheme = () => {
  * @param {Object} options - Additional options { onContact, onClose }
  */
 export async function showSubscriptionModal(subscriptionData = {}, options = {}) {
-  const swal = ensureSwalInstance();
+  ensureSwalInstance();
   const theme = getModalTheme();
   
   // Ensure any previous modals are closed before showing this one
-  if (typeof swal.close === 'function') {
-    swal.close();
-  }
+  await closeAllModals();
   
   const {
     schoolName = 'Sekolah Anda',
@@ -143,6 +168,7 @@ export async function showSubscriptionModal(subscriptionData = {}, options = {})
   const result = await showCustomModal({
     ...ModalDefaults,
     ...theme,
+    width: 'min(92vw, 640px)',
     html: htmlContent,
     showConfirmButton: true,
     showCancelButton: false,
@@ -167,15 +193,12 @@ export async function showSubscriptionModal(subscriptionData = {}, options = {})
   });
 
   if ((result.isDismissed || result.isConfirmed) && onClose) {
-    onClose();
+    await onClose(result);
   }
 
   if (result.isDenied && onContact) {
-    onContact();
+    await onContact(result);
   }
-  
-  // Ensure modal fully closed after confirm/dismiss - FIX modal stacking
-  await closeAllModals();
 
   return result;
 }
@@ -222,6 +245,14 @@ export async function showSchoolStatusModal(statusData = {}, options = {}) {
       actionLabel: 'Status Renewal',
       actionMessage: 'Admin sistem sedang memverifikasi pembayaran renewal. Setelah disetujui, akses sekolah akan aktif kembali.'
     },
+    renewal_pending: {
+      title: 'Perpanjangan Sedang Diproses',
+      subtitle: 'Bukti transfer renewal sudah dikirim dan sedang dicek.',
+      icon: 'fa-receipt',
+      accent: '#3b82f6',
+      actionLabel: 'Status Renewal',
+      actionMessage: 'Admin sistem sedang memverifikasi pembayaran renewal. Setelah disetujui, akses sekolah akan aktif kembali.'
+    },
     inactive: {
       title: 'Status Sekolah Belum Aktif',
       subtitle: 'Akses sekolah belum dapat digunakan.',
@@ -247,86 +278,71 @@ export async function showSchoolStatusModal(statusData = {}, options = {}) {
   const schoolPhone = school.noWa || school.no_wa || '-';
   const proofLink = school.buktiTFLink || school.buktiTransfer || '';
   const message = statusData.message || meta.actionMessage;
+  const infoCards = [
+    { icon: 'fa-layer-group', label: 'Plan', value: planLabel },
+    { icon: 'fa-envelope', label: 'Email', value: schoolEmail },
+    { icon: 'fa-phone', label: 'WhatsApp', value: schoolPhone },
+    { icon: 'fa-calendar-day', label: 'Pengajuan', value: submittedAt }
+  ].map((item) => `
+    <div class="modal-info-card">
+      <div class="modal-info-icon" style="background:${meta.accent}18;color:${meta.accent};">
+        <i class="fas ${item.icon}"></i>
+      </div>
+      <div class="modal-info-text">
+        <span class="modal-info-label">${item.label}</span>
+        <span class="modal-info-card-value">${item.value}</span>
+      </div>
+    </div>
+  `).join('');
 
   const htmlContent = `
-    <div class="modal-subscription-wrapper">
-      <div class="modal-section-header">
+    <div class="modal-status-wrapper">
+      <div class="modal-section-header modal-section-header--compact">
         <div class="modal-icon-group">
           <div class="modal-icon-primary" style="background:${meta.accent}20;color:${meta.accent};">
             <i class="fas ${meta.icon}"></i>
           </div>
         </div>
         <div class="modal-text-group">
-          <h3 class="modal-title">${meta.title}</h3>
-          <p class="modal-subtitle">${schoolName}</p>
+          <span class="modal-status-badge" style="background:${meta.accent}18;color:${meta.accent};border-color:${meta.accent}33;">
+            ${meta.title}
+          </span>
+          <h3 class="modal-title-plain">${schoolName}</h3>
+          <p class="modal-subtitle modal-subtitle-compact">${meta.subtitle}</p>
         </div>
       </div>
 
-      <div class="modal-section-content">
-        <div class="modal-info-box">
-          <div class="modal-info-icon">
-            <i class="fas fa-layer-group"></i>
-          </div>
-          <div class="modal-info-text">
-            <span class="modal-info-label">Plan</span>
-            <span class="modal-info-value">${planLabel}</span>
-          </div>
-        </div>
-
-        <div class="modal-info-box">
-          <div class="modal-info-icon">
-            <i class="fas fa-envelope"></i>
-          </div>
-          <div class="modal-info-text">
-            <span class="modal-info-label">Email Sekolah</span>
-            <span class="modal-info-value">${schoolEmail}</span>
-          </div>
-        </div>
-
-        <div class="modal-info-box">
-          <div class="modal-info-icon">
-            <i class="fas fa-phone"></i>
-          </div>
-          <div class="modal-info-text">
-            <span class="modal-info-label">No. WhatsApp</span>
-            <span class="modal-info-value">${schoolPhone}</span>
-          </div>
-        </div>
-
-        <div class="modal-info-box">
-          <div class="modal-info-icon">
-            <i class="fas fa-calendar-day"></i>
-          </div>
-          <div class="modal-info-text">
-            <span class="modal-info-label">Tanggal Pengajuan</span>
-            <span class="modal-info-value">${submittedAt}</span>
-          </div>
-        </div>
+      <div class="modal-info-grid modal-info-grid-status">
+        ${infoCards}
+      </div>
 
         ${proofLink ? `
-          <div class="modal-info-box">
-            <div class="modal-info-icon">
+          <div class="modal-proof-strip">
+            <div class="modal-proof-label">
               <i class="fas fa-file-invoice"></i>
+              <span>Bukti Transfer</span>
             </div>
-            <div class="modal-info-text">
-              <span class="modal-info-label">Bukti Transfer</span>
-              <span class="modal-info-value">
-                <a href="${proofLink}" target="_blank" rel="noopener noreferrer" style="color:${meta.accent};text-decoration:underline;">
-                  Lihat Bukti Transfer
-                </a>
-              </span>
+            <div class="modal-proof-value">
+              <a
+                href="${proofLink}"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="modal-proof-link"
+                style="color:${meta.accent};border-color:${meta.accent}33;"
+              >
+                Lihat Bukti Transfer
+              </a>
             </div>
           </div>
         ` : ''}
 
-        <div class="modal-warning-box">
-          <div class="modal-warning-icon">
-            <i class="fas fa-circle-info"></i>
-          </div>
-          <div class="modal-warning-text">
-            <h4>${meta.actionLabel}</h4>
-            <p>${message}</p>
-          </div>
+      <div class="modal-message-box" style="border-color:${meta.accent}33;background:${meta.accent}14;">
+        <div class="modal-message-icon" style="background:${meta.accent}20;color:${meta.accent};">
+          <i class="fas fa-circle-info"></i>
+        </div>
+        <div class="modal-message-copy">
+          <span class="modal-info-label">${meta.actionLabel}</span>
+          <p>${message}</p>
         </div>
       </div>
     </div>
@@ -335,6 +351,7 @@ export async function showSchoolStatusModal(statusData = {}, options = {}) {
   const result = await showCustomModal({
     ...ModalDefaults,
     ...theme,
+    width: 'min(94vw, 720px)',
     html: htmlContent,
     showConfirmButton: true,
     showCancelButton: false,
@@ -348,8 +365,10 @@ export async function showSchoolStatusModal(statusData = {}, options = {}) {
     returnFocus: false,
     customClass: {
       container: 'swal-modal-container',
-      popup: 'swal-modal-popup',
-      htmlContainer: 'swal-modal-html'
+      popup: 'swal-modal-popup swal-modal-popup-status',
+      htmlContainer: 'swal-modal-html',
+      confirmButton: 'swal-modal-button-confirm',
+      denyButton: 'swal-modal-button-cancel'
     },
     didOpen: () => {
       appendModalStyles();
@@ -357,11 +376,11 @@ export async function showSchoolStatusModal(statusData = {}, options = {}) {
   });
 
   if ((result.isDismissed || result.isConfirmed) && onClose) {
-    onClose();
+    await onClose(result);
   }
 
   if (result.isDenied && onContact) {
-    onContact();
+    await onContact(result);
   }
 
   return result;
@@ -378,9 +397,7 @@ export async function showSubscriptionRenewalModal(subscriptionData = {}, availa
   const theme = getModalTheme();
 
   // Ensure any previous modals are closed before showing this one
-  if (typeof swal.close === 'function') {
-    swal.close();
-  }
+  await closeAllModals();
 
   const {
     schoolName = 'Sekolah Anda',
@@ -470,6 +487,7 @@ export async function showSubscriptionRenewalModal(subscriptionData = {}, availa
   const result = await swal.fire({
     ...ModalDefaults,
     ...theme,
+    width: 'min(94vw, 860px)',
     html: htmlContent,
     showConfirmButton: false,
     showCancelButton: true,
@@ -504,7 +522,7 @@ export async function showSubscriptionRenewalModal(subscriptionData = {}, availa
   });
 
   if (result.isDismissed && onClose) {
-    onClose();
+    await onClose(result);
   }
 
   return result;
@@ -912,17 +930,23 @@ function appendModalStyles() {
   style.id = 'modal-styles-injected';
   style.textContent = `
     /* Modal Wrapper Styles */
-    .modal-subscription-wrapper {
+    .modal-subscription-wrapper,
+    .modal-status-wrapper {
       text-align: center;
       padding: 0;
+      color: #ffffff;
     }
 
     .modal-section-header {
       display: flex;
       align-items: center;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
+      gap: 0.875rem;
+      margin-bottom: 1rem;
       text-align: left;
+    }
+
+    .modal-section-header--compact {
+      align-items: flex-start;
     }
 
     .modal-icon-group {
@@ -932,10 +956,10 @@ function appendModalStyles() {
     }
 
     .modal-icon-primary {
-      width: 3rem;
-      height: 3rem;
+      width: 2.75rem;
+      height: 2.75rem;
       background: linear-gradient(135deg, #ef4444 0%, #ec4899 100%);
-      border-radius: 0.75rem;
+      border-radius: 0.875rem;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -952,7 +976,7 @@ function appendModalStyles() {
     }
 
     .modal-title {
-      font-size: 1.5rem;
+      font-size: 1.35rem;
       font-weight: bold;
       margin: 0;
       background: linear-gradient(135deg, #f87171 0%, #f472b6 100%);
@@ -961,34 +985,59 @@ function appendModalStyles() {
       background-clip: text;
     }
 
+    .modal-title-plain {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin: 0.4rem 0 0;
+      color: #ffffff;
+      line-height: 1.25;
+    }
+
     .modal-subtitle {
       margin: 0.25rem 0 0 0;
-      font-size: 1.125rem;
+      font-size: 0.95rem;
       color: #9ca3af;
       font-weight: 500;
+    }
+
+    .modal-subtitle-compact {
+      line-height: 1.45;
+    }
+
+    .modal-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.3rem 0.7rem;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
     }
 
     .modal-section-content {
       display: flex;
       flex-direction: column;
-      gap: 1.25rem;
-      margin: 1.5rem 0;
+      gap: 0.875rem;
+      margin: 1rem 0;
       text-align: left;
     }
 
     .modal-info-box {
       display: flex;
       align-items: center;
-      gap: 1rem;
-      padding: 1.5rem;
-      border-radius: 0.75rem;
+      gap: 0.875rem;
+      padding: 1rem;
+      border-radius: 0.875rem;
       border: 1px solid rgba(148, 163, 184, 0.3);
       background: rgba(15, 23, 42, 0.3);
     }
 
     .modal-info-icon {
-      width: 2.5rem;
-      height: 2.5rem;
+      width: 2.25rem;
+      height: 2.25rem;
       border-radius: 0.5rem;
       display: flex;
       align-items: center;
@@ -1022,16 +1071,24 @@ function appendModalStyles() {
     }
 
     .modal-info-value {
-      font-size: 1.125rem;
+      font-size: 1rem;
       font-weight: bold;
       color: #ffffff;
+    }
+
+    .modal-info-card-value {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #ffffff;
+      line-height: 1.4;
+      word-break: break-word;
     }
 
     .modal-warning-box {
       display: flex;
       align-items: flex-start;
-      gap: 1rem;
-      padding: 1.25rem;
+      gap: 0.875rem;
+      padding: 1rem;
       border-radius: 0.75rem;
       border: 1px solid rgba(239, 68, 68, 0.3);
       background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(244, 114, 182, 0.1) 100%);
@@ -1082,6 +1139,101 @@ function appendModalStyles() {
       color: #fbbf24;
     }
 
+    .modal-info-grid-status {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.875rem;
+      margin-bottom: 0.875rem;
+    }
+
+    .modal-info-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.95rem 1rem;
+      border-radius: 0.875rem;
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      background: rgba(15, 23, 42, 0.32);
+      text-align: left;
+    }
+
+    .modal-proof-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.9rem 1rem;
+      border-radius: 0.875rem;
+      border: 1px dashed rgba(148, 163, 184, 0.35);
+      background: rgba(15, 23, 42, 0.24);
+      margin-bottom: 0.875rem;
+      text-align: left;
+    }
+
+    .modal-proof-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      color: #d1d5db;
+      font-size: 0.88rem;
+      font-weight: 600;
+    }
+
+    .modal-proof-value {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .modal-proof-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 2.4rem;
+      padding: 0.55rem 0.9rem;
+      border-radius: 999px;
+      border: 1px solid rgba(59, 130, 246, 0.24);
+      background: rgba(255, 255, 255, 0.03);
+      text-decoration: none;
+      font-size: 0.82rem;
+      font-weight: 700;
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .modal-proof-link:hover {
+      transform: translateY(-1px);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .modal-message-box {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 1rem;
+      border-radius: 0.95rem;
+      border: 1px solid rgba(59, 130, 246, 0.24);
+      text-align: left;
+    }
+
+    .modal-message-icon {
+      width: 2.35rem;
+      height: 2.35rem;
+      border-radius: 0.7rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .modal-message-copy {
+      flex: 1;
+    }
+
+    .modal-message-copy p {
+      margin: 0;
+      color: #d1d5db;
+      font-size: 0.92rem;
+      line-height: 1.55;
+    }
+
     /* Subscription Renewal Modal Styles */
     .modal-subscription-renewal-wrapper {
       color: #ffffff;
@@ -1100,29 +1252,29 @@ function appendModalStyles() {
     }
 
     .modal-plans-section {
-      margin-top: 1.5rem;
+      margin-top: 0.5rem;
     }
 
     .plans-title {
-      font-size: 1.25rem;
+      font-size: 1.05rem;
       font-weight: 600;
       color: #ffffff;
-      margin-bottom: 1rem;
+      margin-bottom: 0.85rem;
       text-align: center;
     }
 
     .plans-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1rem;
-      margin-bottom: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 0.85rem;
+      margin-bottom: 0.75rem;
     }
 
     .renewal-plan-card {
       background: rgba(15, 23, 42, 0.5);
       border: 1px solid rgba(148, 163, 184, 0.3);
       border-radius: 0.75rem;
-      padding: 1.5rem;
+      padding: 1rem;
       transition: all 0.3s ease;
       cursor: pointer;
     }
@@ -1137,11 +1289,12 @@ function appendModalStyles() {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 1rem;
+      gap: 0.75rem;
+      margin-bottom: 0.85rem;
     }
 
     .plan-name {
-      font-size: 1.125rem;
+      font-size: 1rem;
       font-weight: 600;
       color: #ffffff;
       margin: 0;
@@ -1152,7 +1305,7 @@ function appendModalStyles() {
     }
 
     .price-amount {
-      font-size: 1.25rem;
+      font-size: 1.1rem;
       font-weight: 700;
       color: #3b82f6;
       display: block;
@@ -1164,7 +1317,7 @@ function appendModalStyles() {
     }
 
     .plan-features {
-      margin-bottom: 1.5rem;
+      margin-bottom: 1rem;
     }
 
     .plan-feature {
@@ -1204,7 +1357,7 @@ function appendModalStyles() {
       display: flex;
       align-items: flex-start;
       gap: 0.75rem;
-      padding: 1rem;
+      padding: 0.9rem 1rem;
       border-radius: 0.5rem;
       background: rgba(251, 191, 36, 0.1);
       border: 1px solid rgba(251, 191, 36, 0.3);
@@ -1219,7 +1372,8 @@ function appendModalStyles() {
     }
 
     .swal-modal-popup-renewal {
-      max-width: 800px;
+      max-width: 860px;
+      padding: 1.25rem 1.25rem 1rem;
     }
 
     /* Subscription Renewal Detail Modal Styles */
@@ -1300,9 +1454,16 @@ function appendModalStyles() {
     }
 
     .swal-modal-popup {
+      width: min(92vw, 720px);
+      max-width: 720px;
+      padding: 1.25rem 1.25rem 1rem;
       border-radius: 1rem;
       border: 1px solid rgba(100, 116, 139, 0.3);
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    .swal-modal-popup-status {
+      max-width: 720px;
     }
 
     .swal-modal-html {
@@ -1341,17 +1502,42 @@ function appendModalStyles() {
       }
 
       .modal-info-box,
-      .modal-warning-box {
+      .modal-warning-box,
+      .modal-message-box {
         flex-direction: column;
         text-align: center;
       }
 
-      .modal-warning-text {
+      .modal-warning-text,
+      .modal-message-copy {
         text-align: left;
       }
 
       .modal-section-content {
         gap: 1rem;
+      }
+
+      .modal-info-grid-status {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .modal-proof-strip {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .modal-proof-value {
+        justify-content: flex-start;
+      }
+
+      .plans-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .swal-modal-popup,
+      .swal-modal-popup-renewal {
+        width: min(94vw, 94vw);
+        padding: 1rem 1rem 0.9rem;
       }
     }
 

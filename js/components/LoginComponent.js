@@ -6,7 +6,6 @@
  */
 
 import { LoginTemplates } from './templates/LoginTemplates.js';
-import Modal from './utils/Modal.js';
 
 export class LoginComponent {
   constructor(options = {}) {
@@ -108,20 +107,13 @@ export class LoginComponent {
 
   initEvents() {
     // Re-render Google button after component is rendered
-    if (window.google?.accounts?.id) {
+    const loginBtn = document.getElementById("googleLoginBtn");
+    if (window.google?.accounts?.id && loginBtn) {
+      loginBtn.innerHTML = '';
       window.google.accounts.id.renderButton(
-        document.getElementById("googleLoginBtn"),
+        loginBtn,
         { theme: 'outline', size: 'large', width: '300' }
       );
-    }
-    
-    const loginBtn = document.getElementById("googleLoginBtn");
-    if (loginBtn) {
-      loginBtn.addEventListener("click", () => {
-        if (window.google?.accounts?.id) {
-          window.google.accounts.id.prompt();
-        }
-      });
     }
   }
 
@@ -151,34 +143,25 @@ export class LoginComponent {
       if (userRole === 'admin-sekolah') {
         if (window._pricingCache && window._pricingCache.plans) {
           await Modal.subscriptionRenewal(subscriptionData, window._pricingCache.plans, {
-            async onSelectPlan(selectedPlan) {
+            onSelectPlan: async (selectedPlan) => {
               await this.openRenewalRegisterModal(selectedPlan, result.school);
-              if (window.Modal?.closeAll) await window.Modal.closeAll();
             },
-            async onClose() {
-              if (window.Modal?.closeAll) await window.Modal.closeAll();
-            }
+            onClose: null
           });
         } else {
           await Modal.subscription(subscriptionData, {
-            async onContact() {
+            onContact: async () => {
               this.openAdminWhatsApp(result, this.buildSubscriptionMessage(result, subscriptionData));
-              if (window.Modal?.closeAll) await window.Modal.closeAll();
             },
-            async onClose() {
-              if (window.Modal?.closeAll) await window.Modal.closeAll();
-            }
+            onClose: null
           });
         }
       } else {
         await Modal.subscription(subscriptionData, {
-          async onContact() {
+          onContact: async () => {
             this.openAdminWhatsApp(result, this.buildSubscriptionMessage(result, subscriptionData));
-            if (window.Modal?.closeAll) await window.Modal.closeAll();
           },
-          async onClose() {
-            if (window.Modal?.closeAll) await window.Modal.closeAll();
-          }
+          onClose: null
         });
       }
     } catch (error) {
@@ -207,19 +190,14 @@ export class LoginComponent {
         school,
         message: result.message || ''
       }, {
-        async onContact() {
+        onContact: async () => {
           this.openAdminWhatsApp(result, this.buildSchoolStatusMessage(result, school));
-          // Close after contact
-          if (window.Modal?.closeAll) await window.Modal.closeAll();
         },
-        async onClose() {
-          // Ensure clean close
-          if (window.Modal?.closeAll) await window.Modal.closeAll();
-        }
+        onClose: null
       });
     } catch (error) {
       console.error('Failed to load school status modal:', error);
-      this.showError(result.message || 'Status sekolah belum aktif.');
+      this.showError('Status sekolah belum aktif.');
     }
   }
 
@@ -291,5 +269,3 @@ export class LoginComponent {
 }
 
 window.LoginComponent = LoginComponent;
-
-

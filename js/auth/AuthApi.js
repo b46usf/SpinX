@@ -66,7 +66,8 @@ class AuthApi {
       result.error === 'SCHOOL_PENDING_APPROVAL' ||
       result.error === 'SCHOOL_RENEWAL_PENDING' ||
       schoolStatus === 'pending_school' ||
-      schoolStatus === 'pending_renewal'
+      schoolStatus === 'pending_renewal' ||
+      schoolStatus === 'renewal_pending'
     );
 
     if (action === 'login' && result.registered === false) {
@@ -119,7 +120,11 @@ class AuthApi {
       
       // NEW: School subscription invalid → Custom modal
       if (result.error === 'SCHOOL_SUBSCRIPTION_INVALID') {
-        if (schoolStatus === 'pending_school' || schoolStatus === 'pending_renewal') {
+        if (
+          schoolStatus === 'pending_school' ||
+          schoolStatus === 'pending_renewal' ||
+          schoolStatus === 'renewal_pending'
+        ) {
           if (hasSchoolStatusModal) {
             window.loginComponent.showSchoolStatusModal(result);
           } else {

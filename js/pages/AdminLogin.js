@@ -47,9 +47,6 @@ class AdminLogin {
 
     // Render Google button
     this.renderGoogleButton();
-    
-    // Setup click handler
-    this.setupLoginButton();
 
     this.initialized = true;
 
