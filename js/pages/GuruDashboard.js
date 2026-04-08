@@ -10,6 +10,8 @@ import { initSectionNavigation, switchSection, initTabNavigation, switchTab } fr
 import { DOMUtils } from '../core/DOMUtils.js';
 import { ToastUtils } from '../core/ToastUtils.js';
 import { authApi } from '../auth/AuthApi.js';
+import { WebSocketClient } from '../core/WebSocketClient.js';
+import { NotificationManager } from '../core/NotificationManager.js';
 import {
   applyTextSkeleton,
   clearTextSkeleton,
@@ -24,6 +26,8 @@ class GuruDashboard {
     this.currentSection = 'dashboard';
     this.currentUser = null;
     this.kelasId = null;
+    this.webSocketClient = null;
+    this.notificationManager = null;
     this.data = {
       stats: {},
       siswa: [],
@@ -305,6 +309,8 @@ class GuruDashboard {
     this.kelasId = this.currentUser.kelasId || this.currentUser.kelas;
     
     themeManager.init();
+    this.initWebSocket();
+    this.initNotifications();
     this.setupProfile();
     this.setupNavigation();
     this.setupEventListeners();
@@ -315,6 +321,96 @@ class GuruDashboard {
 
     await this.loadDashboardData();
     await this.loadAkunData();
+  }
+
+  /**
+   * Initialize WebSocket connection for real-time updates
+   */
+  initWebSocket() {
+    this.webSocketClient = new WebSocketClient();
+    
+    // Listen for real-time updates
+    this.webSocketClient.on('notification', (notification) => {
+      this.notificationManager.addNotification(notification);
+    });
+
+    this.webSocketClient.on('data:update', (update) => {
+      this.handleDataUpdate(update);
+    });
+
+    this.webSocketClient.on('session:update', (update) => {
+      this.handleSessionUpdate(update);
+    });
+  }
+
+  /**
+   * Initialize notification manager
+   */
+  initNotifications() {
+    this.notificationManager = new NotificationManager();
+  }
+
+  /**
+   * Handle real-time data updates
+   */
+  handleDataUpdate(update) {
+    switch (update.type) {
+      case 'siswa_stats':
+        this.updateSiswaStats(update.data);
+        break;
+      case 'kelas_stats':
+        this.updateKelasStats(update.data);
+        break;
+      case 'reward_update':
+        this.updateRewardData(update.data);
+        break;
+    }
+  }
+
+  /**
+   * Handle session updates
+   */
+  handleSessionUpdate(update) {
+    if (update.type === 'logout' || update.type === 'expired') {
+      // Handle session expiry
+      Toast.error('Sesi Anda telah berakhir. Silakan login kembali.');
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
+    }
+  }
+
+  /**
+   * Update siswa statistics in real-time
+   */
+  updateSiswaStats(data) {
+    if (data.totalSiswa !== undefined) {
+      DOMUtils.setText('stat-siswa', data.totalSiswa);
+    }
+    if (data.totalSpin !== undefined) {
+      DOMUtils.setText('stat-spin', data.totalSpin);
+    }
+    if (data.totalVoucher !== undefined) {
+      DOMUtils.setText('stat-voucher', data.totalVoucher);
+    }
+  }
+
+  /**
+   * Update kelas statistics in real-time
+   */
+  updateKelasStats(data) {
+    // Update kelas-specific stats if needed
+    this.loadDashboardData(); // Reload full data for complex updates
+  }
+
+  /**
+   * Update reward data in real-time
+   */
+  updateRewardData(data) {
+    // Update reward-related UI elements
+    if (this.currentSection === 'reward') {
+      this.loadSectionData('reward');
+    }
   }
 
   setupProfile() {

@@ -10,6 +10,8 @@ import { DashboardUtils } from '../core/DashboardUtils.js';
 import { initSectionNavigation, switchSection } from '../core/NavigationUtils.js';
 import { DOMUtils } from '../core/DOMUtils.js';
 import { authApi } from '../auth/AuthApi.js';
+import { WebSocketClient } from '../core/WebSocketClient.js';
+import { NotificationManager } from '../core/NotificationManager.js';
 import { SchoolManager } from './managers/SchoolManager.js';
 import { SubscriptionManager } from './managers/SubscriptionManager.js';
 import {
@@ -32,6 +34,8 @@ class AdminSystemDashboard {
   constructor() {
     this.currentSection = 'dashboard';
     this.driveFolderUrl = 'https://drive.google.com/drive/folders/1LO3doxMITY5QJN0Z3s5Ar9iczGEqcaxh?usp=sharing';
+    this.webSocketClient = null;
+    this.notificationManager = null;
     
     // Initialize managers
     this.subscriptionStatusConfig = this.getDefaultSubscriptionStatusConfig();
@@ -69,6 +73,8 @@ class AdminSystemDashboard {
     }
 
     themeManager.init();
+    this.initWebSocket();
+    this.initNotifications();
     this.setupProfile();
     this.setupNavigation();
     this.setupEventListeners();
@@ -77,6 +83,96 @@ class AdminSystemDashboard {
     this.loadSubscriptionStatusConfig();
     this.showInitialSkeletons();
     this.refreshAllData();
+  }
+
+  /**
+   * Initialize WebSocket connection for real-time updates
+   */
+  initWebSocket() {
+    this.webSocketClient = new WebSocketClient();
+    
+    // Listen for real-time updates
+    this.webSocketClient.on('notification', (notification) => {
+      this.notificationManager.addNotification(notification);
+    });
+
+    this.webSocketClient.on('data:update', (update) => {
+      this.handleDataUpdate(update);
+    });
+
+    this.webSocketClient.on('session:update', (update) => {
+      this.handleSessionUpdate(update);
+    });
+  }
+
+  /**
+   * Initialize notification manager
+   */
+  initNotifications() {
+    this.notificationManager = new NotificationManager();
+  }
+
+  /**
+   * Handle real-time data updates
+   */
+  handleDataUpdate(update) {
+    switch (update.type) {
+      case 'system_stats':
+        this.updateSystemStats(update.data);
+        break;
+      case 'school_update':
+        this.updateSchoolData(update.data);
+        break;
+      case 'subscription_update':
+        this.updateSubscriptionData(update.data);
+        break;
+    }
+  }
+
+  /**
+   * Handle session updates
+   */
+  handleSessionUpdate(update) {
+    if (update.type === 'logout' || update.type === 'expired') {
+      // Handle session expiry
+      showError('Sesi Anda telah berakhir. Silakan login kembali.');
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
+    }
+  }
+
+  /**
+   * Update system statistics in real-time
+   */
+  updateSystemStats(data) {
+    if (data.totalSchools !== undefined) {
+      DOMUtils.setText('stat-schools', data.totalSchools);
+    }
+    if (data.totalRevenue !== undefined) {
+      DOMUtils.setText('stat-revenue', `Rp ${data.totalRevenue.toLocaleString()}`);
+    }
+    if (data.activeSchools !== undefined) {
+      DOMUtils.setText('stat-active-schools', data.activeSchools);
+    }
+  }
+
+  /**
+   * Update school data in real-time
+   */
+  updateSchoolData(data) {
+    if (this.currentSection === 'schools') {
+      this.schoolManager.loadSchools();
+    }
+  }
+
+  /**
+   * Update subscription data in real-time
+   */
+  updateSubscriptionData(data) {
+    if (this.currentSection === 'subscriptions') {
+      this.subscriptionManager.loadSubscriptions();
+    }
   }
 
   /**

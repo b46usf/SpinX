@@ -1199,6 +1199,216 @@ body::before {
   }
 }
 
+/* ============================================
+   NOTIFICATION STYLES
+   ============================================ */
+
+.notification-panel {
+  position: fixed;
+  top: 70px;
+  right: 20px;
+  width: 380px;
+  max-height: 500px;
+  background: rgba(15, 15, 26, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  overflow: hidden;
+  transform: translateX(420px);
+  transition: transform 0.3s ease;
+}
+
+.notification-panel:not(.hidden) {
+  transform: translateX(0);
+}
+
+.notification-panel-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.notification-panel-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.notification-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.notification-item {
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.notification-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.notification-item.unread {
+  background: rgba(99, 102, 241, 0.1);
+  border-left: 3px solid #6366f1;
+}
+
+.notification-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.notification-item-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: #ffffff;
+  flex: 1;
+}
+
+.notification-item-time {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-left: 8px;
+}
+
+.notification-item-message {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.4;
+}
+
+.notification-empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.notification-empty i {
+  font-size: 48px;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.notification-empty p {
+  font-size: 14px;
+}
+
+.notification-toast {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  width: 350px;
+  background: rgba(15, 15, 26, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  z-index: 1001;
+  transform: translateX(400px);
+  transition: transform 0.3s ease;
+  overflow: hidden;
+}
+
+.notification-toast.show {
+  transform: translateX(0);
+}
+
+.notification-toast-success {
+  border-left: 4px solid #10b981;
+}
+
+.notification-toast-error {
+  border-left: 4px solid #ef4444;
+}
+
+.notification-toast-warning {
+  border-left: 4px solid #f59e0b;
+}
+
+.notification-toast-info {
+  border-left: 4px solid #3b82f6;
+}
+
+.notification-toast-content {
+  padding: 16px;
+  flex: 1;
+}
+
+.notification-toast-icon {
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notification-toast-title {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.notification-toast-message {
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.notification-toast-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.notification-toast-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+/* Badge for notification button */
+.notification-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  border-radius: 10px;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 600;
+  min-width: 18px;
+  text-align: center;
+  border: 2px solid rgba(15, 15, 26, 0.9);
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.hidden {
+  display: none !important;
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #6366f1, #ec4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
 @keyframes pulse {
   0%, 100% { opacity: 0.8; }
   50% { opacity: 1; }

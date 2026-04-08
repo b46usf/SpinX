@@ -8,6 +8,8 @@ import { themeManager } from '../core/ThemeManager.js';
 import { initSectionNavigation, switchSection, initTabNavigation, switchTab } from '../core/NavigationUtils.js';
 import { DOMUtils } from '../core/DOMUtils.js';
 import { authApi } from '../auth/AuthApi.js';
+import { WebSocketClient } from '../core/WebSocketClient.js';
+import { NotificationManager } from '../core/NotificationManager.js';
 import {
   applyTextSkeleton,
   renderListSkeleton,
@@ -58,6 +60,8 @@ export class AdminSchoolDashboard {
     this.currentSection = 'dashboard';
     this.currentImportRole = 'siswa';
     this.orchestrator = null;
+    this.webSocketClient = null;
+    this.notificationManager = null;
     this.loadedUserTabs = Object.fromEntries(USER_ROLES.map(role => [role, false]));
   }
 
@@ -432,10 +436,113 @@ export class AdminSchoolDashboard {
     setText('school-name', currentUser.schoolName || 'Sekolah');
 
     themeManager.init();
+    this.initWebSocket();
+    this.initNotifications();
     this.setupUI(currentUser);
 
     this.orchestrator = createOrchestrator(this, authApi, this.schoolId);
     await this.orchestrator.init();
+  }
+
+  /**
+   * Initialize WebSocket connection for real-time updates
+   */
+  initWebSocket() {
+    this.webSocketClient = new WebSocketClient();
+    
+    // Listen for real-time updates
+    this.webSocketClient.on('notification', (notification) => {
+      this.notificationManager.addNotification(notification);
+    });
+
+    this.webSocketClient.on('data:update', (update) => {
+      this.handleDataUpdate(update);
+    });
+
+    this.webSocketClient.on('session:update', (update) => {
+      this.handleSessionUpdate(update);
+    });
+  }
+
+  /**
+   * Initialize notification manager
+   */
+  initNotifications() {
+    this.notificationManager = new NotificationManager();
+  }
+
+  /**
+   * Handle real-time data updates
+   */
+  handleDataUpdate(update) {
+    switch (update.type) {
+      case 'school_stats':
+        this.updateSchoolStats(update.data);
+        break;
+      case 'user_update':
+        this.updateUserData(update.data);
+        break;
+      case 'subscription_update':
+        this.updateSubscriptionData(update.data);
+        break;
+    }
+  }
+
+  /**
+   * Handle session updates
+   */
+  handleSessionUpdate(update) {
+    if (update.type === 'logout' || update.type === 'expired') {
+      // Handle session expiry
+      Toast?.error?.('Sesi Anda telah berakhir. Silakan login kembali.');
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
+    }
+  }
+
+  /**
+   * Update school statistics in real-time
+   */
+  updateSchoolStats(data) {
+    if (data.totalSiswa !== undefined) {
+      setText('stat-siswa', data.totalSiswa);
+    }
+    if (data.totalSpin !== undefined) {
+      setText('stat-spin', data.totalSpin);
+    }
+    if (data.totalVoucher !== undefined) {
+      setText('stat-voucher', data.totalVoucher);
+    }
+    if (data.siswaAktif !== undefined) {
+      setText('stat-siswa-aktif', data.siswaAktif);
+    }
+    if (data.guruAktif !== undefined) {
+      setText('stat-guru-aktif', data.guruAktif);
+    }
+    if (data.mitraAktif !== undefined) {
+      setText('stat-mitra-aktif', data.mitraAktif);
+    }
+  }
+
+  /**
+   * Update user data in real-time
+   */
+  updateUserData(data) {
+    // Update user lists if currently viewing users section
+    if (this.currentSection === 'users') {
+      this.orchestrator.loadUsers(this.currentImportRole);
+    }
+  }
+
+  /**
+   * Update subscription data in real-time
+   */
+  updateSubscriptionData(data) {
+    // Update subscription-related UI elements
+    if (this.currentSection === 'dashboard') {
+      this.orchestrator.loadDashboardData();
+    }
   }
 
   setupUI(currentUser) {

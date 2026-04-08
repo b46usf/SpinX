@@ -11,6 +11,8 @@ import { initSectionNavigation, switchSection } from '../core/NavigationUtils.js
 import { DOMUtils } from '../core/DOMUtils.js';
 import { ToastUtils } from '../core/ToastUtils.js';
 import { authApi } from '../auth/AuthApi.js';
+import { WebSocketClient } from '../core/WebSocketClient.js';
+import { NotificationManager } from '../core/NotificationManager.js';
 import {
   applyTextSkeleton,
   clearTextSkeleton,
@@ -57,6 +59,8 @@ class SiswaDashboard {
     this.currentSection = 'dashboard';
     this.currentUser = null;
     this.customerId = null;
+    this.webSocketClient = null;
+    this.notificationManager = null;
     this.data = {
       stats: {},
       mitra: [],
@@ -306,6 +310,8 @@ class SiswaDashboard {
 
     // Setup UI
     themeManager.init();
+    this.initWebSocket();
+    this.initNotifications();
     this.setupNavigation();
     this.setupEventListeners();
     this.loadSavedWa();
@@ -314,6 +320,102 @@ class SiswaDashboard {
     // Load data
     await this.loadDashboardData();
     this.initGame();
+  }
+
+  /**
+   * Initialize WebSocket connection for real-time updates
+   */
+  initWebSocket() {
+    this.webSocketClient = new WebSocketClient();
+    
+    // Listen for real-time updates
+    this.webSocketClient.on('notification', (notification) => {
+      this.notificationManager.addNotification(notification);
+    });
+
+    this.webSocketClient.on('data:update', (update) => {
+      this.handleDataUpdate(update);
+    });
+
+    this.webSocketClient.on('session:update', (update) => {
+      this.handleSessionUpdate(update);
+    });
+  }
+
+  /**
+   * Initialize notification manager
+   */
+  initNotifications() {
+    this.notificationManager = new NotificationManager();
+  }
+
+  /**
+   * Handle real-time data updates
+   */
+  handleDataUpdate(update) {
+    switch (update.type) {
+      case 'spin_update':
+        this.updateSpinCount(update.data);
+        break;
+      case 'voucher_update':
+        this.updateVoucherCount(update.data);
+        break;
+      case 'leaderboard_update':
+        this.updateLeaderboard(update.data);
+        break;
+      case 'activity_update':
+        this.updateActivity(update.data);
+        break;
+    }
+  }
+
+  /**
+   * Handle session updates
+   */
+  handleSessionUpdate(update) {
+    if (update.type === 'logout' || update.type === 'expired') {
+      // Handle session expiry
+      this.showError('Sesi Anda telah berakhir', 'Silakan login kembali.');
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
+    }
+  }
+
+  /**
+   * Update spin count in real-time
+   */
+  updateSpinCount(data) {
+    if (data.available !== undefined) {
+      DOMUtils.setText('spin-available', data.available);
+    }
+  }
+
+  /**
+   * Update voucher count in real-time
+   */
+  updateVoucherCount(data) {
+    if (data.active !== undefined) {
+      DOMUtils.setText('voucher-active', data.active);
+    }
+  }
+
+  /**
+   * Update leaderboard in real-time
+   */
+  updateLeaderboard(data) {
+    if (this.currentSection === 'dashboard') {
+      this.loadLeaderboard();
+    }
+  }
+
+  /**
+   * Update activity in real-time
+   */
+  updateActivity(data) {
+    if (this.currentSection === 'dashboard') {
+      this.loadActivity();
+    }
   }
 
   showSuccess(title, message = '') {

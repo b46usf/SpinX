@@ -4,6 +4,8 @@ import { initSectionNavigation, switchSection } from '../core/NavigationUtils.js
 import { DOMUtils } from '../core/DOMUtils.js';
 import { ToastUtils } from '../core/ToastUtils.js';
 import { authApi } from '../auth/AuthApi.js';
+import { WebSocketClient } from '../core/WebSocketClient.js';
+import { NotificationManager } from '../core/NotificationManager.js';
 import {
   applyTextSkeleton,
   clearTextSkeleton,
@@ -18,6 +20,8 @@ class MitraDashboard {
     this.currentSection = 'dashboard';
     this.currentPeriod = 'hari';
     this.currentUser = null;
+    this.webSocketClient = null;
+    this.notificationManager = null;
     this.data = {
       stats: {},
       detail: {},
@@ -270,6 +274,8 @@ class MitraDashboard {
     }
 
     themeManager.init();
+    this.initWebSocket();
+    this.initNotifications();
     this.setupProfile();
     this.updateDate();
     this.showInitialSkeletons();
@@ -277,6 +283,96 @@ class MitraDashboard {
     this.initEventListeners();
 
     await this.loadDashboard();
+  }
+
+  /**
+   * Initialize WebSocket connection for real-time updates
+   */
+  initWebSocket() {
+    this.webSocketClient = new WebSocketClient();
+    
+    // Listen for real-time updates
+    this.webSocketClient.on('notification', (notification) => {
+      this.notificationManager.addNotification(notification);
+    });
+
+    this.webSocketClient.on('data:update', (update) => {
+      this.handleDataUpdate(update);
+    });
+
+    this.webSocketClient.on('session:update', (update) => {
+      this.handleSessionUpdate(update);
+    });
+  }
+
+  /**
+   * Initialize notification manager
+   */
+  initNotifications() {
+    this.notificationManager = new NotificationManager();
+  }
+
+  /**
+   * Handle real-time data updates
+   */
+  handleDataUpdate(update) {
+    switch (update.type) {
+      case 'voucher_redeemed':
+        this.updateVoucherStats(update.data);
+        break;
+      case 'transaction_update':
+        this.updateTransactionData(update.data);
+        break;
+      case 'product_update':
+        this.updateProductData(update.data);
+        break;
+    }
+  }
+
+  /**
+   * Handle session updates
+   */
+  handleSessionUpdate(update) {
+    if (update.type === 'logout' || update.type === 'expired') {
+      // Handle session expiry
+      ToastUtils.error('Sesi Anda telah berakhir', 'Silakan login kembali.');
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 2000);
+    }
+  }
+
+  /**
+   * Update voucher statistics in real-time
+   */
+  updateVoucherStats(data) {
+    if (data.totalRedeemed !== undefined) {
+      DOMUtils.setText('stat-voucher', data.totalRedeemed);
+    }
+    if (data.todayRedeemed !== undefined) {
+      DOMUtils.setText('stat-voucher-hari', data.todayRedeemed);
+    }
+    if (data.weekRedeemed !== undefined) {
+      DOMUtils.setText('stat-voucher-minggu', data.weekRedeemed);
+    }
+  }
+
+  /**
+   * Update transaction data in real-time
+   */
+  updateTransactionData(data) {
+    if (this.currentSection === 'transaksi') {
+      this.loadTransaksi();
+    }
+  }
+
+  /**
+   * Update product data in real-time
+   */
+  updateProductData(data) {
+    if (this.currentSection === 'produk') {
+      this.loadProduk();
+    }
   }
 
   setupProfile() {
