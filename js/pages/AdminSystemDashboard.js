@@ -247,7 +247,14 @@ class AdminSystemDashboard {
                 <span class="badge badge-primary text-xs">Admin Sistem</span>
               </div>
             </div>
-            <div class="grid gap-3 mb-4">
+          </div>
+
+          <div class="glass-card p-4 mb-4 animate-fade-in-up delay-1">
+            <h3 class="text-sm font-bold mb-3 flex items-center gap-2">
+              <i class="fas fa-shield-alt text-indigo-400"></i>
+              Info Admin Sistem
+            </h3>
+            <div class="space-y-3">
               <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
                 <span class="text-sm">Role</span>
                 <span class="text-sm text-gray-300" id="admin-role">Admin Sistem</span>
@@ -265,6 +272,9 @@ class AdminSystemDashboard {
                 <span class="text-sm text-gray-300" id="admin-access">Full Sistem</span>
               </div>
             </div>
+          </div>
+
+          <div class="glass-card p-4 mb-4 animate-fade-in-up delay-2">
             <div class="grid gap-3">
               <button id="edit-profile-btn" class="btn btn-secondary w-full text-sm">
                 <i class="fas fa-edit"></i> Edit Profil
