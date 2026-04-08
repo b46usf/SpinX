@@ -235,9 +235,9 @@ class AdminSystemDashboard {
           </div>
         </section>
 
-        <!-- Akun Section (minimal) -->
+        <!-- Akun Section -->
         <section id="section-akun" class="section-content hidden">
-          <div class="glass-card p-4 mb-4">
+          <div class="glass-card p-4 mb-4 animate-fade-in-up">
             <div class="flex items-center gap-4 mb-4">
               <img id="profile-avatar" src="" alt="Profile" class="w-16 h-16 rounded-full border-2 border-indigo-500">
               <div>
@@ -246,9 +246,28 @@ class AdminSystemDashboard {
                 <span class="badge badge-primary text-xs">Admin Sistem</span>
               </div>
             </div>
-            <button id="edit-profile-btn" class="btn btn-secondary w-full text-sm">
-              <i class="fas fa-edit"></i> Edit Profil
-            </button>
+            <div class="space-y-3 mb-4">
+              <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                <span class="text-sm">Role</span>
+                <span class="text-sm text-gray-300" id="admin-role">Admin Sistem</span>
+              </div>
+              <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                <span class="text-sm">Status</span>
+                <span class="text-sm text-gray-300" id="admin-status">Aktif</span>
+              </div>
+              <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                <span class="text-sm">Email</span>
+                <span class="text-sm text-gray-300" id="admin-email">-</span>
+              </div>
+            </div>
+            <div class="grid gap-3">
+              <button id="edit-profile-btn" class="btn btn-secondary w-full text-sm">
+                <i class="fas fa-edit"></i> Edit Profil
+              </button>
+              <button id="logout-btn" class="btn btn-ghost w-full text-sm text-red-400 hover:bg-red-500/10">
+                <i class="fas fa-sign-out-alt"></i> Logout
+              </button>
+            </div>
           </div>
         </section>
       </main>
@@ -256,19 +275,19 @@ class AdminSystemDashboard {
       <!-- Bottom Navigation -->
       <nav class="fixed bottom-0 left-0 right-0 glass-card border-t border-white/10">
         <div class="flex justify-around px-4 py-3">
-          <button class="bottom-nav-item active" data-section="dashboard">
+          <button class="bottom-nav-item active flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all" data-section="dashboard">
             <i class="fas fa-chart-line"></i>
             <span class="text-xs">Dashboard</span>
           </button>
-          <button class="bottom-nav-item" data-section="sekolah">
+          <button class="bottom-nav-item flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all text-gray-400" data-section="sekolah">
             <i class="fas fa-school"></i>
             <span class="text-xs">Sekolah</span>
           </button>
-          <button class="bottom-nav-item" data-section="subscription">
+          <button class="bottom-nav-item flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all text-gray-400" data-section="subscription">
             <i class="fas fa-credit-card"></i>
             <span class="text-xs">Subscription</span>
           </button>
-          <button class="bottom-nav-item" data-section="akun">
+          <button class="bottom-nav-item flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all text-gray-400" data-section="akun">
             <i class="fas fa-user"></i>
             <span class="text-xs">Akun</span>
           </button>
@@ -289,10 +308,17 @@ class AdminSystemDashboard {
         const profileAvatar = document.getElementById('profile-avatar');
         const profileName = document.getElementById('profile-name');
         const profileEmail = document.getElementById('profile-email');
+        const adminRole = document.getElementById('admin-role');
+        const adminStatus = document.getElementById('admin-status');
+        const adminEmail = document.getElementById('admin-email');
 
-        if (profileAvatar && user.foto) profileAvatar.src = user.foto;
-        if (profileName) profileName.textContent = user.nama || user.email;
-        if (profileEmail) profileEmail.textContent = user.email;
+        const avatarUrl = user.foto || user.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nama || user.name || user.email)}&background=random`;
+        if (profileAvatar) profileAvatar.src = avatarUrl;
+        if (profileName) profileName.textContent = user.nama || user.name || user.email || '-';
+        if (profileEmail) profileEmail.textContent = user.email || '-';
+        if (adminRole) adminRole.textContent = user.role || 'Admin Sistem';
+        if (adminStatus) adminStatus.textContent = user.status || 'Aktif';
+        if (adminEmail) adminEmail.textContent = user.email || '-';
       }
     } catch (error) {
       console.error('Failed to setup profile:', error);
