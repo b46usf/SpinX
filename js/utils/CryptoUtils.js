@@ -164,9 +164,10 @@ class CryptoUtils {
 
     try {
       const decryptedData = await this.decryptObject(response.encryptedData);
+      // Spread decrypted data into response, excluding encryptedData field
       return {
         ...response,
-        data: decryptedData,
+        ...decryptedData,
         encryptedData: undefined // Remove encrypted field
       };
     } catch (error) {

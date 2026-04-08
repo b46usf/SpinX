@@ -6,6 +6,7 @@
  */
 
 import { AUTH_CONFIG } from './Config.js';
+import { CryptoUtils } from '../utils/CryptoUtils.js';
 
 class JwtManager {
   constructor() {
@@ -166,7 +167,8 @@ class JwtManager {
         }
       });
       
-      const result = await response.json();
+      let result = await response.json();
+      result = await CryptoUtils.decryptResponse(result);
       
       if (result.success && result.token) {
         // Update stored token
