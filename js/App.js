@@ -139,7 +139,7 @@ class App {
     }
 
     this.cleanup();
-    this.appContainer.innerHTML = this.loginComponent.render();
+    this.appContainer.innerHTML = this.loginComponent.render({ role });
     this.loginComponent.initEvents();
   }
 

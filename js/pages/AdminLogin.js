@@ -63,7 +63,7 @@ class AdminLogin {
       console.error('[AdminLogin] #app container not found');
       return;
     }
-    appContainer.innerHTML = LoginTemplates.loginSection();
+    appContainer.innerHTML = LoginTemplates.loginSection({ role: 'admin-system' });
   }
 
   restorePendingTelegramState() {

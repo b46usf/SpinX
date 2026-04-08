@@ -101,8 +101,8 @@ export class LoginComponent {
     return lines.join('\n');
   }
 
-  render() {
-    return LoginTemplates.loginSection();
+  render(options = {}) {
+    return LoginTemplates.loginSection(options);
   }
 
   initEvents() {
