@@ -289,21 +289,21 @@ class AdminSystemDashboard {
 
       <!-- Bottom Navigation -->
       <nav class="fixed bottom-0 left-0 right-0 glass-card border-t border-white/10">
-        <div class="flex justify-around px-4 py-3">
+        <div class="flex justify-around items-center px-2 py-2">
           <button class="bottom-nav-item active flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all" data-section="dashboard">
-            <i class="fas fa-chart-line"></i>
+            <i class="fas fa-chart-line text-lg mb-1"></i>
             <span class="text-xs">Dashboard</span>
           </button>
           <button class="bottom-nav-item flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all text-gray-400" data-section="sekolah">
-            <i class="fas fa-school"></i>
+            <i class="fas fa-school text-lg mb-1"></i>
             <span class="text-xs">Sekolah</span>
           </button>
           <button class="bottom-nav-item flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all text-gray-400" data-section="subscription">
-            <i class="fas fa-credit-card"></i>
+            <i class="fas fa-credit-card text-lg mb-1"></i>
             <span class="text-xs">Subscription</span>
           </button>
           <button class="bottom-nav-item flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all text-gray-400" data-section="akun">
-            <i class="fas fa-user"></i>
+            <i class="fas fa-user-cog text-lg mb-1"></i>
             <span class="text-xs">Akun</span>
           </button>
         </div>
