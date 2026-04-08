@@ -26,7 +26,29 @@ export { ensureSwalInstance, getSwalInstance };
 if (typeof document !== 'undefined' && !document.getElementById('swal-above-import-style')) {
   const style = document.createElement('style');
   style.id = 'swal-above-import-style';
-  style.textContent = '.swal2-container.swal-above-import{z-index:20050 !important;}';
+  style.textContent = `
+    .swal2-container.swal-above-import { z-index: 20050 !important; }
+    .swal2-toast-tailwind.swal2-popup {
+      border-radius: 0.75rem !important;
+      padding: 0.85rem 1rem !important;
+      box-shadow: 0 12px 25px rgba(15, 23, 42, 0.18) !important;
+      background: #111827 !important;
+      color: #f9fafb !important;
+      font-weight: 600 !important;
+      min-width: 280px !important;
+      max-width: 360px !important;
+    }
+    .swal2-toast-tailwind .swal2-title {
+      margin: 0 !important;
+      font-size: 0.95rem !important;
+    }
+    .swal2-toast-tailwind .swal2-html-container {
+      margin-top: 0.35rem !important;
+      font-size: 0.85rem !important;
+      line-height: 1.5 !important;
+      color: #d1d5db !important;
+    }
+  `;
   document.head.appendChild(style);
 }
 
@@ -39,6 +61,7 @@ const ToastDefaults = {
   cancelButtonText: 'Batal',
   allowOutsideClick: false,
   allowEscapeKey: true,
+  position: 'top-end',
   showClass: {
     popup: 'animate__animated animate__fadeIn animate__faster'
   },
@@ -49,6 +72,50 @@ const ToastDefaults = {
     container: 'swal-above-import'
   }
 };
+
+const LONG_CONTENT_THRESHOLD = 80;
+const TOAST_DURATION = 3000;
+
+function isLongContent(title = '', message = '') {
+  const text = `${title || ''} ${message || ''}`.trim();
+  return text.length > LONG_CONTENT_THRESHOLD || /[\r\n]/.test(text);
+}
+
+function buildToastOptions({ icon, title, message = '', duration = TOAST_DURATION, forceModal = false }) {
+  const longContent = forceModal || isLongContent(title, message);
+  const baseOptions = {
+    icon,
+    title,
+    text: message,
+    background: '#111827',
+    color: '#f9fafb',
+    confirmButtonColor: ToastDefaults.confirmButtonColor,
+    cancelButtonColor: ToastDefaults.cancelButtonColor,
+    customClass: {
+      container: 'swal-above-import',
+      popup: longContent ? 'swal-modal-popup' : 'swal2-toast-tailwind'
+    }
+  };
+
+  if (longContent) {
+    return {
+      ...baseOptions,
+      toast: false,
+      showConfirmButton: true,
+      timer: 0,
+      timerProgressBar: false
+    };
+  }
+
+  return {
+    ...baseOptions,
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: duration,
+    timerProgressBar: duration > 0
+  };
+}
 
 function fireToast(options = {}) {
   const swal = ensureSwalInstance();
@@ -62,67 +129,41 @@ function fireToast(options = {}) {
 export { fireToast };
 
 /**
- * Show success toast
+ * Show success toast/modal
  * @param {string} title - Title message
  * @param {string} message - Optional description message
  * @param {number} duration - Duration in milliseconds (default: 3000)
  */
-export async function showSuccess(title, message = '', duration = 3000) {
-  return fireToast({
-    icon: 'success',
-    title,
-    text: message,
-    timer: duration,
-    toast: message === '',
-    showConfirmButton: message !== '',
-    timerProgressBar: duration > 0
-  });
+export async function showSuccess(title, message = '', duration = TOAST_DURATION) {
+  return fireToast(buildToastOptions({ icon: 'success', title, message, duration }));
 }
 
 /**
- * Show error toast
+ * Show error toast/modal
  * @param {string} title - Title message
  * @param {string} message - Optional description message
  */
 export async function showError(title, message = '') {
-  return fireToast({
-    icon: 'error',
-    title,
-    text: message,
-    confirmButtonColor: '#ef4444'
-  });
+  return fireToast(buildToastOptions({ icon: 'error', title, message, duration: TOAST_DURATION }));
 }
 
 /**
- * Show warning toast
+ * Show warning toast/modal
  * @param {string} title - Title message
  * @param {string} message - Optional description message
  */
 export async function showWarning(title, message = '') {
-  return fireToast({
-    icon: 'warning',
-    title,
-    text: message,
-    confirmButtonColor: '#f59e0b'
-  });
+  return fireToast(buildToastOptions({ icon: 'warning', title, message, duration: TOAST_DURATION }));
 }
 
 /**
- * Show info toast
+ * Show info toast/modal
  * @param {string} title - Title message
  * @param {string} message - Optional description message
- * @param {number} duration - Duration in milliseconds (default: 0 = no auto-close)
+ * @param {number} duration - Duration in milliseconds (default: 3000)
  */
-export async function showInfo(title, message = '', duration = 0) {
-  return fireToast({
-    icon: 'info',
-    title,
-    text: message,
-    timer: duration,
-    timerProgressBar: duration > 0,
-    showConfirmButton: duration === 0,
-    toast: message === '' && duration > 0
-  });
+export async function showInfo(title, message = '', duration = TOAST_DURATION) {
+  return fireToast(buildToastOptions({ icon: 'info', title, message, duration }));
 }
 
 /**
