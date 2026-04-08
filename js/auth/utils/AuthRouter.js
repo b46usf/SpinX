@@ -114,13 +114,6 @@ const AuthRouter = {
   },
 
   /**
-   * Route to admin login page
-   */
-  routeToAdminLogin() {
-    window.location.href = 'adsys.html';
-  },
-
-  /**
    * Show error message using Toast
    */
   showError(message) {

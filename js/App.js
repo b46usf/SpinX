@@ -89,7 +89,9 @@ class App {
 
   normalizeLoginRole(role = '') {
     const normalizedRole = typeof role === 'string' ? role.trim().toLowerCase() : '';
-    return AuthRouter.userLoginRoles.includes(normalizedRole) ? normalizedRole : '';
+    // Allow admin-system and user login roles
+    const allowedRoles = [...AuthRouter.userLoginRoles, 'admin-system'];
+    return allowedRoles.includes(normalizedRole) ? normalizedRole : '';
   }
 
   parseRouteState() {

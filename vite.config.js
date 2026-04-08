@@ -12,7 +12,6 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: './index.html',
-        adsys: './adsys.html',
         dashboardAdminSystem: './dashboard-admin-system.html',
         dashboardAdminSchool: './dashboard-admin-school.html',
         dashboardSiswa: './dashboard-siswa.html',
