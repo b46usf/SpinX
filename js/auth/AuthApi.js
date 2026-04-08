@@ -10,6 +10,7 @@
 
 import { AUTH_CONFIG } from './Config.js';
 import { jwtManager } from './JwtManager.js';
+import { CryptoUtils } from '../utils/CryptoUtils.js';
 
 // Get Toast functions from global
 const getToast = () => window.Toast || null;
@@ -238,6 +239,23 @@ class AuthApi {
           success: false, 
           message: 'Respons server tidak valid',
           raw: text 
+        };
+      }
+
+      // Decrypt response if encrypted
+      try {
+        result = await CryptoUtils.decryptResponse(result);
+      } catch (decryptError) {
+        console.error('Failed to decrypt response:', decryptError);
+        
+        if (showToast && Toast) {
+          Toast.error('Error', 'Gagal mendekripsi respons');
+        }
+        
+        return { 
+          success: false, 
+          message: 'Gagal mendekripsi respons',
+          error: decryptError.message 
         };
       }
 
