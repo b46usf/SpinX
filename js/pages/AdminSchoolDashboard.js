@@ -85,7 +85,7 @@ export class AdminSchoolDashboard {
             <button id="notif-btn" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-300 transition-colors">
               <i class="fas fa-bell"></i>
             </button>
-            <img id="user-avatar" src="" alt="Avatar" class="w-9 h-9 rounded-full border-2 border-purple-500">
+            <img id="user-avatar" src="" alt="Avatar" class="w-9 h-9 rounded-full border-2 border-indigo-500">
           </div>
         </div>
       </header>
@@ -285,7 +285,7 @@ export class AdminSchoolDashboard {
         <section id="section-akun" class="section-content hidden">
           <div class="glass-card p-4 mb-4 animate-fade-in-up">
             <div class="flex items-center gap-4 mb-4">
-              <img id="profile-avatar" src="" alt="Profile" class="w-16 h-16 rounded-full border-2 border-purple-500">
+              <img id="profile-avatar" src="" alt="Profile" class="w-16 h-16 rounded-full border-2 border-indigo-500">
               <div>
                 <h2 class="text-lg font-bold" id="profile-name">-</h2>
                 <p class="text-sm text-gray-400" id="profile-email">-</p>
@@ -402,7 +402,9 @@ export class AdminSchoolDashboard {
 
     const authResult = authGuard.init('admin-sekolah', {
       avatarId: 'user-avatar',
-      welcomeId: 'welcome-name'
+      nameId: 'user-name',
+      welcomeId: 'welcome-name',
+      logoutId: 'logout-btn'
     });
     if (!authResult) return;
 
@@ -445,17 +447,8 @@ export class AdminSchoolDashboard {
   }
 
   setupProfile(currentUser) {
-    const avatarUrl =
-      currentUser.picture ||
-      currentUser.foto ||
-      `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name || 'A')}&background=random`;
-
-    const avatar = getElement('user-avatar');
-    if (avatar) avatar.src = avatarUrl;
-
-    const profileAvatar = getElement('profile-avatar');
-    if (profileAvatar) profileAvatar.src = avatarUrl;
-
+    // Avatar and name are handled by authGuard.init()
+    // Only set profile section data
     setText('profile-name', currentUser.name || '-');
     setText('profile-email', currentUser.email || '-');
   }

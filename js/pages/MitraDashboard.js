@@ -50,7 +50,7 @@ class MitraDashboard {
             <button id="notif-btn" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-300 transition-colors">
               <i class="fas fa-bell"></i>
             </button>
-            <img id="user-avatar" src="" alt="Avatar" class="w-9 h-9 rounded-full border-2 border-green-500">
+            <img id="user-avatar" src="" alt="Avatar" class="w-9 h-9 rounded-full border-2 border-indigo-500">
           </div>
         </div>
       </header>
@@ -175,7 +175,7 @@ class MitraDashboard {
         <section id="section-akun" class="section-content hidden">
           <div class="glass-card p-4 mb-4 animate-fade-in-up">
             <div class="flex items-center gap-4 mb-4">
-              <img id="profile-avatar" src="" alt="Profile" class="w-16 h-16 rounded-full border-2 border-green-500">
+              <img id="profile-avatar" src="" alt="Profile" class="w-16 h-16 rounded-full border-2 border-indigo-500">
               <div>
                 <h2 class="text-lg font-bold" id="profile-name">-</h2>
                 <p class="text-sm text-gray-400" id="profile-email">-</p>
@@ -254,6 +254,7 @@ class MitraDashboard {
 
     if (!authGuard.init('mitra', {
       avatarId: 'user-avatar',
+      nameId: 'user-name',
       welcomeId: 'welcome-name',
       logoutId: 'logout-btn'
     })) {
@@ -279,17 +280,8 @@ class MitraDashboard {
   }
 
   setupProfile() {
-    const avatarUrl = this.currentUser?.picture || this.currentUser?.foto ||
-      `https://ui-avatars.com/api/?name=${encodeURIComponent(this.currentUser?.name || 'M')}&background=random`;
-
-    const avatarIds = ['user-avatar', 'profile-avatar'];
-    avatarIds.forEach((id) => {
-      const element = DOMUtils.getElement(id);
-      if (element) {
-        element.src = avatarUrl;
-      }
-    });
-
+    // Avatar and name are handled by authGuard.init()
+    // Only set profile section data
     DOMUtils.setText('profile-name', this.currentUser?.name || 'Mitra');
     DOMUtils.setText('profile-email', this.currentUser?.email || '-');
     DOMUtils.setText('mitra-name', this.currentUser?.schoolName || this.currentUser?.name || 'Mitra');

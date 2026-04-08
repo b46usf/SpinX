@@ -56,7 +56,7 @@ class GuruDashboard {
             <button id="notif-btn" class="w-9 h-9 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-gray-300 transition-colors">
               <i class="fas fa-bell"></i>
             </button>
-            <img id="user-avatar" src="" alt="Avatar" class="w-9 h-9 rounded-full border-2 border-purple-500">
+            <img id="user-avatar" src="" alt="Avatar" class="w-9 h-9 rounded-full border-2 border-indigo-500">
           </div>
         </div>
       </header>
@@ -207,7 +207,7 @@ class GuruDashboard {
         <section id="section-akun" class="section-content hidden">
           <div class="glass-card p-4 mb-4 animate-fade-in-up">
             <div class="flex items-center gap-4 mb-4">
-              <img id="profile-avatar" src="" alt="Profile" class="w-16 h-16 rounded-full border-2 border-purple-500">
+              <img id="profile-avatar" src="" alt="Profile" class="w-16 h-16 rounded-full border-2 border-indigo-500">
               <div>
                 <h2 class="text-lg font-bold" id="profile-name">-</h2>
                 <p class="text-sm text-gray-400" id="profile-email">-</p>
@@ -286,7 +286,9 @@ class GuruDashboard {
     // Auth protection - guru role only
     const authResult = authGuard.init('guru', {
       avatarId: 'user-avatar',
-      welcomeId: 'welcome-name'
+      nameId: 'user-name',
+      welcomeId: 'welcome-name',
+      logoutId: 'logout-btn'
     });
     if (!authResult) return;
 
@@ -316,14 +318,8 @@ class GuruDashboard {
   }
 
   setupProfile() {
-    const avatar = DOMUtils.getElement('user-avatar');
-    if (avatar) {
-      avatar.src = this.currentUser.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(this.currentUser.name)}&background=random`;
-    }
-
-    const profileAvatar = DOMUtils.getElement('profile-avatar');
-    if (profileAvatar) profileAvatar.src = avatar.src;
-
+    // Avatar and name are handled by authGuard.init()
+    // Only set profile section data
     DOMUtils.setText('profile-name', this.currentUser.name);
     DOMUtils.setText('profile-email', this.currentUser.email);
   }
