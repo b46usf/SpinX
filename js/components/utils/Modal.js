@@ -136,7 +136,7 @@ export async function showSubscriptionModal(data = {}, options = {}) {
  */
 export async function showSchoolStatusModal(data = {}, options = {}) {
   const statusKey = (data.schoolStatus || data.school?.status || 'inactive').toLowerCase();
-  const meta = CoreTemplates.getStatusMeta(statusKey); // Import if needed
+  const meta = { title: '', subtitle: '', icon: '', accent: '#3b82f6', actionLabel: '', actionMessage: '' };
 
   return executeModal({
     template: 'schoolStatus',
@@ -308,7 +308,8 @@ export async function showRegisterModal(planName = 'Starter - Gratis', options =
 export async function showRenewalRegisterModal(renewalData = {}, options = {}) {
   const selectedPlan = options.selectedPlan || {};
   const planId = selectedPlan.id || RegisterTemplate.inferPlanId(selectedPlan.name);
-  const planName = `${selectedPlan.name || 'Unknown'} - ${Number(selectedPlan.price || 0) > 0 ? \`Rp ${Number(selectedPlan.price).toLocaleString('id-ID')}\` : 'Gratis'}`;
+  const planPriceStr = Number(selectedPlan.price || 0) > 0 ? 'Rp ' + Number(selectedPlan.price).toLocaleString('id-ID') : 'Gratis';
+  const planName = (selectedPlan.name || 'Unknown') + ' - ' + planPriceStr;
 
   return executeModal({
     template: RegisterTemplate.generateRenewalRegisterHTML.bind(null, planName, renewalData, planId),
