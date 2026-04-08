@@ -57,6 +57,8 @@ class AdminSystemDashboard {
    * Initialize
    */
   init() {
+    this.renderDashboardShell();
+
     if (!authGuard.init('admin-system', {
       avatarId: 'user-avatar',
       nameId: 'user-name',
@@ -67,7 +69,6 @@ class AdminSystemDashboard {
     }
 
     themeManager.init();
-    this.renderDashboardShell();
     this.setupProfile();
     this.setupNavigation();
     this.setupEventListeners();
@@ -246,7 +247,7 @@ class AdminSystemDashboard {
                 <span class="badge badge-primary text-xs">Admin Sistem</span>
               </div>
             </div>
-            <div class="space-y-3 mb-4">
+            <div class="grid gap-3 mb-4">
               <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
                 <span class="text-sm">Role</span>
                 <span class="text-sm text-gray-300" id="admin-role">Admin Sistem</span>
@@ -258,6 +259,10 @@ class AdminSystemDashboard {
               <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
                 <span class="text-sm">Email</span>
                 <span class="text-sm text-gray-300" id="admin-email">-</span>
+              </div>
+              <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                <span class="text-sm">Akses Admin</span>
+                <span class="text-sm text-gray-300" id="admin-access">Full Sistem</span>
               </div>
             </div>
             <div class="grid gap-3">
@@ -306,19 +311,23 @@ class AdminSystemDashboard {
       const user = authGuard.getUser();
       if (user) {
         const profileAvatar = document.getElementById('profile-avatar');
+        const headerAvatar = document.getElementById('user-avatar');
         const profileName = document.getElementById('profile-name');
         const profileEmail = document.getElementById('profile-email');
         const adminRole = document.getElementById('admin-role');
         const adminStatus = document.getElementById('admin-status');
         const adminEmail = document.getElementById('admin-email');
+        const adminAccess = document.getElementById('admin-access');
 
         const avatarUrl = user.foto || user.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.nama || user.name || user.email)}&background=random`;
         if (profileAvatar) profileAvatar.src = avatarUrl;
+        if (headerAvatar) headerAvatar.src = avatarUrl;
         if (profileName) profileName.textContent = user.nama || user.name || user.email || '-';
         if (profileEmail) profileEmail.textContent = user.email || '-';
         if (adminRole) adminRole.textContent = user.role || 'Admin Sistem';
         if (adminStatus) adminStatus.textContent = user.status || 'Aktif';
         if (adminEmail) adminEmail.textContent = user.email || '-';
+        if (adminAccess) adminAccess.textContent = 'Full Sistem';
       }
     } catch (error) {
       console.error('Failed to setup profile:', error);
