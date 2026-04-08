@@ -185,7 +185,7 @@ export class LoginComponent {
       const Modal = module.default || module.Modal || module;
       const school = result.school || {};
 
-      await Modal.schoolStatus({
+await Modal.showSchoolStatusModal({
         schoolStatus: result.schoolStatus || school.rawStatus || school.status || result.reason || 'inactive',
         school,
         message: result.message || ''
