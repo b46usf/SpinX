@@ -15,6 +15,9 @@ class NotificationManager {
     this.storageKey = 'notifications_data';
     this.settingsKey = 'notification_settings';
     
+    // Backend integration (Phase 2)
+    this.webSocketClient = null;
+    
     // Default settings
     this.settings = {
       soundEnabled: true,
@@ -34,6 +37,62 @@ class NotificationManager {
     this.loadSettings();
     this.setupUI();
     this.setupNotificationPermission();
+    this.setupWebSocketIntegration(); // Backend sync (Phase 2)
+  }
+
+  /**
+   * WebSocket integration for real-time notifications
+   */
+  setupWebSocketIntegration() {
+    // Wait for webSocketClient to be available (defensive)
+    const checkWebSocket = () => {
+      if (typeof window !== 'undefined' && 
+          typeof window.webSocketClient !== 'undefined' && 
+          window.webSocketClient && 
+          window.webSocketClient.isReady) {
+        this.webSocketClient = window.webSocketClient;
+        this.bindWebSocketEvents();
+      } else {
+        setTimeout(checkWebSocket, 500);
+      }
+    };
+    checkWebSocket();
+  }
+
+  /**
+   * Bind WebSocket events for notifications
+   */
+  bindWebSocketEvents() {
+    if (!this.webSocketClient) return;
+
+    this.webSocketClient.on('notification', (data) => {
+      console.log('[NotificationManager] Backend notification:', data);
+      this.addNotification({
+        type: data.type || 'info',
+        title: data.title,
+        message: data.message,
+        data: data.data || {},
+        id: data.id,
+        timestamp: data.timestamp || Date.now()
+      });
+    });
+
+    this.webSocketClient.on('websocket:connected', () => {
+      // Sync notifications on reconnect
+      this.syncFromBackend();
+    });
+  }
+
+  /**
+   * Sync notifications from backend
+   */
+  syncFromBackend() {
+    if (!this.webSocketClient) return;
+
+    this.webSocketClient.send({
+      type: 'websocket_get_updates',
+      lastSync: Date.now() - 3600000 // 1 hour ago
+    });
   }
 
   /**
@@ -533,5 +592,7 @@ class NotificationManager {
   }
 }
 
-// Export singleton instance
 export const notificationManager = new NotificationManager();
+
+// Export the class for backward compatibility
+export { NotificationManager };

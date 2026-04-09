@@ -8,8 +8,8 @@ import { themeManager } from '../core/ThemeManager.js';
 import { initSectionNavigation, switchSection, initTabNavigation, switchTab } from '../core/NavigationUtils.js';
 import { DOMUtils } from '../core/DOMUtils.js';
 import { authApi } from '../auth/AuthApi.js';
-import { WebSocketClient } from '../core/WebSocketClient.js';
-import { NotificationManager } from '../core/NotificationManager.js';
+import { webSocketClient } from '../core/WebSocketClient.js';
+import { notificationManager } from '../core/NotificationManager.js';
 import {
   applyTextSkeleton,
   renderListSkeleton,
@@ -448,7 +448,7 @@ export class AdminSchoolDashboard {
    * Initialize WebSocket connection for real-time updates
    */
   initWebSocket() {
-    this.webSocketClient = new WebSocketClient();
+    this.webSocketClient = webSocketClient;
     
     // Listen for real-time updates
     this.webSocketClient.on('notification', (notification) => {
@@ -468,7 +468,7 @@ export class AdminSchoolDashboard {
    * Initialize notification manager
    */
   initNotifications() {
-    this.notificationManager = new NotificationManager();
+    this.notificationManager = notificationManager;
   }
 
   /**

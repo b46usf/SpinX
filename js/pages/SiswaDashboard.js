@@ -11,8 +11,8 @@ import { initSectionNavigation, switchSection } from '../core/NavigationUtils.js
 import { DOMUtils } from '../core/DOMUtils.js';
 import { ToastUtils } from '../core/ToastUtils.js';
 import { authApi } from '../auth/AuthApi.js';
-import { WebSocketClient } from '../core/WebSocketClient.js';
-import { NotificationManager } from '../core/NotificationManager.js';
+import { webSocketClient } from '../core/WebSocketClient.js';
+import { notificationManager } from '../core/NotificationManager.js';
 import {
   applyTextSkeleton,
   clearTextSkeleton,
@@ -346,7 +346,7 @@ class SiswaDashboard {
    * Initialize notification manager
    */
   initNotifications() {
-    this.notificationManager = new NotificationManager();
+    this.notificationManager = notificationManager;
   }
 
   /**
