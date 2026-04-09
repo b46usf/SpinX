@@ -10,7 +10,7 @@ import { DashboardUtils } from '../core/DashboardUtils.js';
 import { initSectionNavigation, switchSection } from '../core/NavigationUtils.js';
 import { DOMUtils } from '../core/DOMUtils.js';
 import { authApi } from '../auth/AuthApi.js';
-import { WebSocketClient } from '../core/WebSocketClient.js';
+import { webSocketClient } from '../core/WebSocketClient.js';
 import { NotificationManager } from '../core/NotificationManager.js';
 import { SchoolManager } from './managers/SchoolManager.js';
 import { SubscriptionManager } from './managers/SubscriptionManager.js';
@@ -89,7 +89,7 @@ class AdminSystemDashboard {
    * Initialize WebSocket connection for real-time updates
    */
   initWebSocket() {
-    this.webSocketClient = new WebSocketClient();
+    this.webSocketClient = webSocketClient;
     
     // Listen for real-time updates
     this.webSocketClient.on('notification', (notification) => {
